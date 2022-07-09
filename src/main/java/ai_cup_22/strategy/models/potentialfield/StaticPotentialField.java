@@ -4,14 +4,19 @@ import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Position;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class StaticPotentialField implements PotentialField {
-    private double[][] values;
     private double startX;
     private double startY;
+    private double stepSize = PotentialField.STEP_SIZE;
+    private Map<Double, Map<Double, Score>> scores;
+    private double[] yCoordinates;
+    private double[] xCoordinates;
+    private int gridSize;
 
     public StaticPotentialField(World world) {
         initValues();
@@ -20,51 +25,66 @@ public class StaticPotentialField implements PotentialField {
 
     private void initValues() {
         var initRadius = World.getInstance().getConstants().getInitialZoneRadius();
-
-        int size = (int) (initRadius * 2 * (1. / PotentialField.STEP_SIZE));
-        this.values = new double[size][size];
+        gridSize = (int) (initRadius * 2 / PotentialField.STEP_SIZE);
 
         startX = -initRadius;
         startY = -initRadius;
+
+        xCoordinates = new double[gridSize];
+        yCoordinates = new double[gridSize];
+        for (int i = 0; i < gridSize; i++) {
+            xCoordinates[i] = yCoordinates[i] = -initRadius + i * stepSize;
+        }
+
+        scores = new LinkedHashMap<>(gridSize);
+        for (var x: xCoordinates) {
+            var row = scores.computeIfAbsent(x, xx -> new LinkedHashMap<>(gridSize));
+
+            for (var y: yCoordinates) {
+                row.put(y, new Score(new Position(x, y)));
+            }
+        }
     }
 
     private void fillStaticData(World world) {
         world.getObstacles().forEach((id, obstacle) -> {
             var circle = obstacle.getCircle();
+            var influenceRadius = circle.getRadius() + 2.5;
 
-            var radius = circle.getRadius() + 2.5;
-            var obstaclesContributor = new CompositeForceContributor()
+            var obstaclesContributor = new CompositeScoreContributor()
 //                    .add(new ConstantOutCircleForceContributor(circle.enlargeToRadius(radius), 0))
-                    .add(new ConstantInCircleForceContributor(circle, PotentialField.UNREACHABLE_VALUE))
-                    .add(new LinearForceContributor(circle.getCenter(), -50, -10, circle.getRadius(), radius));
+                    .add(new ConstantInCircleScoreContributor(circle, PotentialField.UNREACHABLE_VALUE))
+                    .add(new LinearScoreContributor(circle.getCenter(), -50, -10, circle.getRadius(), influenceRadius));
 
-            var minX = Math.max(0, (int) ((circle.getCenter().getX() - radius - startX) / PotentialField.STEP_SIZE));
-            var maxX = Math.min(values.length - 1, (int) ((circle.getCenter().getX() + radius - startX) / PotentialField.STEP_SIZE) + 1);
-            var minY = Math.max(0, (int) ((circle.getCenter().getY() - radius - startY) / PotentialField.STEP_SIZE));
-            var maxY = Math.min(values.length - 1, (int) ((circle.getCenter().getY() + radius - startY) / PotentialField.STEP_SIZE) + 1);
-
-            for (int x = minX; x < maxX; x++) {
-                for (int y = minY; y < maxY; y++) {
-                    var pos = getPositionByIndex(x, y);
-                    values[x][y] += obstaclesContributor.getForce(pos);
-                }
-            }
+            getScoresInCircle(new Circle(circle.getCenter(), influenceRadius))
+                    .forEach(obstaclesContributor::contribute);
         });
     }
 
-    public List<Position> getPositionsInCircle(Circle circle) {
-        var list = new ArrayList<Position>();
+    public List<Score> getScoresInCircle(Circle circle) {
+        var list = new ArrayList<Score>();
 
-        var minX = Math.max(0, (int) ((circle.getCenter().getX() - circle.getRadius() - startX) / PotentialField.STEP_SIZE));
-        var maxX = Math.min(values.length - 1, (int) ((circle.getCenter().getX() + circle.getRadius() - startX) / PotentialField.STEP_SIZE) + 1);
-        var minY = Math.max(0, (int) ((circle.getCenter().getY() - circle.getRadius() - startY) / PotentialField.STEP_SIZE));
-        var maxY = Math.min(values.length - 1, (int) ((circle.getCenter().getY() + circle.getRadius() - startY) / PotentialField.STEP_SIZE) + 1);
+        var bottom = circle.getCenter().getY() - circle.getRadius();
+        var bottomInd = Arrays.binarySearch(yCoordinates, bottom);
+        bottomInd = bottomInd >= 0 ? bottomInd : Math.min(gridSize - 1, -bottomInd - 1);
 
-        for (int x = minX; x < maxX; x++) {
-            for (int y = minY; y < maxY; y++) {
-                var pos = getPositionByIndex(x, y);
-                if (circle.contains(pos)) {
-                    list.add(pos);
+        var top = circle.getCenter().getY() + circle.getRadius();
+        var topInd = Arrays.binarySearch(yCoordinates, top);
+        topInd = topInd >= 0 ? topInd : Math.min(gridSize - 1, -topInd - 1);
+
+        var left = circle.getCenter().getX() - circle.getRadius();
+        var leftInd = Arrays.binarySearch(xCoordinates, left);
+        leftInd = leftInd >= 0 ? leftInd : Math.min(gridSize - 1, -leftInd - 1);
+
+        var right = circle.getCenter().getX() + circle.getRadius();
+        var rightInd = Arrays.binarySearch(xCoordinates, right);
+        rightInd = rightInd >= 0 ? rightInd : Math.min(gridSize - 1, -rightInd - 1);
+
+        for (int x = leftInd; x <= rightInd; x++) {
+            for (int y = bottomInd; y <= topInd; y++) {
+                var score = scores.get(xCoordinates[x]).get(yCoordinates[y]);
+                if (circle.contains(score.getPosition())) {
+                    list.add(score);
                 }
             }
         }
@@ -72,20 +92,10 @@ public class StaticPotentialField implements PotentialField {
         return list;
     }
 
-    private Position getPositionByIndex(int x, int y) {
-        return Position.getCached(x * PotentialField.STEP_SIZE + startX, y * PotentialField.STEP_SIZE + startY);
-    }
-
     @Override
-    public Map<Position, Double> getForces() {
-        var map = new HashMap<Position, Double>();
-
-        for (int x = 0; x < values.length; x++) {
-            for (int y = 0; y < values[0].length; y++) {
-                map.put(getPositionByIndex(x, y), values[x][y]);
-            }
-        }
-
-        return map;
+    public List<Score> getScores() {
+        return scores.values().stream()
+                .flatMap(s -> s.values().stream())
+                .toList();
     }
 }

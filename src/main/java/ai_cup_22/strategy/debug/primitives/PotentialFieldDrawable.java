@@ -2,11 +2,9 @@ package ai_cup_22.strategy.debug.primitives;
 
 import ai_cup_22.DebugInterface;
 import ai_cup_22.debugging.Color;
-import ai_cup_22.strategy.debug.Colors;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.models.potentialfield.PotentialField;
-import ai_cup_22.strategy.models.potentialfield.StaticPotentialField;
 
 public class PotentialFieldDrawable implements Drawable {
     private final PotentialField potentialField;
@@ -17,16 +15,16 @@ public class PotentialFieldDrawable implements Drawable {
 
     @Override
     public void draw(DebugInterface debugInterface) {
-        potentialField.getForces().entrySet().stream()
-                .filter(e -> e.getValue() != PotentialField.UNREACHABLE_VALUE)
-                .filter(e -> e.getKey().getDistanceTo(new Position(0, 0)) < 20)
-                .map(e -> new CircleDrawable(new Circle(e.getKey(), 0.5), getColor(e.getValue())))
+        potentialField.getScores().stream()
+                .filter(score -> score.getScore() != PotentialField.UNREACHABLE_VALUE)
+                .filter(score -> score.getPosition().getDistanceTo(new Position(0, 0)) < 20)
+                .map(score -> new CircleDrawable(new Circle(score.getPosition(), 0.5), getColor(score.getScore())))
                 .forEach(circle -> circle.draw(debugInterface));
 
-        potentialField.getForces().entrySet().stream()
-                .filter(e -> e.getValue() != PotentialField.UNREACHABLE_VALUE)
-                .filter(e -> e.getKey().getDistanceTo(new Position(0, 0)) < 20)
-                .map(e -> new Text(String.format("%.2f", e.getValue()), e.getKey(), 0.2))
+        potentialField.getScores().stream()
+                .filter(score -> score.getScore() != PotentialField.UNREACHABLE_VALUE)
+                .filter(score -> score.getPosition().getDistanceTo(new Position(0, 0)) < 20)
+                .map(score -> new Text(String.format("%.2f", score.getScore()), score.getPosition(), 0.2))
                 .forEach(circle -> circle.draw(debugInterface));
     }
 
