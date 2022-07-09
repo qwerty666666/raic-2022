@@ -6,7 +6,7 @@ import ai_cup_22.strategy.geometry.CircleSegment;
 import ai_cup_22.strategy.geometry.Line;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
-import ai_cup_22.strategy.models.potentialfield.PotentialField;
+import ai_cup_22.strategy.potentialfield.PotentialField;
 
 public class Unit {
     private Circle circle;

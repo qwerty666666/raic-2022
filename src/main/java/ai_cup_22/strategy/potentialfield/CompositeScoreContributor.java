@@ -1,4 +1,4 @@
-package ai_cup_22.strategy.models.potentialfield;
+package ai_cup_22.strategy.potentialfield;
 
 import java.util.ArrayList;
 import java.util.List;

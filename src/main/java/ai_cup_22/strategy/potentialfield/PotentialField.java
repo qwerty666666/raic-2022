@@ -1,8 +1,6 @@
-package ai_cup_22.strategy.models.potentialfield;
+package ai_cup_22.strategy.potentialfield;
 
-import ai_cup_22.strategy.geometry.Position;
 import java.util.List;
-import java.util.Map;
 
 public interface PotentialField {
     double FIELD_RADIUS = 30;

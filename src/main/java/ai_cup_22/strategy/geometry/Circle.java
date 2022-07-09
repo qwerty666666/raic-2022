@@ -43,4 +43,9 @@ public class Circle {
     public Circle enlargeToRadius(double radius) {
         return new Circle(center, radius);
     }
+
+    @Override
+    public String toString() {
+        return "c: " + getCenter() + ", r: " + radius;
+    }
 }

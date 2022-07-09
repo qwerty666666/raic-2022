@@ -4,7 +4,7 @@ import ai_cup_22.DebugInterface;
 import ai_cup_22.debugging.Color;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Position;
-import ai_cup_22.strategy.models.potentialfield.PotentialField;
+import ai_cup_22.strategy.potentialfield.PotentialField;
 
 public class PotentialFieldDrawable implements Drawable {
     private final PotentialField potentialField;

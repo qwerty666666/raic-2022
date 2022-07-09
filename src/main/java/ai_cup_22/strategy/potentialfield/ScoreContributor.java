@@ -1,4 +1,4 @@
-package ai_cup_22.strategy.models.potentialfield;
+package ai_cup_22.strategy.potentialfield;
 
 public interface ScoreContributor {
     default boolean shouldContribute(Score score) {

@@ -1,4 +1,4 @@
-package ai_cup_22.strategy.models.potentialfield;
+package ai_cup_22.strategy.potentialfield;
 
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.geometry.Circle;
@@ -36,6 +36,7 @@ public class StaticPotentialField implements PotentialField {
             xCoordinates[i] = yCoordinates[i] = -initRadius + i * stepSize;
         }
 
+        // init scores
         scores = new LinkedHashMap<>(gridSize);
         for (var x: xCoordinates) {
             var row = scores.computeIfAbsent(x, xx -> new LinkedHashMap<>(gridSize));
@@ -44,9 +45,48 @@ public class StaticPotentialField implements PotentialField {
                 row.put(y, new Score(new Position(x, y)));
             }
         }
+
+        // add scores adjacent graph
+        double straightDist = stepSize;
+        double diagonalDist = Math.sqrt(stepSize * stepSize * 2);
+
+        for (int x = 0; x < gridSize; x++) {
+            for (int y = 0; y < gridSize; y++) {
+                var score = getScoreAtInd(x, y);
+                if (x > 0) {
+                    score.addAdjacent(getScoreAtInd(x - 1, y), straightDist);
+                }
+                if (x < gridSize - 1) {
+                    score.addAdjacent(getScoreAtInd(x + 1, y), straightDist);
+                }
+                if (y > 0) {
+                    score.addAdjacent(getScoreAtInd(x, y - 1), straightDist);
+                }
+                if (y < gridSize - 1) {
+                    score.addAdjacent(getScoreAtInd(x, y + 1), straightDist);
+                }
+                if (x > 0 && y > 0) {
+                    score.addAdjacent(getScoreAtInd(x - 1, y - 1), diagonalDist);
+                }
+                if (x > 0 && y < gridSize - 1) {
+                    score.addAdjacent(getScoreAtInd(x - 1, y + 1), diagonalDist);
+                }
+                if (x < gridSize - 1 && y > 0) {
+                    score.addAdjacent(getScoreAtInd(x + 1, y - 1), diagonalDist);
+                }
+                if (x < gridSize - 1 && y < gridSize - 1) {
+                    score.addAdjacent(getScoreAtInd(x + 1, y + 1), diagonalDist);
+                }
+            }
+        }
+    }
+
+    private Score getScoreAtInd(int x, int y) {
+        return scores.get(xCoordinates[x]).get(yCoordinates[y]);
     }
 
     private void fillStaticData(World world) {
+        // add trees penalty
         world.getObstacles().forEach((id, obstacle) -> {
             var circle = obstacle.getCircle();
             var influenceRadius = circle.getRadius() + 2.5;
@@ -59,6 +99,11 @@ public class StaticPotentialField implements PotentialField {
             getScoresInCircle(new Circle(circle.getCenter(), influenceRadius))
                     .forEach(obstaclesContributor::contribute);
         });
+
+        // set initial scores
+        scores.values().stream()
+                .flatMap(s -> s.values().stream())
+                .forEach(score -> score.setInitialScore(score.getScore()));
     }
 
     public List<Score> getScoresInCircle(Circle circle) {
