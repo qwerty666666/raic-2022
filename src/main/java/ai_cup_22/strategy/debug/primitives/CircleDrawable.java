@@ -5,12 +5,12 @@ import ai_cup_22.debugging.Color;
 import ai_cup_22.strategy.geometry.Circle;
 
 public class CircleDrawable implements Drawable {
-    private final Position center;
+    private final PositionDrawable center;
     private final double radius;
     private final Color color;
 
     public CircleDrawable(Circle circle, Color color) {
-        this.center = new Position(circle.getCenter());
+        this.center = new PositionDrawable(circle.getCenter());
         this.radius = circle.getRadius();
         this.color = color;
     }

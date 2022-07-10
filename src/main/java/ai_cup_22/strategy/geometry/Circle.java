@@ -40,6 +40,10 @@ public class Circle {
         return p.getSquareDistanceTo(center) <= radius * radius;
     }
 
+    public Circle enlarge(double added) {
+        return new Circle(center, radius + added);
+    }
+
     public Circle enlargeToRadius(double radius) {
         return new Circle(center, radius);
     }

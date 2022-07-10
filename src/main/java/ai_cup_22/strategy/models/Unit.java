@@ -7,17 +7,32 @@ import ai_cup_22.strategy.geometry.Line;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.potentialfield.PotentialField;
+import ai_cup_22.strategy.potentialfield.UnitPotentialField;
+import java.util.Collections;
+import java.util.List;
 
 public class Unit {
     private Circle circle;
     private ai_cup_22.model.Unit unit;
     private Vector direction;
-    private PotentialField potentialField;
+    private UnitPotentialField potentialField = new UnitPotentialField(this);
+    private List<Position> currentPath;
 
     public void updateTick(ai_cup_22.model.Unit unit) {
         this.unit = unit;
         this.circle = new Circle(new Position(unit.getPosition()), World.getInstance().getConstants().getUnitRadius());
         this.direction = new Vector(unit.getDirection());
+        this.potentialField.refresh();
+        this.currentPath = Collections.emptyList();
+    }
+
+    public List<Position> getCurrentPath() {
+        return currentPath;
+    }
+
+    public Unit setCurrentPath(List<Position> currentPath) {
+        this.currentPath = currentPath;
+        return this;
     }
 
     public PotentialField getPotentialField() {

@@ -45,40 +45,6 @@ public class StaticPotentialField implements PotentialField {
                 row.put(y, new Score(new Position(x, y)));
             }
         }
-
-        // add scores adjacent graph
-        double straightDist = stepSize;
-        double diagonalDist = Math.sqrt(stepSize * stepSize * 2);
-
-        for (int x = 0; x < gridSize; x++) {
-            for (int y = 0; y < gridSize; y++) {
-                var score = getScoreAtInd(x, y);
-                if (x > 0) {
-                    score.addAdjacent(getScoreAtInd(x - 1, y), straightDist);
-                }
-                if (x < gridSize - 1) {
-                    score.addAdjacent(getScoreAtInd(x + 1, y), straightDist);
-                }
-                if (y > 0) {
-                    score.addAdjacent(getScoreAtInd(x, y - 1), straightDist);
-                }
-                if (y < gridSize - 1) {
-                    score.addAdjacent(getScoreAtInd(x, y + 1), straightDist);
-                }
-                if (x > 0 && y > 0) {
-                    score.addAdjacent(getScoreAtInd(x - 1, y - 1), diagonalDist);
-                }
-                if (x > 0 && y < gridSize - 1) {
-                    score.addAdjacent(getScoreAtInd(x - 1, y + 1), diagonalDist);
-                }
-                if (x < gridSize - 1 && y > 0) {
-                    score.addAdjacent(getScoreAtInd(x + 1, y - 1), diagonalDist);
-                }
-                if (x < gridSize - 1 && y < gridSize - 1) {
-                    score.addAdjacent(getScoreAtInd(x + 1, y + 1), diagonalDist);
-                }
-            }
-        }
     }
 
     private Score getScoreAtInd(int x, int y) {
@@ -86,9 +52,11 @@ public class StaticPotentialField implements PotentialField {
     }
 
     private void fillStaticData(World world) {
+        var unitRadius = World.getInstance().getConstants().getUnitRadius();
+
         // add trees penalty
         world.getObstacles().forEach((id, obstacle) -> {
-            var circle = obstacle.getCircle();
+            var circle = obstacle.getCircle().enlarge(unitRadius);
             var influenceRadius = circle.getRadius() + 2.5;
 
             var obstaclesContributor = new CompositeScoreContributor()
@@ -104,6 +72,39 @@ public class StaticPotentialField implements PotentialField {
         scores.values().stream()
                 .flatMap(s -> s.values().stream())
                 .forEach(score -> score.setInitialScore(score.getScore()));
+    }
+
+    public void buildGraph() {
+        // add scores adjacent graph
+        for (int x = 0; x < gridSize; x++) {
+            for (int y = 0; y < gridSize; y++) {
+                var score = getScoreAtInd(x, y);
+                if (x > 0) {
+                    score.addAdjacent(getScoreAtInd(x - 1, y));
+                }
+                if (x < gridSize - 1) {
+                    score.addAdjacent(getScoreAtInd(x + 1, y));
+                }
+                if (y > 0) {
+                    score.addAdjacent(getScoreAtInd(x, y - 1));
+                }
+                if (y < gridSize - 1) {
+                    score.addAdjacent(getScoreAtInd(x, y + 1));
+                }
+                if (x > 0 && y > 0) {
+                    score.addAdjacent(getScoreAtInd(x - 1, y - 1));
+                }
+                if (x > 0 && y < gridSize - 1) {
+                    score.addAdjacent(getScoreAtInd(x - 1, y + 1));
+                }
+                if (x < gridSize - 1 && y > 0) {
+                    score.addAdjacent(getScoreAtInd(x + 1, y - 1));
+                }
+                if (x < gridSize - 1 && y < gridSize - 1) {
+                    score.addAdjacent(getScoreAtInd(x + 1, y + 1));
+                }
+            }
+        }
     }
 
     public List<Score> getScoresInCircle(Circle circle) {

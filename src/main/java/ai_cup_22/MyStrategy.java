@@ -9,10 +9,13 @@ import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.CompositeAction;
 import ai_cup_22.strategy.actions.LookToAction;
 import ai_cup_22.strategy.actions.MoveToAction;
+import ai_cup_22.strategy.actions.MoveToWithPathfindingAction;
 import ai_cup_22.strategy.actions.ShootAction;
 import ai_cup_22.strategy.debug.DebugData;
-import ai_cup_22.strategy.debug.primitives.PotentialFieldDrawable;
+import ai_cup_22.strategy.debug.primitives.PathDrawable;
 import ai_cup_22.strategy.geometry.Position;
+import ai_cup_22.strategy.pathfinding.AStarPathFinder;
+import java.util.Collections;
 import java.util.Comparator;
 
 public class MyStrategy {
@@ -27,6 +30,11 @@ public class MyStrategy {
         if (game.getCurrentTick() == 0) {
             initWorld(game);
 //            updateObstaclesDebugLayer();
+            return new Order(Collections.emptyMap());
+        }
+
+        if (game.getCurrentTick() == 1) {
+            world.getStaticPotentialField().buildGraph();
         }
 
         world.updateTick(game);
@@ -39,31 +47,35 @@ public class MyStrategy {
         for (var unit: world.getMyUnits().values()) {
             var action = new CompositeAction();
 
-            if (world.getEnemyUnits().isEmpty()) {
-                action
-                        .add(new MoveToAction(new Position(0, 0)))
-                        .add(new LookToAction(unit.getDirection().rotate(Math.PI / 2).getEndPosition()));
-            } else {
-                var enemiesUnderAttack = world.getEnemyUnits().values().stream()
-                        .filter(unit::canShoot)
-                        .sorted(Comparator.comparingDouble(a -> a.getDistanceTo(unit)))
-                        .toList();
+//            if (world.getEnemyUnits().isEmpty()) {
+//                action
+//                        .add(new MoveToAction(new Position(0, 0)))
+//                        .add(new LookToAction(unit.getDirection().rotate(Math.PI / 2).getEndPosition()));
+//            } else {
+//                var enemiesUnderAttack = world.getEnemyUnits().values().stream()
+//                        .filter(unit::canShoot)
+//                        .sorted(Comparator.comparingDouble(a -> a.getDistanceTo(unit)))
+//                        .toList();
+//
+//                if (!enemiesUnderAttack.isEmpty()) {
+//                    action
+//                            .add(new MoveToAction(new Position(0, 0)))
+//                            .add(new ShootAction(enemiesUnderAttack.get(0)));
+//                } else {
+//                    var target = world.getEnemyUnits().values().stream()
+//                            .min(Comparator.comparingDouble(a -> a.getDistanceTo(unit)))
+//                            .orElse(null);
+//
+//                    action
+//                            .add(new MoveToAction(new Position(0, 0)))
+//                            .add(new LookToAction(target));
+//                }
+//            }
 
-                if (!enemiesUnderAttack.isEmpty()) {
-                    action
-                            .add(new MoveToAction(new Position(0, 0)))
-                            .add(new ShootAction(enemiesUnderAttack.get(0)));
-                } else {
-                    var target = world.getEnemyUnits().values().stream()
-                            .min(Comparator.comparingDouble(a -> a.getDistanceTo(unit)))
-                            .orElse(null);
+            action
+                    .add(new MoveToWithPathfindingAction(Position.ZERO));
 
-                    action
-                            .add(new MoveToAction(new Position(0, 0)))
-                            .add(new LookToAction(target));
-                }
-            }
-
+            // default action - do nothing
             orders.computeIfAbsent(unit.getId(), id -> {
                 var unitOrder = new UnitOrder(new Vec2(0, 0), new Vec2(0, 0), null);
 
@@ -75,15 +87,22 @@ public class MyStrategy {
 
 
 
-        updateUnitsDebugLayer();
-        updatePositionsDebugLayer();
-        updateDefaultDebugLayer();
+        if (DebugData.isEnabled) {
+            updateUnitsDebugLayer();
+            updatePositionsDebugLayer();
+            updateDefaultDebugLayer();
 
 //        new PotentialFieldDrawable(world.getStaticPotentialField()).draw(debugInterface);
 
-        DebugData.getInstance().getDefaultLayer().show(debugInterface);
+            DebugData.getInstance().getDefaultLayer().show(debugInterface);
 
-
+//            for (var unit: world.getMyUnits().values()) {
+//                DebugData.getInstance().getCursorPosition().ifPresent(target -> {
+//                    var path = new AStarPathFinder().findPath(unit.getPotentialField(), unit.getPosition(), target);
+//                    new PathDrawable(path).draw(debugInterface);
+//                });
+//            }
+        }
 
         return new Order(orders);
     }
@@ -110,7 +129,15 @@ public class MyStrategy {
     }
 
     public void debugUpdate(DebugInterface debugInterface) {
+        updateCursorPosition(debugInterface);
+
         DebugData.getInstance().draw(debugInterface);
+    }
+
+    private void updateCursorPosition(DebugInterface debugInterface) {
+        var position = debugInterface.getState().getCursorWorldPosition();
+
+        DebugData.getInstance().setCursorPosition(position == null ? null : new Position(position));
     }
 
     public void finish() {

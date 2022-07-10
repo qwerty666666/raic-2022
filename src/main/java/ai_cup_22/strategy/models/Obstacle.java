@@ -20,6 +20,10 @@ public class Obstacle {
         return circle;
     }
 
+    public Position getCenter() {
+        return circle.getCenter();
+    }
+
     public int getId() {
         return id;
     }

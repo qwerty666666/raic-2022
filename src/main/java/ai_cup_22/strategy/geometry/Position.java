@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Position {
+    public static final Position ZERO = new Position(0, 0);
+
     private final static Map<Double, Map<Double, Position>> cachedPositions = new HashMap<>();
 
     private final double x;

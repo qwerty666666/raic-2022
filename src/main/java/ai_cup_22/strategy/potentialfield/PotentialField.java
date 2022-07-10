@@ -3,7 +3,6 @@ package ai_cup_22.strategy.potentialfield;
 import java.util.List;
 
 public interface PotentialField {
-    double FIELD_RADIUS = 30;
     double STEP_SIZE = 1;
 
     double MIN_VALUE = -100;

@@ -2,8 +2,11 @@ package ai_cup_22.strategy.debug.layers;
 
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.debug.Colors;
+import ai_cup_22.strategy.debug.DebugData;
 import ai_cup_22.strategy.debug.primitives.CircleSegment;
 import ai_cup_22.strategy.debug.primitives.Line;
+import ai_cup_22.strategy.debug.primitives.PathDrawable;
+import ai_cup_22.strategy.debug.primitives.Text;
 
 public class DefaultLayer extends DrawLayer {
     public void update(World world) {
@@ -11,6 +14,18 @@ public class DefaultLayer extends DrawLayer {
 
         addShootLines(world);
         addShootAreas(world);
+        addCursorPosition();
+        addUnitPaths(world);
+    }
+
+    private void addUnitPaths(World world) {
+        world.getMyUnits().values().forEach(unit -> add(new PathDrawable(unit.getCurrentPath())));
+    }
+
+    private void addCursorPosition() {
+        DebugData.getInstance().getCursorPosition().ifPresent(position -> {
+            add(new Text(position.toString(), position));
+        });
     }
 
     private void addShootLines(World world) {

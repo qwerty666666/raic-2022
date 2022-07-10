@@ -6,16 +6,21 @@ import ai_cup_22.strategy.debug.layers.DrawLayer;
 import ai_cup_22.strategy.debug.layers.ObstaclesLayer;
 import ai_cup_22.strategy.debug.layers.PositionsLayer;
 import ai_cup_22.strategy.debug.layers.UnitsLayer;
+import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.utils.CollectionUtils;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DebugData {
+    public static final boolean isEnabled = "true".equals(System.getenv().get("debug"));
     private static DebugData instance;
+
+    private Optional<Position> cursorPosition = Optional.empty();
 
     private final ObstaclesLayer obstaclesLayer = new ObstaclesLayer();
     private final PositionsLayer positionsLayer = new PositionsLayer();
@@ -32,6 +37,14 @@ public class DebugData {
         add("D");
         add("O");
     }};
+
+    public void setCursorPosition(Position cursorPosition) {
+        this.cursorPosition = Optional.ofNullable(cursorPosition);
+    }
+
+    public Optional<Position> getCursorPosition() {
+        return cursorPosition;
+    }
 
     public ObstaclesLayer getObstaclesLayer() {
         return obstaclesLayer;

@@ -1,14 +1,14 @@
 package ai_cup_22.strategy.potentialfield;
 
 import ai_cup_22.strategy.geometry.Position;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Score {
     private Position position;
     private double score;
     private double initialScore;
-    private Map<Score, Double> adjacent = new HashMap<>();
+    private List<Score> adjacent = new ArrayList<>();
 
     public Score(Position position) {
         this.position = position;
@@ -38,12 +38,12 @@ public class Score {
         this.score = initialScore;
     }
 
-    public Map<Score, Double> getAdjacent() {
+    public List<Score> getAdjacent() {
         return adjacent;
     }
 
-    public void addAdjacent(Score score, double dist) {
-        adjacent.put(score, dist);
+    public void addAdjacent(Score score) {
+        adjacent.add(score);
     }
 
     @Override
