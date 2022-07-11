@@ -18,7 +18,12 @@ public class MoveToWithPathfindingAction implements Action {
 
     @Override
     public void apply(Unit unit, UnitOrder order) {
-        var path = pathFinder.findPath(unit.getPotentialField(), unit.getPosition(), target);
+        if (unit.getPosition().getDistanceTo(target) < 2) {
+            new MoveToAction(target).apply(unit, order);
+            return;
+        }
+
+        var path = pathFinder.findPath(unit.getPotentialField(), unit.getPosition(), target).getPathPositions();
 
         unit.setCurrentPath(path);
 

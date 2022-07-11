@@ -30,8 +30,16 @@ public class Score {
         return score;
     }
 
+    public double getInitialScore() {
+        return initialScore;
+    }
+
     public void setInitialScore(double initialScore) {
         this.initialScore = initialScore;
+    }
+
+    public double getNonStaticScore() {
+        return score - initialScore;
     }
 
     public void reset() {

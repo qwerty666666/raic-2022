@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 public class AStarPathFinder implements PathFinder {
     @Override
-    public List<Position> findPath(PotentialField potentialField, Position startPosition, Position destination) {
+    public Path findPath(PotentialField potentialField, Position startPosition, Position destination) {
         var scores = potentialField.getScores();
         var graph = buildGraph(scores);
 
@@ -48,22 +48,22 @@ public class AStarPathFinder implements PathFinder {
         return buildPath(from, to);
     }
 
-    private List<Position> buildPath(Node from, Node to) {
+    private Path buildPath(Node from, Node to) {
         if (to.parent == null) {
             return null;
         }
 
-        var path = new ArrayList<Position>();
+        var path = new ArrayList<Score>();
         var tmp = to;
 
         while (tmp != from) {
-            path.add(tmp.getPosition());
+            path.add(tmp.score);
             tmp = tmp.parent;
         }
 
         Collections.reverse(path);
 
-        return path;
+        return new Path(path);
     }
 
     private Map<Position, Node> buildGraph(List<Score> scores) {

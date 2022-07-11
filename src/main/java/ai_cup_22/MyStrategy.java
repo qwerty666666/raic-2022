@@ -68,7 +68,7 @@ public class MyStrategy {
 //new SumCompositeScoreContributor()
 //        .add(new ZoneScoreContributor())
 //        .contribute(unit.getPotentialField());
-new PotentialFieldDrawable(unit.getPotentialField()).draw(debugInterface);
+//new PotentialFieldDrawable(unit.getPotentialField()).draw(debugInterface);
                 DebugData.getInstance().getCursorPosition().ifPresent(target -> {
 //                    var path = new AStarPathFinder().findPath(unit.getPotentialField(), unit.getPosition(), target);
 //                    new PathDrawable(path).draw(debugInterface);

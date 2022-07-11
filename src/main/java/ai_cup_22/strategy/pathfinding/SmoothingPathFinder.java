@@ -6,6 +6,7 @@ import ai_cup_22.strategy.geometry.Line;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Rectangle;
 import ai_cup_22.strategy.potentialfield.PotentialField;
+import ai_cup_22.strategy.potentialfield.Score;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,45 +18,47 @@ public class SmoothingPathFinder implements PathFinder {
     }
 
     @Override
-    public List<Position> findPath(PotentialField potentialField, Position startPosition, Position destination) {
+    public Path findPath(PotentialField potentialField, Position startPosition, Position destination) {
         var path = pathFinder.findPath(potentialField, startPosition, destination);
 
-        if (path == null || path.size() < 2) {
+        if (path == null || path.getScores().size() < 2) {
             return path;
         }
 
         return smoothPath(path);
     }
 
-    private List<Position> smoothPath(List<Position> path) {
-        var pathRect = new Rectangle(path.get(0), path.get(path.size() - 1)).increase(5);
+    private Path smoothPath(Path path) {
+        var pathNodes = path.getScores();
+        var pathRect = new Rectangle(pathNodes.get(0).getPosition(), pathNodes.get(pathNodes.size() - 1).getPosition())
+                .increase(5);
         var unitRadius = World.getInstance().getConstants().getUnitRadius();
         var obstacles = World.getInstance().getObstacles().values().stream()
                 .filter(obstacle -> pathRect.contains(obstacle.getCenter()))
                 .map(obstacle -> obstacle.getCircle().enlarge(unitRadius))
                 .toList();
 
-        var newPath = new ArrayList<Position>();
+        var newPath = new ArrayList<Score>();
 
         int from = 0;
-        newPath.add(path.get(from));
+        newPath.add(pathNodes.get(from));
 
-        while (from < path.size() - 1) {
-            int to = findFurtherDirectlyAccessiblePosition(path, obstacles, from);
-            newPath.add(path.get(to));
+        while (from < pathNodes.size() - 1) {
+            int to = findFurtherDirectlyAccessiblePosition(pathNodes, obstacles, from);
+            newPath.add(pathNodes.get(to));
             from = to;
         }
 
-        return newPath;
+        return new Path(newPath);
     }
 
-    private int findFurtherDirectlyAccessiblePosition(List<Position> path, List<Circle> obstacles, int from) {
+    private int findFurtherDirectlyAccessiblePosition(List<Score> path, List<Circle> obstacles, int from) {
         int left = from + 1;
         int right = path.size() - 1;
 
         while (left <= right) {
             int mid = (right + left) / 2;
-            var line = new Line(path.get(from), path.get(mid));
+            var line = new Line(path.get(from).getPosition(), path.get(mid).getPosition());
 
             if (obstacles.stream().anyMatch(obstacle -> obstacle.isIntersect(line))) {
                 right = mid - 1;
