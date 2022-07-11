@@ -14,11 +14,16 @@ import java.util.PriorityQueue;
 import java.util.stream.Collectors;
 
 public class AStarPathFinder implements PathFinder {
-    @Override
-    public Path findPath(PotentialField potentialField, Position startPosition, Position destination) {
-        var scores = potentialField.getScores();
-        var graph = buildGraph(scores);
+    private final PotentialField potentialField;
+    private final Map<Position, Node> graph;
 
+    public AStarPathFinder(PotentialField potentialField) {
+        this.potentialField = potentialField;
+        graph = buildGraph(potentialField.getScores());
+    }
+
+    @Override
+    public Path findPath(Position startPosition, Position destination) {
         var from = graph.computeIfAbsent(startPosition, p -> addNodeToGraph(graph, startPosition));
         var to = graph.computeIfAbsent(destination, p -> addNodeToGraph(graph, destination));
 

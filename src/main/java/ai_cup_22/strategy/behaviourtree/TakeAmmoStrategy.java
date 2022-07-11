@@ -43,12 +43,12 @@ public class TakeAmmoStrategy implements Strategy {
     }
 
     private Loot getBestAmmo() {
-        var pathFinder = new AStarPathFinder();
+        var pathFinder = new AStarPathFinder(unit.getPotentialField());
 
         var paths = getSuitableAmmoLoots().stream()
                 .collect(Collectors.toMap(
                         loot -> loot,
-                        loot -> pathFinder.findPath(unit.getPotentialField(), unit.getPosition(), loot.getPosition())
+                        loot -> pathFinder.findPath(unit.getPosition(), loot.getPosition())
                 ));
 
         // search by min sum of treats on the path

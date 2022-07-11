@@ -58,17 +58,12 @@ public class MyStrategy {
         if (DebugData.isEnabled) {
             updateUnitsDebugLayer();
             updateLootsDebugLayer();
-            updatePositionsDebugLayer();
+//            updatePositionsDebugLayer();
             updateDefaultDebugLayer();
 
-//        new PotentialFieldDrawable(world.getStaticPotentialField()).draw(debugInterface);
-
+//new PotentialFieldDrawable(unit.getPotentialField()).draw(debugInterface);
 
             for (var unit: world.getMyUnits().values()) {
-//new SumCompositeScoreContributor()
-//        .add(new ZoneScoreContributor())
-//        .contribute(unit.getPotentialField());
-//new PotentialFieldDrawable(unit.getPotentialField()).draw(debugInterface);
                 DebugData.getInstance().getCursorPosition().ifPresent(target -> {
 //                    var path = new AStarPathFinder().findPath(unit.getPotentialField(), unit.getPosition(), target);
 //                    new PathDrawable(path).draw(debugInterface);

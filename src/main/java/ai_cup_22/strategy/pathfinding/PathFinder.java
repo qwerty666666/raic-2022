@@ -5,5 +5,5 @@ import ai_cup_22.strategy.potentialfield.PotentialField;
 import java.util.List;
 
 public interface PathFinder {
-    Path findPath(PotentialField potentialField, Position startPosition, Position destination);
+    Path findPath(Position startPosition, Position destination);
 }

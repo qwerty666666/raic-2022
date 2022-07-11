@@ -10,7 +10,6 @@ import ai_cup_22.strategy.pathfinding.SmoothingPathFinder;
 
 public class MoveToWithPathfindingAction implements Action {
     private final Position target;
-    private final PathFinder pathFinder = new SmoothingPathFinder(new AStarPathFinder());
 
     public MoveToWithPathfindingAction(Position target) {
         this.target = target;
@@ -18,12 +17,8 @@ public class MoveToWithPathfindingAction implements Action {
 
     @Override
     public void apply(Unit unit, UnitOrder order) {
-        if (unit.getPosition().getDistanceTo(target) < 2) {
-            new MoveToAction(target).apply(unit, order);
-            return;
-        }
-
-        var path = pathFinder.findPath(unit.getPotentialField(), unit.getPosition(), target).getPathPositions();
+        var pathFinder = new SmoothingPathFinder(new AStarPathFinder(unit.getPotentialField()));
+        var path = pathFinder.findPath(unit.getPosition(), target).getPathPositions();
 
         unit.setCurrentPath(path);
 
@@ -35,6 +30,8 @@ public class MoveToWithPathfindingAction implements Action {
 
             // look to target by default
             new LookToAction(nextPosition).apply(unit, order);
+        } else {
+            new MoveToAction(target).apply(unit, order);
         }
     }
 }

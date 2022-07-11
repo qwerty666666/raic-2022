@@ -18,8 +18,8 @@ public class SmoothingPathFinder implements PathFinder {
     }
 
     @Override
-    public Path findPath(PotentialField potentialField, Position startPosition, Position destination) {
-        var path = pathFinder.findPath(potentialField, startPosition, destination);
+    public Path findPath(Position startPosition, Position destination) {
+        var path = pathFinder.findPath(startPosition, destination);
 
         if (path == null || path.getScores().size() < 2) {
             return path;
