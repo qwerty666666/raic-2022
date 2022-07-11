@@ -26,6 +26,10 @@ public class Weapon {
         return properties.getAimFieldOfView();
     }
 
+    public int getAimTicks() {
+        return (int)Math.ceil(properties.getAimTime() / World.getInstance().getTimePerTick());
+    }
+
     public static Weapon get(int id) {
         return weapons.computeIfAbsent(id, i -> new Weapon(World.getInstance().getConstants().getWeapons()[id]));
     }

@@ -19,6 +19,7 @@ public class World {
 
     private final Constants constants;
     private final int myId;
+    private int currentTick;
 
     private final Map<Integer, Obstacle> obstacles;
     private final List<Obstacle> nonShootThroughObstacles;
@@ -60,6 +61,8 @@ public class World {
     }
 
     public void updateTick(Game game) {
+        this.currentTick = game.getCurrentTick();
+
         updateUnits(game);
         updateZone(game);
         updateBullets(game);
@@ -179,5 +182,9 @@ public class World {
 
     public Map<Integer, Bullet> getBullets() {
         return bullets;
+    }
+
+    public int getCurrentTick() {
+        return currentTick;
     }
 }

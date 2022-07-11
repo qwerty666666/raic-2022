@@ -2,8 +2,6 @@ package ai_cup_22.strategy.models;
 
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.behaviourtree.BehaviourTree;
-import ai_cup_22.strategy.behaviourtree.ExploreStrategy;
-import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.CircleSegment;
 import ai_cup_22.strategy.geometry.Line;
@@ -73,6 +71,14 @@ public class Unit {
 
     public Circle getCircle() {
         return circle;
+    }
+
+    public int getTicksToFullAim() {
+        return getWeapon().getAimTicks();
+    }
+
+    public int getRemainingCoolDownTicks() {
+        return Math.max(0, unit.getNextShotTick() - World.getInstance().getCurrentTick());
     }
 
     public boolean canShoot(Unit enemy) {
