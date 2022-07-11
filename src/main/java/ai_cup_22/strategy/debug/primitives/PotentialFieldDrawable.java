@@ -17,13 +17,13 @@ public class PotentialFieldDrawable implements Drawable {
     public void draw(DebugInterface debugInterface) {
         potentialField.getScores().stream()
                 .filter(score -> score.getScore() != PotentialField.UNREACHABLE_VALUE)
-                .filter(score -> score.getPosition().getDistanceTo(new Position(0, 0)) < 20)
+//                .filter(score -> score.getPosition().getDistanceTo(new Position(0, 0)) < 20)
                 .map(score -> new CircleDrawable(new Circle(score.getPosition(), 0.5), getColor(score.getScore())))
                 .forEach(circle -> circle.draw(debugInterface));
 
         potentialField.getScores().stream()
                 .filter(score -> score.getScore() != PotentialField.UNREACHABLE_VALUE)
-                .filter(score -> score.getPosition().getDistanceTo(new Position(0, 0)) < 20)
+//                .filter(score -> score.getPosition().getDistanceTo(new Position(0, 0)) < 20)
                 .map(score -> new Text(String.format("%.2f", score.getScore()), score.getPosition(), 0.2))
                 .forEach(circle -> circle.draw(debugInterface));
     }

@@ -59,8 +59,7 @@ public class StaticPotentialField implements PotentialField {
             var circle = obstacle.getCircle().enlarge(unitRadius);
             var influenceRadius = circle.getRadius() + 2.5;
 
-            var obstaclesContributor = new CompositeScoreContributor()
-//                    .add(new ConstantOutCircleForceContributor(circle.enlargeToRadius(radius), 0))
+            var obstaclesContributor = new FirstMatchCompositeScoreContributor()
                     .add(new ConstantInCircleScoreContributor(circle, PotentialField.UNREACHABLE_VALUE))
                     .add(new LinearScoreContributor(circle.getCenter(), -50, -10, circle.getRadius(), influenceRadius));
 

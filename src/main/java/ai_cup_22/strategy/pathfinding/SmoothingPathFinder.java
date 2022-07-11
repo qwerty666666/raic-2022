@@ -5,7 +5,6 @@ import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Line;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Rectangle;
-import ai_cup_22.strategy.models.Obstacle;
 import ai_cup_22.strategy.potentialfield.PotentialField;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +57,7 @@ public class SmoothingPathFinder implements PathFinder {
             int mid = (right + left) / 2;
             var line = new Line(path.get(from), path.get(mid));
 
-            if (obstacles.stream().anyMatch(obstacle -> obstacle.intersect(line))) {
+            if (obstacles.stream().anyMatch(obstacle -> obstacle.isIntersect(line))) {
                 right = mid - 1;
             } else {
                 left = mid + 1;

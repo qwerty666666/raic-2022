@@ -6,18 +6,13 @@ import ai_cup_22.model.Order;
 import ai_cup_22.model.UnitOrder;
 import ai_cup_22.model.Vec2;
 import ai_cup_22.strategy.World;
-import ai_cup_22.strategy.actions.Action;
-import ai_cup_22.strategy.actions.CompositeAction;
-import ai_cup_22.strategy.actions.LookToAction;
-import ai_cup_22.strategy.actions.MoveToAction;
-import ai_cup_22.strategy.actions.MoveToWithPathfindingAction;
-import ai_cup_22.strategy.actions.ShootAction;
 import ai_cup_22.strategy.debug.DebugData;
-import ai_cup_22.strategy.debug.primitives.PathDrawable;
+import ai_cup_22.strategy.debug.primitives.PotentialFieldDrawable;
 import ai_cup_22.strategy.geometry.Position;
-import ai_cup_22.strategy.pathfinding.AStarPathFinder;
+import ai_cup_22.strategy.potentialfield.FirstMatchCompositeScoreContributor;
+import ai_cup_22.strategy.potentialfield.SumCompositeScoreContributor;
+import ai_cup_22.strategy.potentialfield.ZoneScoreContributor;
 import java.util.Collections;
-import java.util.Comparator;
 
 public class MyStrategy {
     private World world;
@@ -68,14 +63,28 @@ public class MyStrategy {
 
 //        new PotentialFieldDrawable(world.getStaticPotentialField()).draw(debugInterface);
 
-            DebugData.getInstance().getDefaultLayer().show(debugInterface);
 
-//            for (var unit: world.getMyUnits().values()) {
-//                DebugData.getInstance().getCursorPosition().ifPresent(target -> {
+            for (var unit: world.getMyUnits().values()) {
+//new SumCompositeScoreContributor()
+//        .add(new ZoneScoreContributor())
+//        .contribute(unit.getPotentialField());
+//new PotentialFieldDrawable(unit.getPotentialField()).draw(debugInterface);
+                DebugData.getInstance().getCursorPosition().ifPresent(target -> {
 //                    var path = new AStarPathFinder().findPath(unit.getPotentialField(), unit.getPosition(), target);
 //                    new PathDrawable(path).draw(debugInterface);
-//                });
-//            }
+
+//                    var line = new Line(unit.getPosition(), target);
+//                    World.getInstance().getObstacles().values().stream()
+//                            .forEach(obstacle -> {
+//                                line.getIntersectionPoints(obstacle.getCircle()).forEach(p -> {
+//                                    DebugData.getInstance().getDefaultLayer().add(new CircleDrawable(new Circle(p, 0.5), Colors.BLUE_TRANSPARENT));
+//                                });
+//                            });
+//                    DebugData.getInstance().getDefaultLayer().add(new ai_cup_22.strategy.debug.primitives.Line(line, Colors.BLUE_TRANSPARENT));
+                });
+            }
+
+            DebugData.getInstance().getDefaultLayer().show(debugInterface);
         }
 
         return new Order(orders);

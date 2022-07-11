@@ -72,8 +72,8 @@ public class World {
     public void updateTick(Game game) {
         this.currentTick = game.getCurrentTick();
 
-        updateUnits(game);
         updateZone(game);
+        updateUnits(game);
         updateBullets(game);
         updateLoot(game);
     }
@@ -96,6 +96,12 @@ public class World {
         removeDisappearedLoots(weaponLoots, seeingLoots);
         removeDisappearedLoots(ammoLoots, seeingLoots);
         removeDisappearedLoots(shieldLoots, seeingLoots);
+
+        if (getCurrentTick() % 10 == 0) {
+            removeLootsOutOfZone(weaponLoots);
+            removeLootsOutOfZone(ammoLoots);
+            removeLootsOutOfZone(shieldLoots);
+        }
     }
 
     private void removeDisappearedLoots(Map<Integer, ? extends Loot> loots, Set<Integer> seeingLoots) {
@@ -106,6 +112,14 @@ public class World {
         for (var loot: disappearedLoot) {
             loots.remove(loot.getId());
         }
+    }
+
+    private void removeLootsOutOfZone(Map<Integer, ? extends Loot> loots) {
+        loots.values().stream()
+                .filter(loot -> !zone.contains(loot.getPosition()))
+                .map(Loot::getId)
+                .toList()
+                .forEach(loots::remove);
     }
 
     private void updateBullets(Game game) {
@@ -143,7 +157,7 @@ public class World {
 
             // remove bullets which have hit my units
             var isHitMe = getMyUnits().values().stream()
-                    .anyMatch(unit -> unit.getCircle().intersect(bullet.getLastTickTrajectory()));
+                    .anyMatch(unit -> unit.getCircle().isIntersect(bullet.getLastTickTrajectory()));
             if (isHitMe) {
                 bullets.remove(id);
             }

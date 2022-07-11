@@ -2,7 +2,6 @@ package ai_cup_22.strategy.actions;
 
 import ai_cup_22.model.UnitOrder;
 import ai_cup_22.strategy.World;
-import ai_cup_22.strategy.geometry.Line;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.models.Bullet;
 import ai_cup_22.strategy.models.Unit;
@@ -51,6 +50,6 @@ public class DodgeBulletsAction implements Action {
     }
 
     private boolean isBulletTreatsUnit(Unit unit, Bullet bullet) {
-        return unit.getCircle().enlarge(0.3).intersect(bullet.getTrajectory());
+        return unit.getCircle().enlarge(0.3).isIntersect(bullet.getTrajectory());
     }
 }

@@ -19,6 +19,10 @@ public class Vector {
         this(p2.getX() - p1.getX(), p2.getY() - p1.getY());
     }
 
+    public Vector(Position p) {
+        this(p.getX(), p.getY());
+    }
+
     public double getX() {
         return x;
     }

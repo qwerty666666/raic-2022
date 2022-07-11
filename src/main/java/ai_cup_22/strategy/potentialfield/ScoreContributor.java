@@ -2,8 +2,20 @@ package ai_cup_22.strategy.potentialfield;
 
 public interface ScoreContributor {
     default boolean shouldContribute(Score score) {
-        return true;
+        return score.getScore() != PotentialField.UNREACHABLE_VALUE;
     }
 
-    void contribute(Score score);
+    double getScoreValue(Score score);
+
+    default void contribute(Score score) {
+        if (shouldContribute(score)) {
+            score.setScore(getScoreValue(score));
+        }
+    }
+
+    default void contribute(PotentialField potentialField) {
+        potentialField.getScores().stream()
+                .filter(this::shouldContribute)
+                .forEach(this::contribute);
+    }
 }

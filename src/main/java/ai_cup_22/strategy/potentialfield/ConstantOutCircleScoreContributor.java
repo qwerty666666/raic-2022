@@ -13,11 +13,19 @@ public class ConstantOutCircleScoreContributor implements ScoreContributor {
 
     @Override
     public boolean shouldContribute(Score score) {
+        if (!ScoreContributor.super.shouldContribute(score)) {
+            return false;
+        }
+
         return !circle.contains(score.getPosition());
     }
 
     @Override
-    public void contribute(Score score) {
-        score.increaseScore(this.score);
+    public double getScoreValue(Score score) {
+        if (!this.shouldContribute(score)) {
+            return 0;
+        }
+
+        return this.score;
     }
 }

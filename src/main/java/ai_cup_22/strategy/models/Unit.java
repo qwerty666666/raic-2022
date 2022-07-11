@@ -93,11 +93,11 @@ public class Unit {
         var line = new Line(getPosition(), enemy.getPosition());
 
         return World.getInstance().getNonShootThroughObstacles().stream()
-                .noneMatch(obstacle -> obstacle.getCircle().intersect(line))
+                .noneMatch(obstacle -> obstacle.getCircle().isIntersect(line))
                 &&
                 World.getInstance().getAllUnits().values().stream()
                         .filter(u -> u.getId() != this.getId() && u.getId() != enemy.getId())
-                        .noneMatch(u -> u.getCircle().intersect(line));
+                        .noneMatch(u -> u.getCircle().isIntersect(line));
     }
 
     public boolean hasWeapon() {

@@ -23,14 +23,21 @@ public class LinearScoreContributor implements ScoreContributor {
 
     @Override
     public boolean shouldContribute(Score score) {
+        if (!ScoreContributor.super.shouldContribute(score)) {
+            return false;
+        }
+
         var d = score.getPosition().getSquareDistanceTo(this.position);
+
         return d <= maxDist * maxDist && d >= minDist * minDist;
     }
 
     @Override
-    public void contribute(Score score) {
-        var delta = maxScore - ((this.position.getDistanceTo(score.getPosition()) - minDist) / (maxDist - minDist) * (maxScore - minScore));
+    public double getScoreValue(Score score) {
+        if (!this.shouldContribute(score)) {
+            return 0;
+        }
 
-        score.increaseScore(delta);
+        return maxScore - ((this.position.getDistanceTo(score.getPosition()) - minDist) / (maxDist - minDist) * (maxScore - minScore));
     }
 }

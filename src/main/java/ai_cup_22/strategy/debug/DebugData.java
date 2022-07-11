@@ -38,7 +38,6 @@ public class DebugData {
     }};
     private Set<String> turnedOnLayers = new HashSet<>() {{
         add("D");
-        add("L");
     }};
 
     public void setCursorPosition(Position cursorPosition) {

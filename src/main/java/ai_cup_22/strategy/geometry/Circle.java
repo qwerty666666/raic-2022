@@ -17,7 +17,7 @@ public class Circle {
         return radius;
     }
 
-    public boolean intersect(Line line) {
+    public boolean isIntersect(Line line) {
         return line.getStart().getDistanceTo(center) <= radius ||
                 line.getEnd().getDistanceTo(center) <= radius ||
                 (line.getDistanceTo(center) <= radius && line.contains(line.getProjection(center)));

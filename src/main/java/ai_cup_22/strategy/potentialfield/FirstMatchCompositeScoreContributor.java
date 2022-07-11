@@ -3,10 +3,10 @@ package ai_cup_22.strategy.potentialfield;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CompositeScoreContributor implements ScoreContributor {
+public class FirstMatchCompositeScoreContributor implements ScoreContributor {
     private final List<ScoreContributor> contributors = new ArrayList<>();
 
-    public CompositeScoreContributor add(ScoreContributor contributor) {
+    public FirstMatchCompositeScoreContributor add(ScoreContributor contributor) {
         contributors.add(contributor);
         return this;
     }
@@ -17,15 +17,15 @@ public class CompositeScoreContributor implements ScoreContributor {
     }
 
     @Override
-    public void contribute(Score score) {
+    public double getScoreValue(Score score) {
         if (!shouldContribute(score)) {
-            return;
+            return 0;
         }
 
-        contributors.stream()
+        return contributors.stream()
                 .filter(contributor -> contributor.shouldContribute(score))
                 .findFirst()
                 .get()
-                .contribute(score);
+                .getScoreValue(score);
     }
 }
