@@ -7,7 +7,6 @@ import ai_cup_22.strategy.actions.CompositeAction;
 import ai_cup_22.strategy.actions.DodgeBulletsAction;
 import ai_cup_22.strategy.actions.HoldDistanceAction;
 import ai_cup_22.strategy.actions.LookToAction;
-import ai_cup_22.strategy.actions.MoveToAction;
 import ai_cup_22.strategy.actions.MoveToWithPathfindingAction;
 import ai_cup_22.strategy.actions.ShootAction;
 import ai_cup_22.strategy.models.Unit;
@@ -64,5 +63,10 @@ public class FightStrategy implements Strategy {
         return enemies.stream()
                 .min(Comparator.comparingDouble(enemy -> enemy.getDistanceTo(me)))
                 .orElse(null);
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " (" + getOrder() + ") ";
     }
 }

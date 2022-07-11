@@ -10,6 +10,7 @@ import ai_cup_22.strategy.debug.primitives.Line;
 import ai_cup_22.strategy.debug.primitives.PathDrawable;
 import ai_cup_22.strategy.debug.primitives.Text;
 import ai_cup_22.strategy.geometry.Circle;
+import ai_cup_22.strategy.geometry.Vector;
 
 public class DefaultLayer extends DrawLayer {
     public void update(World world) {
@@ -18,9 +19,16 @@ public class DefaultLayer extends DrawLayer {
         addShootLines(world);
         addShootAreas(world);
         addUnitPaths(world);
+        addUnitStrategies(world);
         addBullets(world);
 
 //        addCursorPosition();
+    }
+
+    private void addUnitStrategies(World world) {
+        world.getMyUnits().values().forEach(unit -> {
+            add(new Text(unit.getBehaviourTree().getStrategy().toString(), unit.getPosition(), 0.5, new Vector(0.5, 2)));
+        });
     }
 
     private void addBullets(World world) {

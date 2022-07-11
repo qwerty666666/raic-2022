@@ -21,6 +21,11 @@ public class ExploreStrategy implements Strategy {
     }
 
     @Override
+    public double getOrder() {
+        return 0.1;
+    }
+
+    @Override
     public Action getAction() {
         if (positionToExplore == null || !getZone().contains(positionToExplore) ||
                 unit.getViewSegment().contains(positionToExplore)) {
@@ -43,5 +48,10 @@ public class ExploreStrategy implements Strategy {
 
     private Zone getZone() {
         return World.getInstance().getZone();
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " (" + getOrder() + ") ";
     }
 }

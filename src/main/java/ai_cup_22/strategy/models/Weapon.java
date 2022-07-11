@@ -36,6 +36,10 @@ public class Weapon {
         return (int)Math.ceil(properties.getAimTime() / World.getInstance().getTimePerTick());
     }
 
+    public int getMaxBulletCount() {
+        return properties.getMaxInventoryAmmo();
+    }
+
     public static Weapon get(int id) {
         return weapons.computeIfAbsent(id, i -> new Weapon(World.getInstance().getConstants().getWeapons()[id], id));
     }

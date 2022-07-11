@@ -108,6 +108,10 @@ public class Unit {
         return hasWeapon() ? unit.getAmmo()[unit.getWeapon()] : 0;
     }
 
+    public int getMaxBulletCount() {
+        return hasWeapon() ? getWeapon().getMaxBulletCount() : 0;
+    }
+
     public Weapon getWeapon() {
         if (unit.getWeapon() == null) {
             return null;
