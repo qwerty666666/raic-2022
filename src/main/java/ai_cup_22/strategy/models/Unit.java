@@ -142,6 +142,10 @@ public class Unit {
         return u.getPosition().getDistanceTo(this.getPosition());
     }
 
+    public boolean canTakeLoot(Loot loot) {
+        return circle.contains(loot.getPosition());
+    }
+
     @Override
     public int hashCode() {
         return getId();

@@ -253,4 +253,10 @@ public class World {
     public Map<Integer, AmmoLoot> getAmmoLoots() {
         return ammoLoots;
     }
+
+    public List<AmmoLoot> getAmmoLoots(int weaponId) {
+        return ammoLoots.values().stream()
+                .filter(loot -> loot.getWeaponId() == weaponId)
+                .toList();
+    }
 }

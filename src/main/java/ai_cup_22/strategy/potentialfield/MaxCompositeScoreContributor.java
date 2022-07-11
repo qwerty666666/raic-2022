@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class SumCompositeScoreContributor implements ScoreContributor {
+public class MaxCompositeScoreContributor implements ScoreContributor {
     private final List<ScoreContributor> contributors = new ArrayList<>();
 
-    public SumCompositeScoreContributor add(ScoreContributor contributor) {
+    public MaxCompositeScoreContributor add(ScoreContributor contributor) {
         contributors.add(contributor);
         return this;
     }
 
-    public SumCompositeScoreContributor add(Collection<? extends ScoreContributor> contributors) {
+    public MaxCompositeScoreContributor add(Collection<? extends ScoreContributor> contributors) {
         this.contributors.addAll(contributors);
         return this;
     }
@@ -26,7 +26,8 @@ public class SumCompositeScoreContributor implements ScoreContributor {
     public double getScoreValue(Score score) {
         return contributors.stream()
                 .mapToDouble(contributor -> contributor.getScoreValue(score))
-                .sum();
+                .max()
+                .orElse(0);
     }
 
     @Override

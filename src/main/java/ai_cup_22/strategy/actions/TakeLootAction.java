@@ -14,7 +14,7 @@ public class TakeLootAction implements Action {
 
     @Override
     public void apply(Unit unit, UnitOrder order) {
-        if (unit.getCircle().contains(loot.getPosition())) {
+        if (unit.canTakeLoot(loot)) {
             new MoveToAction(loot.getPosition()).apply(unit, order);
             order.setAction(new Pickup(loot.getId()));
         } else {
