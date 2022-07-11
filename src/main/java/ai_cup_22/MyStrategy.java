@@ -6,6 +6,7 @@ import ai_cup_22.model.Order;
 import ai_cup_22.model.UnitOrder;
 import ai_cup_22.model.Vec2;
 import ai_cup_22.strategy.World;
+import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.CompositeAction;
 import ai_cup_22.strategy.actions.LookToAction;
 import ai_cup_22.strategy.actions.MoveToAction;
@@ -45,35 +46,7 @@ public class MyStrategy {
         java.util.HashMap<Integer, UnitOrder> orders = new java.util.HashMap<>();
 
         for (var unit: world.getMyUnits().values()) {
-            var action = new CompositeAction();
-
-//            if (world.getEnemyUnits().isEmpty()) {
-//                action
-//                        .add(new MoveToAction(new Position(0, 0)))
-//                        .add(new LookToAction(unit.getDirection().rotate(Math.PI / 2).getEndPosition()));
-//            } else {
-//                var enemiesUnderAttack = world.getEnemyUnits().values().stream()
-//                        .filter(unit::canShoot)
-//                        .sorted(Comparator.comparingDouble(a -> a.getDistanceTo(unit)))
-//                        .toList();
-//
-//                if (!enemiesUnderAttack.isEmpty()) {
-//                    action
-//                            .add(new MoveToAction(new Position(0, 0)))
-//                            .add(new ShootAction(enemiesUnderAttack.get(0)));
-//                } else {
-//                    var target = world.getEnemyUnits().values().stream()
-//                            .min(Comparator.comparingDouble(a -> a.getDistanceTo(unit)))
-//                            .orElse(null);
-//
-//                    action
-//                            .add(new MoveToAction(new Position(0, 0)))
-//                            .add(new LookToAction(target));
-//                }
-//            }
-
-            action
-                    .add(new MoveToWithPathfindingAction(Position.ZERO));
+            var action = unit.getBehaviourTree().getStrategy().getAction();
 
             // default action - do nothing
             orders.computeIfAbsent(unit.getId(), id -> {

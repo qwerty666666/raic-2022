@@ -1,6 +1,9 @@
 package ai_cup_22.strategy.models;
 
 import ai_cup_22.strategy.World;
+import ai_cup_22.strategy.behaviourtree.BehaviourTree;
+import ai_cup_22.strategy.behaviourtree.ExploreStrategy;
+import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.CircleSegment;
 import ai_cup_22.strategy.geometry.Line;
@@ -17,6 +20,7 @@ public class Unit {
     private Vector direction;
     private UnitPotentialField potentialField = new UnitPotentialField(this);
     private List<Position> currentPath;
+    private BehaviourTree behaviourTree = new BehaviourTree(this);
 
     public void updateTick(ai_cup_22.model.Unit unit) {
         this.unit = unit;
@@ -24,6 +28,10 @@ public class Unit {
         this.direction = new Vector(unit.getDirection());
         this.potentialField.refresh();
         this.currentPath = Collections.emptyList();
+    }
+
+    public BehaviourTree getBehaviourTree() {
+        return behaviourTree;
     }
 
     public List<Position> getCurrentPath() {
@@ -93,8 +101,23 @@ public class Unit {
         return new CircleSegment(
                 new Circle(getPosition(), World.getInstance().getConstants().getViewDistance()),
                 direction.getAngle(),
-                hasWeapon() ? getWeapon().getSpread() / 180 * Math.PI : 0
+                hasWeapon() ? Math.toRadians(getWeapon().getSpread()) : 0
         );
+    }
+
+    public CircleSegment getViewSegment() {
+        var fieldOfView = Math.toRadians(World.getInstance().getConstants().getFieldOfView());
+        var aimFieldOfView = hasWeapon() ? Math.toRadians(getWeapon().getAimFieldOfView()) : fieldOfView;
+
+        return new CircleSegment(
+                new Circle(getPosition(), World.getInstance().getConstants().getViewDistance()),
+                direction.getAngle(),
+                fieldOfView - (fieldOfView - aimFieldOfView) * getAim()
+        );
+    }
+
+    public double getAim() {
+        return unit.getAim();
     }
 
     public double getDistanceTo(Unit u) {

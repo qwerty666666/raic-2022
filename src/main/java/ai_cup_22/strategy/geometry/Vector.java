@@ -31,6 +31,10 @@ public class Vector {
         return new Position(x, y);
     }
 
+    public Vector reverse() {
+        return increase(-1);
+    }
+
     public double getLength() {
         return Math.sqrt(x * x + y * y);
     }

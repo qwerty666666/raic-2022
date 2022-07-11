@@ -4,7 +4,6 @@ import ai_cup_22.model.UnitOrder;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Unit;
-import java.util.ArrayList;
 import java.util.List;
 
 public class MoveToAction implements Action {

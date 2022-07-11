@@ -2,27 +2,28 @@ package ai_cup_22.strategy.models;
 
 import ai_cup_22.model.WeaponProperties;
 import ai_cup_22.strategy.World;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Weapon {
     private static Map<Integer, Weapon> weapons = new HashMap<>();
 
-    private final double damage;
-    private final double spread;
+    private final WeaponProperties properties;
 
-    private Weapon(WeaponProperties w) {
-        damage = w.getProjectileDamage();
-        spread = w.getSpread();
+    private Weapon(WeaponProperties properties) {
+        this.properties = properties;
     }
 
     public double getDamage() {
-        return damage;
+        return properties.getProjectileDamage();
     }
 
     public double getSpread() {
-        return spread;
+        return properties.getSpread();
+    }
+
+    public double getAimFieldOfView() {
+        return properties.getAimFieldOfView();
     }
 
     public static Weapon get(int id) {

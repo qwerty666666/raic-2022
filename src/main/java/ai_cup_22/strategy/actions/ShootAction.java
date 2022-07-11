@@ -13,9 +13,9 @@ public class ShootAction implements Action {
 
     @Override
     public void apply(Unit unit, UnitOrder order) {
-        if (unit.getShootingSegment().contains(target.getPosition()) && unit.canShoot(target)) {
-            order.setAction(new Aim(true));
-        }
+        var shoot = unit.getShootingSegment().contains(target.getPosition()) && unit.canShoot(target);
+
+        order.setAction(new Aim(shoot));
 
         new LookToAction(target).apply(unit, order);
     }
