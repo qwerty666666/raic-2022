@@ -70,6 +70,10 @@ public class Bullet {
         return new Line(position.move(velocity.reverse()), position);
     }
 
+    public Line getTrajectory() {
+        return new Line(position, position.move(velocity.increase(getRemainingLifetimeTicks())));
+    }
+
     @Override
     public String toString() {
         return position.toString();

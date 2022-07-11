@@ -52,6 +52,18 @@ public class Line {
                 p.getY() >= Math.min(start.getY(), end.getY()) && p.getY() <= Math.max(start.getY(), end.getY());
     }
 
+    public Vector toVector() {
+        return new Vector(start, end);
+    }
+
+    public Line getPerpendicular() {
+        return toVector().rotate(Math.PI / 2).toLine();
+    }
+
+    public Line move(Vector v) {
+        return new Line(start.move(v), end.move(v));
+    }
+
     @Override
     public String toString() {
         return "Line{" +

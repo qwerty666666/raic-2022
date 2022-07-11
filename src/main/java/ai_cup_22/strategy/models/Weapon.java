@@ -9,9 +9,15 @@ public class Weapon {
     private static Map<Integer, Weapon> weapons = new HashMap<>();
 
     private final WeaponProperties properties;
+    private final int id;
 
-    private Weapon(WeaponProperties properties) {
+    private Weapon(WeaponProperties properties, int id) {
         this.properties = properties;
+        this.id = id;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public double getDamage() {
@@ -31,6 +37,6 @@ public class Weapon {
     }
 
     public static Weapon get(int id) {
-        return weapons.computeIfAbsent(id, i -> new Weapon(World.getInstance().getConstants().getWeapons()[id]));
+        return weapons.computeIfAbsent(id, i -> new Weapon(World.getInstance().getConstants().getWeapons()[id], id));
     }
 }

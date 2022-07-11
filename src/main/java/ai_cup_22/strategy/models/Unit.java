@@ -77,6 +77,10 @@ public class Unit {
         return getWeapon().getAimTicks();
     }
 
+    public double getMaxSpeedPerTick() {
+        return World.getInstance().getConstants().getMaxUnitForwardSpeed() * World.getInstance().getTimePerTick();
+    }
+
     public int getRemainingCoolDownTicks() {
         return Math.max(0, unit.getNextShotTick() - World.getInstance().getCurrentTick());
     }
@@ -94,6 +98,10 @@ public class Unit {
 
     public boolean hasWeapon() {
         return getWeapon() != null;
+    }
+
+    public int getBulletCount() {
+        return hasWeapon() ? unit.getAmmo()[unit.getWeapon()] : 0;
     }
 
     public Weapon getWeapon() {

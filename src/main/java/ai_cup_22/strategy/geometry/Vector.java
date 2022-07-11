@@ -53,6 +53,10 @@ public class Vector {
         return new Vec2(x, y);
     }
 
+    public Line toLine() {
+        return new Line(Position.ZERO, getEndPosition());
+    }
+
     public Vector rotate(double angle) {
         return new Vector(
                 x * Math.cos(angle) + y * Math.sin(angle),

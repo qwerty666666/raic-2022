@@ -4,6 +4,7 @@ import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.AimAction;
 import ai_cup_22.strategy.actions.CompositeAction;
+import ai_cup_22.strategy.actions.DodgeBulletsAction;
 import ai_cup_22.strategy.actions.HoldDistanceAction;
 import ai_cup_22.strategy.actions.LookToAction;
 import ai_cup_22.strategy.actions.MoveToAction;
@@ -35,7 +36,8 @@ public class FightStrategy implements Strategy {
 
             return new CompositeAction()
                     .add(new HoldDistanceAction(target.getPosition(), 18))
-                    .add(new ShootAction(target));
+                    .add(new ShootAction(target))
+                    .add(new DodgeBulletsAction());
         } else {
             // aim to the nearest enemy
             var target = getNearestEnemy(getEnemies());
@@ -43,7 +45,8 @@ public class FightStrategy implements Strategy {
             return new CompositeAction()
                     .add(new MoveToWithPathfindingAction(target.getPosition()))
                     .add(new LookToAction(target))
-                    .add(new AimAction());
+                    .add(new AimAction())
+                    .add(new DodgeBulletsAction());
         }
     }
 
