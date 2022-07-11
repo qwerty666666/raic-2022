@@ -2,7 +2,11 @@ package ai_cup_22.strategy;
 
 import ai_cup_22.model.Constants;
 import ai_cup_22.model.Game;
+import ai_cup_22.model.Item.ShieldPotions;
+import ai_cup_22.model.Item.Weapon;
+import ai_cup_22.strategy.models.AmmoLoot;
 import ai_cup_22.strategy.models.Bullet;
+import ai_cup_22.strategy.models.Loot;
 import ai_cup_22.strategy.models.Obstacle;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.models.Zone;
@@ -12,6 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class World {
@@ -32,6 +37,10 @@ public class World {
     private Zone zone;
 
     private Map<Integer, Bullet> bullets = new HashMap<>();
+
+    private Map<Integer, Loot> weaponLoots = new HashMap<>();
+    private Map<Integer, Loot> shieldLoots = new HashMap<>();
+    private Map<Integer, AmmoLoot> ammoLoots = new HashMap<>();
 
     private World(Constants constants, Game game) {
         this.constants = constants;
@@ -66,6 +75,37 @@ public class World {
         updateUnits(game);
         updateZone(game);
         updateBullets(game);
+        updateLoot(game);
+    }
+
+    private void updateLoot(Game game) {
+        var seeingLoots = new HashSet<Integer>();
+
+        for (var l: game.getLoot()) {
+            if (l.getItem() instanceof Weapon) {
+                weaponLoots.computeIfAbsent(l.getId(), id -> new Loot(l));
+            } else if (l.getItem() instanceof ShieldPotions) {
+                shieldLoots.computeIfAbsent(l.getId(), id -> new Loot(l));
+            } else {
+                ammoLoots.computeIfAbsent(l.getId(), id -> new AmmoLoot(l));
+            }
+
+            seeingLoots.add(l.getId());
+        }
+
+        removeDisappearedLoots(weaponLoots, seeingLoots);
+        removeDisappearedLoots(ammoLoots, seeingLoots);
+        removeDisappearedLoots(shieldLoots, seeingLoots);
+    }
+
+    private void removeDisappearedLoots(Map<Integer, ? extends Loot> loots, Set<Integer> seeingLoots) {
+        var disappearedLoot = loots.values().stream()
+                .filter(loot -> getMyUnits().values().stream().anyMatch(unit -> unit.canSee(loot.getPosition())))
+                .filter(loot -> !seeingLoots.contains(loot.getId()))
+                .toList();
+        for (var loot: disappearedLoot) {
+            loots.remove(loot.getId());
+        }
     }
 
     private void updateBullets(Game game) {
@@ -186,5 +226,17 @@ public class World {
 
     public int getCurrentTick() {
         return currentTick;
+    }
+
+    public Map<Integer, Loot> getWeaponLoots() {
+        return weaponLoots;
+    }
+
+    public Map<Integer, Loot> getShieldLoots() {
+        return shieldLoots;
+    }
+
+    public Map<Integer, AmmoLoot> getAmmoLoots() {
+        return ammoLoots;
     }
 }

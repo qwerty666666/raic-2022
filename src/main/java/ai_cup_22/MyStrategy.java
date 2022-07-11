@@ -62,6 +62,7 @@ public class MyStrategy {
 
         if (DebugData.isEnabled) {
             updateUnitsDebugLayer();
+            updateLootsDebugLayer();
             updatePositionsDebugLayer();
             updateDefaultDebugLayer();
 
@@ -87,6 +88,10 @@ public class MyStrategy {
 
     private void updateDefaultDebugLayer() {
         DebugData.getInstance().getDefaultLayer().update(world);
+    }
+
+    private void updateLootsDebugLayer() {
+        DebugData.getInstance().getLootsLayer().update(world);
     }
 
     private void updateObstaclesDebugLayer() {

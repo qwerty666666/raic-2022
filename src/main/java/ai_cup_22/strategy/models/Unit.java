@@ -85,6 +85,10 @@ public class Unit {
         return Math.max(0, unit.getNextShotTick() - World.getInstance().getCurrentTick());
     }
 
+    public boolean canSee(Position p) {
+        return getViewSegment().contains(p);
+    }
+
     public boolean canShoot(Unit enemy) {
         var line = new Line(getPosition(), enemy.getPosition());
 

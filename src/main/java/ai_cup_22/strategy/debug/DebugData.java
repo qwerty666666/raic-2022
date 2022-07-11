@@ -3,6 +3,7 @@ package ai_cup_22.strategy.debug;
 import ai_cup_22.DebugInterface;
 import ai_cup_22.strategy.debug.layers.DefaultLayer;
 import ai_cup_22.strategy.debug.layers.DrawLayer;
+import ai_cup_22.strategy.debug.layers.LootsLayer;
 import ai_cup_22.strategy.debug.layers.ObstaclesLayer;
 import ai_cup_22.strategy.debug.layers.PositionsLayer;
 import ai_cup_22.strategy.debug.layers.UnitsLayer;
@@ -26,16 +27,18 @@ public class DebugData {
     private final PositionsLayer positionsLayer = new PositionsLayer();
     private final DefaultLayer defaultLayer = new DefaultLayer();
     private final UnitsLayer unitsLayer = new UnitsLayer();
+    private final LootsLayer lootsLayer = new LootsLayer();
 
     private final Map<String, DrawLayer> layers = new HashMap<>() {{
         put("D", defaultLayer);
-        put("L", positionsLayer);
+        put("L", lootsLayer);
+        put("I", positionsLayer);
         put("O", obstaclesLayer);
         put("U", unitsLayer);
     }};
     private Set<String> turnedOnLayers = new HashSet<>() {{
         add("D");
-        add("O");
+        add("L");
     }};
 
     public void setCursorPosition(Position cursorPosition) {
@@ -44,6 +47,10 @@ public class DebugData {
 
     public Optional<Position> getCursorPosition() {
         return cursorPosition;
+    }
+
+    public LootsLayer getLootsLayer() {
+        return lootsLayer;
     }
 
     public ObstaclesLayer getObstaclesLayer() {
