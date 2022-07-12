@@ -54,6 +54,7 @@ public class LootShieldStrategy implements Strategy {
         @Override
         public double getOrder() {
             return getNearestLoot()
+                    .filter(this::canTakeLootOnlyAfterDisabledTime)
                     .map(loot -> {
                         var dist = unit.getPosition().getDistanceTo(loot.getPosition());
 
@@ -81,6 +82,11 @@ public class LootShieldStrategy implements Strategy {
         private Optional<Loot> getNearestLoot() {
             return getSuitableLoots().stream()
                     .min(Comparator.comparingDouble(loot -> unit.getPosition().getDistanceTo(loot.getPosition())));
+        }
+
+        private boolean canTakeLootOnlyAfterDisabledTime(Loot loot) {
+            return loot.getPosition().getDistanceTo(unit.getPosition()) >=
+                    unit.getTicksToNewActionBeAvailable() * unit.getMaxForwardSpeedPerTick();
         }
 
         @Override

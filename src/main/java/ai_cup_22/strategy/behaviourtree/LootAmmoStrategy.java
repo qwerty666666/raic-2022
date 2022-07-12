@@ -60,6 +60,7 @@ public class LootAmmoStrategy implements Strategy {
         @Override
         public double getOrder() {
             return getNearestAmmoLoot()
+                    .filter(this::canTakeLootOnlyAfterDisabledTime)
                     .map(ammo -> {
                         var dist = unit.getPosition().getDistanceTo(ammo.getPosition());
                         var maxBullets = unit.getMaxBulletCount();
@@ -87,6 +88,11 @@ public class LootAmmoStrategy implements Strategy {
         private Optional<AmmoLoot> getNearestAmmoLoot() {
             return getSuitableAmmoLoots().stream()
                     .min(Comparator.comparingDouble(loot -> unit.getPosition().getDistanceTo(loot.getPosition())));
+        }
+
+        private boolean canTakeLootOnlyAfterDisabledTime(Loot loot) {
+            return loot.getPosition().getDistanceTo(unit.getPosition()) >=
+                    unit.getTicksToNewActionBeAvailable() * unit.getMaxForwardSpeedPerTick();
         }
 
         @Override
