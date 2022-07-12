@@ -3,6 +3,7 @@ package ai_cup_22.strategy.actions;
 import ai_cup_22.model.UnitOrder;
 import ai_cup_22.strategy.models.Unit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class CompositeAction implements Action {
@@ -10,6 +11,12 @@ public class CompositeAction implements Action {
 
     public CompositeAction add(Action action) {
         this.actions.add(action);
+
+        return this;
+    }
+
+    public CompositeAction add(Collection<Action> actions) {
+        this.actions.addAll(actions);
 
         return this;
     }

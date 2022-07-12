@@ -2,6 +2,7 @@ package ai_cup_22.strategy.actions;
 
 import ai_cup_22.model.UnitOrder;
 import ai_cup_22.strategy.World;
+import ai_cup_22.strategy.actions.basic.MoveToAction;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.models.Bullet;
 import ai_cup_22.strategy.models.Unit;

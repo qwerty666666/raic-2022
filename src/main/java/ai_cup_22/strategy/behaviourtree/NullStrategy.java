@@ -1,7 +1,7 @@
 package ai_cup_22.strategy.behaviourtree;
 
 import ai_cup_22.strategy.actions.Action;
-import ai_cup_22.strategy.actions.NullAction;
+import ai_cup_22.strategy.actions.basic.NullAction;
 
 public class NullStrategy implements Strategy {
     @Override

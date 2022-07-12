@@ -1,7 +1,8 @@
 package ai_cup_22.strategy.actions;
 
-import ai_cup_22.model.ActionOrder.Aim;
 import ai_cup_22.model.UnitOrder;
+import ai_cup_22.strategy.actions.basic.AimAction;
+import ai_cup_22.strategy.actions.basic.LookToAction;
 import ai_cup_22.strategy.models.Unit;
 
 public class ShootAction implements Action {

@@ -1,10 +1,10 @@
 package ai_cup_22.strategy.actions;
 
 import ai_cup_22.model.UnitOrder;
+import ai_cup_22.strategy.actions.basic.MoveToAction;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Unit;
-import java.util.List;
 
 public class HoldDistanceAction implements Action {
     private final Position target;
@@ -25,8 +25,7 @@ public class HoldDistanceAction implements Action {
             velocity = new Vector(unit.getPosition(), target);
         }
 
-//        unit.setCurrentPath(List.of(unit.getPosition(), target));
-
-        order.setTargetVelocity(velocity.normalizeToLength(10).toVec2());
+        new MoveToAction(unit.getPosition().move(velocity.normalizeToLength(2)))
+                .apply(unit, order);
     }
 }

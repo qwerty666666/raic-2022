@@ -33,7 +33,7 @@ public interface Strategy {
             sb.append(" {\n");
 
             loosedStrategies.forEach(loosedStrategy -> {
-                sb.append(StringUtils.pad("--" + toString(loosedStrategy), 4) + "\n");
+                sb.append(StringUtils.pad("--- " + toString(loosedStrategy), 4) + "\n");
             });
 
             sb.append(StringUtils.pad(child.toString(), 4));

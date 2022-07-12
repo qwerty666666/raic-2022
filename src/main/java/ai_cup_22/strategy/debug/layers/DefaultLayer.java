@@ -21,6 +21,7 @@ public class DefaultLayer extends DrawLayer {
 
         addUnitPaths(world);
         addUnitStrategies(world);
+        addUnitShields(world);
 
         addBullets(world);
 
@@ -30,6 +31,15 @@ public class DefaultLayer extends DrawLayer {
     private void addUnitStrategies(World world) {
         world.getMyUnits().values().forEach(unit -> {
             add(new Text(unit.getBehaviourTree().getStrategy().toString(), unit.getPosition(), 0.5, new Vector(0, 2)));
+        });
+    }
+
+    private void addUnitShields(World world) {
+        world.getMyUnits().values().forEach(unit -> {
+            add(new Text("Shields: " + unit.getShieldPotions(), unit.getPosition(), 0.3, new Vector(0, -2)));
+        });
+        world.getEnemyUnits().values().forEach(unit -> {
+            add(new Text("Shields: " + unit.getShieldPotions(), unit.getPosition(), 0.3, new Vector(0, -1)));
         });
     }
 

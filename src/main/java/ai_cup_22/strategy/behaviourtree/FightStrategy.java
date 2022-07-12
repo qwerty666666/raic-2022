@@ -2,11 +2,11 @@ package ai_cup_22.strategy.behaviourtree;
 
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
-import ai_cup_22.strategy.actions.AimAction;
+import ai_cup_22.strategy.actions.basic.AimAction;
 import ai_cup_22.strategy.actions.CompositeAction;
 import ai_cup_22.strategy.actions.DodgeBulletsAction;
 import ai_cup_22.strategy.actions.HoldDistanceAction;
-import ai_cup_22.strategy.actions.LookToAction;
+import ai_cup_22.strategy.actions.basic.LookToAction;
 import ai_cup_22.strategy.actions.MoveToWithPathfindingAction;
 import ai_cup_22.strategy.actions.ShootAction;
 import ai_cup_22.strategy.models.Unit;
@@ -19,6 +19,11 @@ public class FightStrategy implements Strategy {
 
     public FightStrategy(Unit me) {
         this.me = me;
+    }
+
+    @Override
+    public double getOrder() {
+        return MAX_ORDER;
     }
 
     @Override

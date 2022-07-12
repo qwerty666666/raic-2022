@@ -8,6 +8,7 @@ public class BehaviourTree {
     private FightStrategy fightStrategy;
     private LootAmmoStrategy lootAmmoStrategy;
     private LootShieldStrategy lootShieldStrategy;
+    private TakeShieldPotionStrategy takeShieldPotionStrategy;
     private Unit unit;
 
     public BehaviourTree(Unit unit) {
@@ -16,16 +17,20 @@ public class BehaviourTree {
         fightStrategy = new FightStrategy(unit);
         lootAmmoStrategy = new LootAmmoStrategy(unit, exploreStrategy);
         lootShieldStrategy = new LootShieldStrategy(unit, exploreStrategy);
+        takeShieldPotionStrategy = new TakeShieldPotionStrategy(unit);
     }
 
     public Strategy getStrategy() {
-        return new FirstMatchCompositeStrategy()
-                .add(() -> unit.getBulletCount() == 0, lootAmmoStrategy)
-                .add(() -> !World.getInstance().getEnemyUnits().isEmpty(), fightStrategy)
-                .add(() -> true, new MaxOrderCompositeStrategy()
-                        .add(lootAmmoStrategy)
-                        .add(lootShieldStrategy)
-                        .add(exploreStrategy)
+        return new AndStrategy()
+                .add(takeShieldPotionStrategy)
+                .add(new FirstMatchCompositeStrategy()
+                        .add(() -> unit.getBulletCount() == 0, lootAmmoStrategy)
+                        .add(() -> !World.getInstance().getEnemyUnits().isEmpty(), fightStrategy)
+                        .add(() -> true, new MaxOrderCompositeStrategy()
+                                .add(lootAmmoStrategy)
+                                .add(lootShieldStrategy)
+                                .add(exploreStrategy)
+                        )
                 );
     }
 }

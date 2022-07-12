@@ -1,11 +1,12 @@
 package ai_cup_22.strategy.actions;
 
 import ai_cup_22.model.UnitOrder;
+import ai_cup_22.strategy.actions.basic.LookToAction;
+import ai_cup_22.strategy.actions.basic.MoveToAction;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.pathfinding.AStarPathFinder;
-import ai_cup_22.strategy.pathfinding.PathFinder;
 import ai_cup_22.strategy.pathfinding.SmoothingPathFinder;
 
 public class MoveToWithPathfindingAction implements Action {

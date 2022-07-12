@@ -1,6 +1,9 @@
 package ai_cup_22.strategy.models;
 
+import ai_cup_22.model.ActionOrder.Pickup;
 import ai_cup_22.strategy.World;
+import ai_cup_22.strategy.actions.basic.OrderAction;
+import ai_cup_22.strategy.actions.basic.PickupAction;
 import ai_cup_22.strategy.behaviourtree.BehaviourTree;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.CircleSegment;
@@ -19,6 +22,8 @@ public class Unit {
     private UnitPotentialField potentialField = new UnitPotentialField(this);
     private List<Position> currentPath;
     private BehaviourTree behaviourTree = new BehaviourTree(this);
+    private OrderAction lastAction;
+    private int lastLootingTick = -100;
 
     public void updateTick(ai_cup_22.model.Unit unit) {
         this.unit = unit;
@@ -26,6 +31,9 @@ public class Unit {
         this.direction = new Vector(unit.getDirection());
         this.potentialField.refresh();
         this.currentPath = Collections.emptyList();
+        if (this.lastAction != null) {
+            lastAction.updateTick(this, unit.getAction());
+        }
     }
 
     public BehaviourTree getBehaviourTree() {
@@ -164,6 +172,25 @@ public class Unit {
 
     public double getMaxShield() {
         return World.getInstance().getConstants().getMaxShield();
+    }
+
+    public boolean canDoNewAction() {
+        int lootingTicks = (int) (Math.ceil(World.getInstance().getConstants().getLootingTime() / World.getInstance().getTimePerTick()));
+        return lastLootingTick + lootingTicks <= World.getInstance().getCurrentTick();
+    }
+
+    public OrderAction getLastAction() {
+        return lastAction;
+    }
+
+    public Unit setLastAction(OrderAction lastAction) {
+        this.lastAction = lastAction;
+        return this;
+    }
+
+    public Unit setLastLootingTick(int lastLootingTick) {
+        this.lastLootingTick = lastLootingTick;
+        return this;
     }
 
     @Override

@@ -61,8 +61,9 @@ public class LootShieldStrategy implements Strategy {
                                 .get(dist);
                         var countMul = new FirstMatchDistributor()
                                 // 0.15 -- dist < MAX_DIST * 0.3
-                                .add(val -> val < 5, new LinearDistributor(2, 5, 1, 0.15))
-                                .add(val -> val < unit.getMaxShieldPotions(), new ConstDistributor(0.15))
+//                                .add(val -> val < 5, new LinearDistributor(2, 5, 1, 0.15))
+//                                .add(val -> val < unit.getMaxShieldPotions(), new ConstDistributor(0.15))
+                                .add(val -> true, new LinearDistributor(2, unit.getMaxShieldPotions(), 1, 0))
                                 .get(unit.getShieldPotions());
 
                         return distMul * countMul;
