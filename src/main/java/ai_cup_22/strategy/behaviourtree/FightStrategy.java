@@ -39,7 +39,7 @@ public class FightStrategy implements Strategy {
             var target = getNearestEnemy(enemiesUnderAttack);
 
             return new CompositeAction()
-                    .add(new HoldDistanceAction(target.getPosition(), 18))
+                    .add(new HoldDistanceAction(target.getPosition(), target.getThreatenDistanceFor(me)))
                     .add(new ShootAction(target))
                     .add(new DodgeBulletsAction());
         } else {

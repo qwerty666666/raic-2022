@@ -74,6 +74,14 @@ public class Unit {
         return getSpeedVector().getLength();
     }
 
+    public double getMaxForwardSpeedPerTick() {
+        return World.getInstance().getConstants().getMaxUnitForwardSpeed() *  World.getInstance().getTimePerTick();
+    }
+
+    public double getMaxBackwardSpeedPreTick() {
+        return World.getInstance().getConstants().getMaxUnitBackwardSpeed() *  World.getInstance().getTimePerTick();
+    }
+
     public Circle getCircle() {
         return circle;
     }
@@ -186,6 +194,10 @@ public class Unit {
     public Unit setLastAction(ActionBlockingAction lastAction) {
         this.lastAction = lastAction;
         return this;
+    }
+
+    public double getThreatenDistanceFor(Unit unit) {
+        return 18;
     }
 
     @Override

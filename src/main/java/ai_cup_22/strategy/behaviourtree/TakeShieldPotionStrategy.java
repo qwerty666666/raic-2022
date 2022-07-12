@@ -28,18 +28,20 @@ public class TakeShieldPotionStrategy implements Strategy {
             return false;
         }
 
-        if ((unit.getMaxShield() - unit.getShield()) / 2 < shieldPotionHealth) {
+        // two hits from  .. , or 4 hits from ..
+        if (unit.getShield() > 160) {
             return false;
         }
 
-        return getDistanceToNearestEnemy() > 30;
+        return World.getInstance().getEnemyUnits().values().stream()
+                .allMatch(enemy -> enemy.getDistanceTo(unit) >= getMinDistToEnemyToSafelyRetreatForDisabledTime(enemy));
     }
 
-    private double getDistanceToNearestEnemy() {
-        return World.getInstance().getEnemyUnits().values().stream()
-                .mapToDouble(enemy -> enemy.getDistanceTo(unit))
-                .min()
-                .orElse(Double.MAX_VALUE);
+    private double getMinDistToEnemyToSafelyRetreatForDisabledTime(Unit enemy) {
+        var speedDiff = (enemy.getMaxForwardSpeedPerTick() - unit.getMaxBackwardSpeedPreTick());
+        var retreatDistance = speedDiff * unit.getTicksToNewActionBeAvailable();
+
+        return enemy.getThreatenDistanceFor(unit) + retreatDistance;
     }
 
     @Override
