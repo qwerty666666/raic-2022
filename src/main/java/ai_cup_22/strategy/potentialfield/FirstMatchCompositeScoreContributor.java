@@ -13,19 +13,22 @@ public class FirstMatchCompositeScoreContributor implements ScoreContributor {
 
     @Override
     public boolean shouldContribute(Score score) {
-        return contributors.stream().anyMatch(c -> c.shouldContribute(score));
+        for (var c: contributors) {
+            if (c.shouldContribute(score)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
     public double getScoreValue(Score score) {
-        if (!shouldContribute(score)) {
-            return 0;
+        for (var contributor: contributors) {
+            if (contributor.shouldContribute(score)) {
+                return contributor.getScoreValue(score);
+            }
         }
 
-        return contributors.stream()
-                .filter(contributor -> contributor.shouldContribute(score))
-                .findFirst()
-                .get()
-                .getScoreValue(score);
+        return 0;
     }
 }

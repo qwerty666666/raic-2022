@@ -5,50 +5,38 @@ import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Position;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class StaticPotentialField implements PotentialField {
-    private double startX;
-    private double startY;
+    public static final double TREE_MAX_INFLUENCE_RADIUS = 2.5;
+    public static final double TREE_MIN_SCORE = -50;
+
+    private double startCoord;
     private double stepSize = PotentialField.STEP_SIZE;
-    private Map<Double, Map<Double, Score>> scores;
-    private double[] yCoordinates;
-    private double[] xCoordinates;
     private int gridSize;
+    private Score[][] scores;
+
+    private List<Score> allScores;
 
     public StaticPotentialField(World world) {
         initValues();
         fillStaticData(world);
+        buildGraph();
     }
 
     private void initValues() {
         var initRadius = World.getInstance().getConstants().getInitialZoneRadius();
         gridSize = (int) (initRadius * 2 / PotentialField.STEP_SIZE);
 
-        startX = -initRadius;
-        startY = -initRadius;
-
-        xCoordinates = new double[gridSize];
-        yCoordinates = new double[gridSize];
-        for (int i = 0; i < gridSize; i++) {
-            xCoordinates[i] = yCoordinates[i] = -initRadius + i * stepSize;
-        }
+        startCoord = -initRadius;
 
         // init scores
-        scores = new LinkedHashMap<>(gridSize);
-        for (var x: xCoordinates) {
-            var row = scores.computeIfAbsent(x, xx -> new LinkedHashMap<>(gridSize));
-
-            for (var y: yCoordinates) {
-                row.put(y, new Score(new Position(x, y)));
+        scores = new Score[gridSize][gridSize];
+        for (int x = 0; x < gridSize; x++) {
+            for (int y = 0; y < gridSize; y++) {
+                scores[x][y] = new Score(new Position(stepSize * x + startCoord, stepSize * y + startCoord));
             }
         }
-    }
-
-    private Score getScoreAtInd(int x, int y) {
-        return scores.get(xCoordinates[x]).get(yCoordinates[y]);
     }
 
     private void fillStaticData(World world) {
@@ -57,77 +45,73 @@ public class StaticPotentialField implements PotentialField {
         // add trees penalty
         world.getObstacles().forEach((id, obstacle) -> {
             var circle = obstacle.getCircle().enlarge(unitRadius);
-            var influenceRadius = circle.getRadius() + 2.5;
+            var influenceRadius = circle.getRadius() + TREE_MAX_INFLUENCE_RADIUS;
 
             var obstaclesContributor = new FirstMatchCompositeScoreContributor()
                     .add(new ConstantInCircleScoreContributor(circle, PotentialField.UNREACHABLE_VALUE))
-                    .add(new LinearScoreContributor(circle.getCenter(), -50, -10, circle.getRadius(), influenceRadius));
+                    .add(new LinearScoreContributor(circle.getCenter(), TREE_MIN_SCORE, 0, circle.getRadius(), influenceRadius));
 
             getScoresInCircle(new Circle(circle.getCenter(), influenceRadius))
                     .forEach(obstaclesContributor::contribute);
         });
 
         // set initial scores
-        scores.values().stream()
-                .flatMap(s -> s.values().stream())
-                .forEach(score -> score.setInitialScore(score.getScore()));
+        for (var col: scores) {
+            for (var score: col) {
+                score.setInitialScore(score.getScore());
+            }
+        }
     }
 
-    public void buildGraph() {
+    private void buildGraph() {
         // add scores adjacent graph
         for (int x = 0; x < gridSize; x++) {
             for (int y = 0; y < gridSize; y++) {
-                var score = getScoreAtInd(x, y);
+                var score = scores[x][y];
                 if (x > 0) {
-                    score.addAdjacent(getScoreAtInd(x - 1, y));
+                    score.addAdjacent(scores[x - 1][y]);
                 }
                 if (x < gridSize - 1) {
-                    score.addAdjacent(getScoreAtInd(x + 1, y));
+                    score.addAdjacent(scores[x + 1][y]);
                 }
                 if (y > 0) {
-                    score.addAdjacent(getScoreAtInd(x, y - 1));
+                    score.addAdjacent(scores[x][y - 1]);
                 }
                 if (y < gridSize - 1) {
-                    score.addAdjacent(getScoreAtInd(x, y + 1));
+                    score.addAdjacent(scores[x][y + 1]);
                 }
                 if (x > 0 && y > 0) {
-                    score.addAdjacent(getScoreAtInd(x - 1, y - 1));
+                    score.addAdjacent(scores[x - 1][y - 1]);
                 }
                 if (x > 0 && y < gridSize - 1) {
-                    score.addAdjacent(getScoreAtInd(x - 1, y + 1));
+                    score.addAdjacent(scores[x - 1][y + 1]);
                 }
                 if (x < gridSize - 1 && y > 0) {
-                    score.addAdjacent(getScoreAtInd(x + 1, y - 1));
+                    score.addAdjacent(scores[x + 1][y - 1]);
                 }
                 if (x < gridSize - 1 && y < gridSize - 1) {
-                    score.addAdjacent(getScoreAtInd(x + 1, y + 1));
+                    score.addAdjacent(scores[x + 1][y + 1]);
                 }
             }
         }
     }
 
+    private int getIndex(double coord) {
+        return (int) Math.max(0, Math.min(gridSize, (coord - startCoord) / stepSize));
+    }
+
     public List<Score> getScoresInCircle(Circle circle) {
         var list = new ArrayList<Score>();
 
-        var bottom = circle.getCenter().getY() - circle.getRadius();
-        var bottomInd = Arrays.binarySearch(yCoordinates, bottom);
-        bottomInd = bottomInd >= 0 ? bottomInd : Math.min(gridSize - 1, -bottomInd - 1);
+        int minX = getIndex(circle.getCenter().getX() - circle.getRadius());
+        int maxX = getIndex(circle.getCenter().getX() + circle.getRadius());
+        int minY = getIndex(circle.getCenter().getY() - circle.getRadius());
+        int maxY = getIndex(circle.getCenter().getY() + circle.getRadius());
 
-        var top = circle.getCenter().getY() + circle.getRadius();
-        var topInd = Arrays.binarySearch(yCoordinates, top);
-        topInd = topInd >= 0 ? topInd : Math.min(gridSize - 1, -topInd - 1);
+        for (int x = minX; x < maxX; x++) {
+            for (int y = minY; y < maxY; y++) {
+                var score = scores[x][y];
 
-        var left = circle.getCenter().getX() - circle.getRadius();
-        var leftInd = Arrays.binarySearch(xCoordinates, left);
-        leftInd = leftInd >= 0 ? leftInd : Math.min(gridSize - 1, -leftInd - 1);
-
-        var right = circle.getCenter().getX() + circle.getRadius();
-        var rightInd = Arrays.binarySearch(xCoordinates, right);
-        rightInd = rightInd >= 0 ? rightInd : Math.min(gridSize - 1, -rightInd - 1);
-
-        for (int x = leftInd; x <= rightInd; x++) {
-            for (int y = bottomInd; y <= topInd; y++) {
-                var score = scores.get(xCoordinates[x]).get(yCoordinates[y]);
                 if (circle.contains(score.getPosition())) {
                     list.add(score);
                 }
@@ -139,8 +123,11 @@ public class StaticPotentialField implements PotentialField {
 
     @Override
     public List<Score> getScores() {
-        return scores.values().stream()
-                .flatMap(s -> s.values().stream())
-                .toList();
+        if (allScores == null) {
+            allScores = Arrays.stream(scores)
+                    .flatMap(Arrays::stream)
+                    .toList();
+        }
+        return allScores;
     }
 }

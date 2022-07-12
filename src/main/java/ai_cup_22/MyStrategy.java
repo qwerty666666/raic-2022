@@ -23,19 +23,18 @@ public class MyStrategy {
     }
 
     public Order getOrder(Game game, DebugInterface debugInterface) {
+        long start = 0;
+        if (DebugData.isEnabled) {
+            start = System.currentTimeMillis();
+        }
+
+
         if (game.getCurrentTick() == 0) {
             initWorld(game);
 //            updateObstaclesDebugLayer();
-            return new Order(Collections.emptyMap());
-        }
-
-        if (game.getCurrentTick() == 1) {
-            world.getStaticPotentialField().buildGraph();
         }
 
         world.updateTick(game);
-
-
 
 
         java.util.HashMap<Integer, UnitOrder> orders = new java.util.HashMap<>();
@@ -61,9 +60,9 @@ public class MyStrategy {
 //            updatePositionsDebugLayer();
             updateDefaultDebugLayer();
 
-//new PotentialFieldDrawable(unit.getPotentialField()).draw(debugInterface);
-
             for (var unit: world.getMyUnits().values()) {
+//                new PotentialFieldDrawable(unit.getPotentialField()).draw(debugInterface);
+
                 DebugData.getInstance().getCursorPosition().ifPresent(target -> {
 //                    var path = new AStarPathFinder().findPath(unit.getPotentialField(), unit.getPosition(), target);
 //                    new PathDrawable(path).draw(debugInterface);
@@ -80,6 +79,8 @@ public class MyStrategy {
             }
 
             DebugData.getInstance().getDefaultLayer().show(debugInterface);
+
+            System.out.println(World.getInstance().getCurrentTick() + " " + (System.currentTimeMillis() - start));
         }
 
         return new Order(orders);
