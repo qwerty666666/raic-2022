@@ -16,6 +16,6 @@ public class NullStrategy implements Strategy {
 
     @Override
     public String toString() {
-        return "NullStrategy";
+        return Strategy.toString(this);
     }
 }

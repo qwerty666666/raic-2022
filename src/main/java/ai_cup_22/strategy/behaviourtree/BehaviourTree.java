@@ -7,6 +7,7 @@ public class BehaviourTree {
     private ExploreStrategy exploreStrategy;
     private FightStrategy fightStrategy;
     private LootAmmoStrategy lootAmmoStrategy;
+    private LootShieldStrategy lootShieldStrategy;
     private Unit unit;
 
     public BehaviourTree(Unit unit) {
@@ -14,6 +15,7 @@ public class BehaviourTree {
         exploreStrategy = new ExploreStrategy(unit);
         fightStrategy = new FightStrategy(unit);
         lootAmmoStrategy = new LootAmmoStrategy(unit, exploreStrategy);
+        lootShieldStrategy = new LootShieldStrategy(unit, exploreStrategy);
     }
 
     public Strategy getStrategy() {
@@ -22,6 +24,7 @@ public class BehaviourTree {
                 .add(() -> !World.getInstance().getEnemyUnits().isEmpty(), fightStrategy)
                 .add(() -> true, new MaxOrderCompositeStrategy()
                         .add(lootAmmoStrategy)
+                        .add(lootShieldStrategy)
                         .add(exploreStrategy)
                 );
     }

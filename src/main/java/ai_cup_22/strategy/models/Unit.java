@@ -150,6 +150,22 @@ public class Unit {
         return circle.contains(loot.getPosition());
     }
 
+    public int getShieldPotions() {
+        return unit.getShieldPotions();
+    }
+
+    public int getMaxShieldPotions() {
+        return World.getInstance().getConstants().getMaxShieldPotionsInInventory();
+    }
+
+    public double getShield() {
+        return unit.getShield();
+    }
+
+    public double getMaxShield() {
+        return World.getInstance().getConstants().getMaxShield();
+    }
+
     @Override
     public int hashCode() {
         return getId();

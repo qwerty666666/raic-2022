@@ -18,8 +18,10 @@ public class DefaultLayer extends DrawLayer {
 
         addShootLines(world);
         addShootAreas(world);
+
         addUnitPaths(world);
         addUnitStrategies(world);
+
         addBullets(world);
 
 //        addCursorPosition();
@@ -27,7 +29,7 @@ public class DefaultLayer extends DrawLayer {
 
     private void addUnitStrategies(World world) {
         world.getMyUnits().values().forEach(unit -> {
-            add(new Text(unit.getBehaviourTree().getStrategy().toString(), unit.getPosition(), 0.5, new Vector(0.5, 2)));
+            add(new Text(unit.getBehaviourTree().getStrategy().toString(), unit.getPosition(), 0.5, new Vector(0, 2)));
         });
     }
 

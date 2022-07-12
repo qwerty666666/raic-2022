@@ -52,6 +52,6 @@ public class ExploreStrategy implements Strategy {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " (" + getOrder() + ") ";
+        return Strategy.toString(this);
     }
 }

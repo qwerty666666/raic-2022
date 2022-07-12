@@ -3,6 +3,8 @@ package ai_cup_22.strategy.behaviourtree;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.TakeLootAction;
+import ai_cup_22.strategy.distributions.FirstMatchDistributor;
+import ai_cup_22.strategy.distributions.LinearDistributor;
 import ai_cup_22.strategy.models.AmmoLoot;
 import ai_cup_22.strategy.models.Loot;
 import ai_cup_22.strategy.models.Unit;
@@ -14,7 +16,6 @@ import ai_cup_22.strategy.potentialfield.Score;
 import ai_cup_22.strategy.potentialfield.ScoreContributor;
 import ai_cup_22.strategy.potentialfield.SumCompositeScoreContributor;
 import ai_cup_22.strategy.potentialfield.ZoneScoreContributor;
-import ai_cup_22.strategy.utils.DistributionUtils;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -34,7 +35,7 @@ public class LootAmmoStrategy implements Strategy {
         this.delegate = new FirstMatchCompositeStrategy()
                 .add(() -> !unit.hasWeapon(), new NullStrategy())
                 .add(() -> unit.getBulletCount() == 0, new LootAmmoForceStrategy())
-                .add(() -> true, new LootNearestStrategy());
+                .add(() -> true, new LootNearestAmmoStrategy());
     }
 
     @Override
@@ -55,7 +56,7 @@ public class LootAmmoStrategy implements Strategy {
 
 
 
-    public class LootNearestStrategy implements Strategy {
+    public class LootNearestAmmoStrategy implements Strategy {
         @Override
         public double getOrder() {
             return getNearestAmmoLoot()
@@ -63,9 +64,13 @@ public class LootAmmoStrategy implements Strategy {
                         var dist = unit.getPosition().getDistanceTo(ammo.getPosition());
                         var maxBullets = unit.getMaxBulletCount();
 
-                        var distMul = DistributionUtils.linear(dist, 0, MAX_AMMO_DIST, 1, 0);
-                        var countMul = DistributionUtils.linear(unit.getBulletCount(),
-                                maxBullets * 0.2, maxBullets * 0.8, 1, 0);
+                        var distMul = new LinearDistributor(0, MAX_AMMO_DIST, 1, 0)
+                                .get(dist);
+                        var countMul = new FirstMatchDistributor()
+                                // 0.125 -- dist < MAX_DIST * 0.2
+                                .add(val -> val < maxBullets * 0.8, new LinearDistributor(maxBullets * 0.2, maxBullets * 0.8, 1, 0.125))
+                                .add(val -> true, new LinearDistributor(maxBullets * 0.8, maxBullets, 0.125, 0))
+                                .get(unit.getBulletCount());
 
                         return distMul * countMul;
                     })
@@ -86,7 +91,7 @@ public class LootAmmoStrategy implements Strategy {
 
         @Override
         public String toString() {
-            return getClass().getSimpleName() + " (" + getOrder() + ") ";
+            return getClass().getSimpleName() + " (" + getOrder() + ") \n";
         }
     }
 
@@ -149,12 +154,12 @@ public class LootAmmoStrategy implements Strategy {
 
         @Override
         public String toString() {
-            return getClass().getSimpleName();
+            return Strategy.toString(this);
         }
     }
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " (" + getOrder() + ") { " + delegate.toString() + " } ";
+        return Strategy.toString(this, delegate);
     }
 }

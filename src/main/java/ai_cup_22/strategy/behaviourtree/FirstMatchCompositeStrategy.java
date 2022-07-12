@@ -1,6 +1,7 @@
 package ai_cup_22.strategy.behaviourtree;
 
 import ai_cup_22.strategy.actions.Action;
+import ai_cup_22.strategy.utils.StringUtils;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -34,6 +35,6 @@ public class FirstMatchCompositeStrategy implements Strategy {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " { " + getStrategy().toString() + " } ";
+        return Strategy.toString(this, getStrategy());
     }
 }

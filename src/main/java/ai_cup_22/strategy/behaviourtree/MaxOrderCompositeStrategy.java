@@ -31,6 +31,11 @@ public class MaxOrderCompositeStrategy implements Strategy {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " (" + getOrder() + ") { " + getStrategy().toString() + " } ";
+        var winnerStrategy = getStrategy();
+        var loosedStrategies = strategies.stream()
+                .filter(s -> s != winnerStrategy)
+                .toList();
+
+        return Strategy.toString(this, winnerStrategy, loosedStrategies);
     }
 }
