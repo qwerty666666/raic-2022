@@ -4,12 +4,12 @@ import ai_cup_22.model.Action;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.models.Unit;
 
-public class OrderAction {
+public class ActionBlockingAction {
     protected int startTick;
     protected int finishTick;
     protected int targetId;
 
-    public OrderAction() {
+    public ActionBlockingAction() {
         this.startTick = this.finishTick = World.getInstance().getCurrentTick();
     }
 

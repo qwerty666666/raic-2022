@@ -18,7 +18,8 @@ public class AimAction implements Action {
 
     @Override
     public void apply(Unit unit, UnitOrder order) {
-        if (unit.hasWeapon() && unit.getBulletCount() > 0 &&
+        if (unit.canDoNewAction() &&
+                unit.hasWeapon() && unit.getBulletCount() > 0 &&
                 unit.getRemainingCoolDownTicks() <= unit.getTicksToFullAim()) {
             order.setAction(new Aim(shoot));
         }

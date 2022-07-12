@@ -97,11 +97,9 @@ public class World {
         removeDisappearedLoots(ammoLoots, seeingLoots);
         removeDisappearedLoots(shieldLoots, seeingLoots);
 
-        if (getCurrentTick() % 10 == 0) {
-            removeLootsOutOfZone(weaponLoots);
-            removeLootsOutOfZone(ammoLoots);
-            removeLootsOutOfZone(shieldLoots);
-        }
+        removeLootsOutOfZone(weaponLoots);
+        removeLootsOutOfZone(ammoLoots);
+        removeLootsOutOfZone(shieldLoots);
     }
 
     private void removeDisappearedLoots(Map<Integer, ? extends Loot> loots, Set<Integer> seeingLoots) {

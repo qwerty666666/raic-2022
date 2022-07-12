@@ -1,9 +1,7 @@
 package ai_cup_22.strategy.models;
 
-import ai_cup_22.model.ActionOrder.Pickup;
 import ai_cup_22.strategy.World;
-import ai_cup_22.strategy.actions.basic.OrderAction;
-import ai_cup_22.strategy.actions.basic.PickupAction;
+import ai_cup_22.strategy.actions.basic.ActionBlockingAction;
 import ai_cup_22.strategy.behaviourtree.BehaviourTree;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.CircleSegment;
@@ -22,8 +20,7 @@ public class Unit {
     private UnitPotentialField potentialField = new UnitPotentialField(this);
     private List<Position> currentPath;
     private BehaviourTree behaviourTree = new BehaviourTree(this);
-    private OrderAction lastAction;
-    private int lastLootingTick = -100;
+    private ActionBlockingAction lastAction;
 
     public void updateTick(ai_cup_22.model.Unit unit) {
         this.unit = unit;
@@ -175,21 +172,19 @@ public class Unit {
     }
 
     public boolean canDoNewAction() {
-        int lootingTicks = (int) (Math.ceil(World.getInstance().getConstants().getLootingTime() / World.getInstance().getTimePerTick()));
-        return lastLootingTick + lootingTicks <= World.getInstance().getCurrentTick();
+        return getTicksToNewActionBeAvailable() == 0;
     }
 
-    public OrderAction getLastAction() {
+    public int getTicksToNewActionBeAvailable() {
+        return lastAction == null ? 0 : lastAction.getFinishTick() - World.getInstance().getCurrentTick();
+    }
+
+    public ActionBlockingAction getLastAction() {
         return lastAction;
     }
 
-    public Unit setLastAction(OrderAction lastAction) {
+    public Unit setLastAction(ActionBlockingAction lastAction) {
         this.lastAction = lastAction;
-        return this;
-    }
-
-    public Unit setLastLootingTick(int lastLootingTick) {
-        this.lastLootingTick = lastLootingTick;
         return this;
     }
 
