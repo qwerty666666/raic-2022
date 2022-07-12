@@ -1,8 +1,9 @@
-package ai_cup_22.strategy.behaviourtree;
+package ai_cup_22.strategy.behaviourtree.strategies.peaceful;
 
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.basic.TakeShieldPotionAction;
+import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.models.Unit;
 
 public class TakeShieldPotionStrategy implements Strategy {

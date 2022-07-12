@@ -9,7 +9,7 @@ public interface ScoreContributor {
 
     default void contribute(Score score) {
         if (shouldContribute(score)) {
-            score.setScore(getScoreValue(score));
+            score.increaseScore(getScoreValue(score));
         }
     }
 

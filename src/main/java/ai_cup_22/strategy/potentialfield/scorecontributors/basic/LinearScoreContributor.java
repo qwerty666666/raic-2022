@@ -1,6 +1,8 @@
-package ai_cup_22.strategy.potentialfield;
+package ai_cup_22.strategy.potentialfield.scorecontributors.basic;
 
 import ai_cup_22.strategy.geometry.Position;
+import ai_cup_22.strategy.potentialfield.Score;
+import ai_cup_22.strategy.potentialfield.ScoreContributor;
 
 public class LinearScoreContributor implements ScoreContributor {
     private final Position position;

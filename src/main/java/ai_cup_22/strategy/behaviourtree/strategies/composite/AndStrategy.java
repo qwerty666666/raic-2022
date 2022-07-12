@@ -1,7 +1,8 @@
-package ai_cup_22.strategy.behaviourtree;
+package ai_cup_22.strategy.behaviourtree.strategies.composite;
 
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.CompositeAction;
+import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.utils.StringUtils;
 import java.util.ArrayList;
 import java.util.List;

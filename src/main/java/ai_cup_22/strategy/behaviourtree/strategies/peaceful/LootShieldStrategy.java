@@ -1,9 +1,11 @@
-package ai_cup_22.strategy.behaviourtree;
+package ai_cup_22.strategy.behaviourtree.strategies.peaceful;
 
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.TakeLootAction;
-import ai_cup_22.strategy.distributions.ConstDistributor;
+import ai_cup_22.strategy.behaviourtree.strategies.composite.FirstMatchCompositeStrategy;
+import ai_cup_22.strategy.behaviourtree.strategies.NullStrategy;
+import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.distributions.FirstMatchDistributor;
 import ai_cup_22.strategy.distributions.LinearDistributor;
 import ai_cup_22.strategy.models.Loot;

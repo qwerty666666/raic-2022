@@ -1,10 +1,11 @@
-package ai_cup_22.strategy.behaviourtree;
+package ai_cup_22.strategy.behaviourtree.strategies.peaceful;
 
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.CompositeAction;
 import ai_cup_22.strategy.actions.MoveToWithPathfindingAction;
 import ai_cup_22.strategy.actions.RotateAction;
+import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Unit;

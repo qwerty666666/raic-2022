@@ -1,4 +1,4 @@
-package ai_cup_22.strategy.behaviourtree;
+package ai_cup_22.strategy.behaviourtree.strategies.fight;
 
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
@@ -9,6 +9,7 @@ import ai_cup_22.strategy.actions.HoldDistanceAction;
 import ai_cup_22.strategy.actions.basic.LookToAction;
 import ai_cup_22.strategy.actions.MoveToWithPathfindingAction;
 import ai_cup_22.strategy.actions.ShootAction;
+import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.models.Unit;
 import java.util.Collection;
 import java.util.Comparator;

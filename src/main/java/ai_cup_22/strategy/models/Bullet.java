@@ -13,11 +13,13 @@ public class Bullet {
     private boolean isEnemy;
     private double lifetime;
     private boolean isSimulated;
+    private int unitId;
 
     public Bullet(Projectile projectile) {
         this.velocity = new Vector(projectile.getVelocity()).increase(World.getInstance().getTimePerTick());
         this.id = projectile.getId();
         this.isEnemy = projectile.getShooterPlayerId() != World.getInstance().getMyId();
+        this.unitId = projectile.getShooterId();
 
         updateTick(projectile);
     }
@@ -72,6 +74,10 @@ public class Bullet {
 
     public Line getTrajectory() {
         return new Line(position, position.move(velocity.increase(getRemainingLifetimeTicks())));
+    }
+
+    public int getUnitId() {
+        return unitId;
     }
 
     @Override

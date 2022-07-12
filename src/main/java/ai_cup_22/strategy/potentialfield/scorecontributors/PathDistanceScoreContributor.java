@@ -1,6 +1,9 @@
-package ai_cup_22.strategy.potentialfield;
+package ai_cup_22.strategy.potentialfield.scorecontributors;
 
 import ai_cup_22.strategy.geometry.Position;
+import ai_cup_22.strategy.potentialfield.PotentialField;
+import ai_cup_22.strategy.potentialfield.Score;
+import ai_cup_22.strategy.potentialfield.ScoreContributor;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;

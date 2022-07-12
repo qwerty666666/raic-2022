@@ -46,6 +46,7 @@ public class DodgeBulletsAction implements Action {
 
     private Bullet getNearestBullet(List<Bullet> bullets, Unit unit) {
         return bullets.stream()
+                .filter(bullet -> bullet.getUnitId() != unit.getId())
                 .min(Comparator.comparingDouble(b -> b.getPosition().getDistanceTo(unit.getPosition())))
                 .orElse(null);
     }

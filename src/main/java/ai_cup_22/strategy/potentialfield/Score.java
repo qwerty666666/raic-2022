@@ -18,6 +18,10 @@ public class Score {
         score += delta;
     }
 
+    public boolean isUnreachable() {
+        return getScore() == PotentialField.UNREACHABLE_VALUE;
+    }
+
     public void setScore(double score) {
         this.score = score;
     }

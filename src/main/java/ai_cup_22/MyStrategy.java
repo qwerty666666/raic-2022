@@ -7,12 +7,7 @@ import ai_cup_22.model.UnitOrder;
 import ai_cup_22.model.Vec2;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.debug.DebugData;
-import ai_cup_22.strategy.debug.primitives.PotentialFieldDrawable;
 import ai_cup_22.strategy.geometry.Position;
-import ai_cup_22.strategy.potentialfield.FirstMatchCompositeScoreContributor;
-import ai_cup_22.strategy.potentialfield.SumCompositeScoreContributor;
-import ai_cup_22.strategy.potentialfield.ZoneScoreContributor;
-import java.util.Collections;
 
 public class MyStrategy {
     private World world;
@@ -61,8 +56,6 @@ public class MyStrategy {
             updateDefaultDebugLayer();
 
             for (var unit: world.getMyUnits().values()) {
-//                new PotentialFieldDrawable(unit.getPotentialField()).draw(debugInterface);
-
                 DebugData.getInstance().getCursorPosition().ifPresent(target -> {
 //                    var path = new AStarPathFinder().findPath(unit.getPotentialField(), unit.getPosition(), target);
 //                    new PathDrawable(path).draw(debugInterface);

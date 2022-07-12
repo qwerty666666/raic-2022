@@ -1,12 +1,14 @@
-package ai_cup_22.strategy.potentialfield;
+package ai_cup_22.strategy.potentialfield.scorecontributors.basic;
 
 import ai_cup_22.strategy.geometry.Circle;
+import ai_cup_22.strategy.potentialfield.Score;
+import ai_cup_22.strategy.potentialfield.ScoreContributor;
 
-public class ConstantInCircleScoreContributor implements ScoreContributor {
+public class ConstantOutCircleScoreContributor implements ScoreContributor {
     private final Circle circle;
     private final double score;
 
-    public ConstantInCircleScoreContributor(Circle circle, double score) {
+    public ConstantOutCircleScoreContributor(Circle circle, double score) {
         this.circle = circle;
         this.score = score;
     }
@@ -17,7 +19,7 @@ public class ConstantInCircleScoreContributor implements ScoreContributor {
             return false;
         }
 
-        return circle.contains(score.getPosition());
+        return !circle.contains(score.getPosition());
     }
 
     @Override
