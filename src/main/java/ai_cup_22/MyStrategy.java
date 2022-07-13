@@ -12,6 +12,7 @@ import ai_cup_22.strategy.debug.primitives.PotentialFieldDrawable;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.pathfinding.AStarPathFinder;
 import ai_cup_22.strategy.pathfinding.DijkstraPathFinder;
+import java.util.Collections;
 
 public class MyStrategy {
     private World world;
@@ -29,8 +30,17 @@ public class MyStrategy {
 
 
         if (game.getCurrentTick() == 0) {
+            var s = System.currentTimeMillis();
             initWorld(game);
 //            updateObstaclesDebugLayer();
+            System.out.println(System.currentTimeMillis() - s);
+            return new Order(Collections.emptyMap());
+        }
+
+        if (game.getCurrentTick() == 1) {
+            var s = System.currentTimeMillis();
+            world.getStaticPotentialField().buildGraph();
+            System.out.println(System.currentTimeMillis() - s);
         }
 
         world.updateTick(game);

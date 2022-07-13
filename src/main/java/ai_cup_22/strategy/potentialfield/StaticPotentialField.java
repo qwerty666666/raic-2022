@@ -24,7 +24,7 @@ public class StaticPotentialField implements PotentialField {
     public StaticPotentialField(World world) {
         initValues();
         fillStaticData(world);
-        buildGraph();
+//        buildGraph();
     }
 
     private void initValues() {
@@ -66,7 +66,7 @@ public class StaticPotentialField implements PotentialField {
         }
     }
 
-    private void buildGraph() {
+    public void buildGraph() {
         // add scores adjacent graph
         for (int x = 0; x < gridSize; x++) {
             for (int y = 0; y < gridSize; y++) {
