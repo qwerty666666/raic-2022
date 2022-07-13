@@ -5,6 +5,7 @@ import ai_cup_22.strategy.behaviourtree.strategies.composite.AndStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.composite.FirstMatchCompositeStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.composite.MaxOrderCompositeStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.fight.FightStrategy;
+import ai_cup_22.strategy.behaviourtree.strategies.fight.RegenerateHealthStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.fight.RetreatStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.peaceful.ExploreStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.peaceful.LootAmmoStrategy;
@@ -19,6 +20,7 @@ public class BehaviourTree {
     private LootShieldStrategy lootShieldStrategy;
     private TakeShieldPotionStrategy takeShieldPotionStrategy;
     private RetreatStrategy retreatStrategy;
+    private RegenerateHealthStrategy regenerateHealthStrategy;
     private Unit unit;
 
     public BehaviourTree(Unit unit) {
@@ -29,15 +31,16 @@ public class BehaviourTree {
         lootShieldStrategy = new LootShieldStrategy(unit, exploreStrategy);
         takeShieldPotionStrategy = new TakeShieldPotionStrategy(unit);
         retreatStrategy = new RetreatStrategy(unit);
+        regenerateHealthStrategy = new RegenerateHealthStrategy(unit, retreatStrategy);
     }
 
     public Strategy getStrategy() {
         return new AndStrategy()
-//                .add(retreatStrategy);
                 .add(takeShieldPotionStrategy)
                 .add(new FirstMatchCompositeStrategy()
                         .add(() -> unit.getBulletCount() == 0, lootAmmoStrategy)
                         .add(() -> !World.getInstance().getEnemyUnits().isEmpty(), new FirstMatchCompositeStrategy()
+                                .add(() -> regenerateHealthStrategy.getOrder() == Strategy.MAX_ORDER, regenerateHealthStrategy)
                                 .add(() -> unit.canDoNewAction(), fightStrategy)
                                 .add(() -> true, retreatStrategy)
                         )

@@ -187,6 +187,26 @@ public class Unit {
         return lastAction == null ? 0 : lastAction.getFinishTick() - World.getInstance().getCurrentTick();
     }
 
+    public double getHealth() {
+        return unit.getHealth();
+    }
+
+    public int ticksToStartHealthRegeneration() {
+        return Math.max(0, unit.getHealthRegenerationStartTick() - World.getInstance().getCurrentTick());
+    }
+
+    public boolean isRegeneratingHealth() {
+        return getHealth() < getMaxHealth() && ticksToStartHealthRegeneration() == 0;
+    }
+
+    public double getMaxHealth() {
+        return World.getInstance().getConstants().getUnitHealth();
+    }
+
+    public double getFullHealth() {
+        return getShield() + getHealth();
+    }
+
     public ActionBlockingAction getLastAction() {
         return lastAction;
     }
@@ -197,7 +217,7 @@ public class Unit {
     }
 
     public double getThreatenDistanceFor(Unit unit) {
-        return 18;
+        return 15;
     }
 
     @Override
