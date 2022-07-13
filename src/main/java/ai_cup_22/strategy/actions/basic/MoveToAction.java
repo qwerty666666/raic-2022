@@ -18,7 +18,7 @@ public class MoveToAction implements Action {
     public void apply(Unit unit, UnitOrder order) {
         var velocity = new Vector(unit.getPosition(), target);
 
-        unit.setCurrentPath(List.of(unit.getPosition(), target));
+//        unit.setCurrentPath(List.of(unit.getPosition(), target));
 
         order.setTargetVelocity(velocity.normalizeToLength(10).toVec2());
     }

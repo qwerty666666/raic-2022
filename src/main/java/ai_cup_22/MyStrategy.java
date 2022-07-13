@@ -7,7 +7,11 @@ import ai_cup_22.model.UnitOrder;
 import ai_cup_22.model.Vec2;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.debug.DebugData;
+import ai_cup_22.strategy.debug.primitives.PathDrawable;
+import ai_cup_22.strategy.debug.primitives.PotentialFieldDrawable;
 import ai_cup_22.strategy.geometry.Position;
+import ai_cup_22.strategy.pathfinding.AStarPathFinder;
+import ai_cup_22.strategy.pathfinding.DijkstraPathFinder;
 
 public class MyStrategy {
     private World world;
@@ -57,8 +61,11 @@ public class MyStrategy {
 
             for (var unit: world.getMyUnits().values()) {
                 DebugData.getInstance().getCursorPosition().ifPresent(target -> {
-//                    var path = new AStarPathFinder().findPath(unit.getPotentialField(), unit.getPosition(), target);
-//                    new PathDrawable(path).draw(debugInterface);
+//                     DijkstraPathFinder.minThreatPathFinder(unit.getPotentialField());
+//                     new PotentialFieldDrawable(unit.getPotentialField()).draw(debugInterface);
+
+//                    var path = new AStarPathFinder(unit.getPotentialField()).findPath(unit.getPosition(), target);
+//                    new PathDrawable(path.getPathPositions()).draw(debugInterface);
 
 //                    var line = new Line(unit.getPosition(), target);
 //                    World.getInstance().getObstacles().values().stream()

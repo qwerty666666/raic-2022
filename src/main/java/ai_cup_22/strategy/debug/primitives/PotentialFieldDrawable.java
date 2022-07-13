@@ -21,10 +21,8 @@ public class PotentialFieldDrawable implements Drawable {
                 .map(score -> new CircleDrawable(new Circle(score.getPosition(), 0.5), getColor(score.getScore())))
                 .forEach(circle -> circle.draw(debugInterface));
 
-        potentialField.getScores().stream()
-                .filter(score -> score.getScore() != PotentialField.UNREACHABLE_VALUE)
-//                .filter(score -> score.getPosition().getDistanceTo(new Position(0, 0)) < 20)
-                .map(score -> new Text(String.format("%.2f", score.getScore()), score.getPosition(), 0.2))
+        potentialField.getGraph().getNodes().values().stream()
+                .map(node -> new Text(String.format("%.2f\n(%.2f)", node.getScore().getScore(), node.getDist()), node.getPosition(), 0.2))
                 .forEach(circle -> circle.draw(debugInterface));
     }
 

@@ -1,7 +1,10 @@
 package ai_cup_22.strategy.pathfinding;
 
 import ai_cup_22.strategy.geometry.Position;
+import ai_cup_22.strategy.pathfinding.Graph.Node;
 import ai_cup_22.strategy.potentialfield.Score;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Path {
@@ -27,5 +30,23 @@ public class Path {
         }
 
         return dist;
+    }
+
+    public static Path from(Node to) {
+        if (to.getParent() == null) {
+            return null;
+        }
+
+        var path = new ArrayList<Score>();
+        var tmp = to;
+
+        while (tmp != null) {
+            path.add(tmp.getScore());
+            tmp = tmp.getParent();
+        }
+
+        Collections.reverse(path);
+
+        return new Path(path);
     }
 }

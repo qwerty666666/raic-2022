@@ -33,6 +33,7 @@ public class BehaviourTree {
 
     public Strategy getStrategy() {
         return new AndStrategy()
+//                .add(retreatStrategy);
                 .add(takeShieldPotionStrategy)
                 .add(new FirstMatchCompositeStrategy()
                         .add(() -> unit.getBulletCount() == 0, lootAmmoStrategy)

@@ -1,5 +1,7 @@
 package ai_cup_22.strategy.potentialfield;
 
+import ai_cup_22.strategy.geometry.Position;
+import ai_cup_22.strategy.pathfinding.Graph;
 import java.util.List;
 
 public interface PotentialField {
@@ -10,4 +12,12 @@ public interface PotentialField {
     double UNREACHABLE_VALUE = -10000000;
 
     List<Score> getScores();
+
+    default Graph getGraph() {
+        throw new UnsupportedOperationException();
+    }
+
+    default Position getCenter() {
+        throw new UnsupportedOperationException();
+    }
 }
