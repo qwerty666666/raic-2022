@@ -111,7 +111,7 @@ public class MyStrategy {
         DebugData.getInstance().getPositionsLayer().reinit(world);
     }
 
-    public void debugUpdate(DebugInterface debugInterface) {
+    public void debugUpdate(int displayedTick, DebugInterface debugInterface) {
         updateCursorPosition(debugInterface);
 
         DebugData.getInstance().draw(debugInterface);
