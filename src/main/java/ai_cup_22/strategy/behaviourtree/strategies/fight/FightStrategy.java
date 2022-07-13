@@ -11,6 +11,7 @@ import ai_cup_22.strategy.actions.MoveToWithPathfindingAction;
 import ai_cup_22.strategy.actions.ShootAction;
 import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.models.Unit;
+import ai_cup_22.strategy.models.Weapon;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -37,11 +38,11 @@ public class FightStrategy implements Strategy {
 
         if (!enemiesUnderAttack.isEmpty()) {
             // shoot to the nearest enemy
-            var target = getNearestEnemy(enemiesUnderAttack);
+            var targetEnemy = getNearestEnemy(enemiesUnderAttack);
 
             return new CompositeAction()
-                    .add(new HoldDistanceAction(target.getPosition(), target.getThreatenDistanceFor(me)))
-                    .add(new ShootAction(target))
+                    .add(new HoldDistanceAction(targetEnemy.getPosition(), getBestDistanceToEnemy(targetEnemy)))
+                    .add(new ShootAction(targetEnemy))
                     .add(new DodgeBulletsAction());
         } else {
             // aim to the nearest enemy
@@ -53,6 +54,34 @@ public class FightStrategy implements Strategy {
                     .add(new AimAction())
                     .add(new DodgeBulletsAction());
         }
+    }
+
+    private double getBestDistanceToEnemy(Unit enemy) {
+        if (canAttackByDps(enemy)) {
+            return 0;
+        }
+
+        if (canAttackByEnemyHasNoEnoughBullets(enemy)) {
+            return 0;
+        }
+
+        return enemy.getThreatenDistanceFor(me);
+    }
+
+    private boolean canAttackByEnemyHasNoEnoughBullets(Unit enemy) {
+        var dmg = enemy.getWeaponOptional().map(Weapon::getDamage).orElse(0.);
+
+        return dmg * enemy.getBulletCount() <= me.getFullHealth() - me.getMaxHealth();
+    }
+
+    private boolean canAttackByDps(Unit enemy) {
+        var enemyDps = enemy.getWeaponOptional().map(Weapon::getDps).orElse(0.);
+        var myDps = me.getWeaponOptional().map(Weapon::getDps).orElse(0.);
+
+        var timeToKillMe = Math.ceil(me.getFullHealth() / enemyDps);
+        var timeToKillEnemy = Math.ceil(enemy.getFullHealth() / myDps);
+
+        return timeToKillEnemy * 1.5 < timeToKillMe;
     }
 
     private List<Unit> getEnemies() {

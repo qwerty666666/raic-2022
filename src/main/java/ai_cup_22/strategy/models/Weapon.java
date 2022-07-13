@@ -20,6 +20,10 @@ public class Weapon {
         return id;
     }
 
+    public double getDps() {
+        return getDamage() * properties.getRoundsPerSecond();
+    }
+
     public double getDamage() {
         return properties.getProjectileDamage();
     }

@@ -29,8 +29,7 @@ public class TakeShieldPotionStrategy implements Strategy {
             return false;
         }
 
-        // two hits from  .. , or 4 hits from ..
-        if (unit.getShield() > 160) {
+        if (unit.getShield() > 150) {
             return false;
         }
 

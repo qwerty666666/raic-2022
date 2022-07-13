@@ -12,6 +12,7 @@ import ai_cup_22.strategy.potentialfield.PotentialField;
 import ai_cup_22.strategy.potentialfield.UnitPotentialField;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class Unit {
     private Circle circle;
@@ -130,6 +131,10 @@ public class Unit {
             return null;
         }
         return Weapon.get(unit.getWeapon());
+    }
+
+    public Optional<Weapon> getWeaponOptional() {
+        return Optional.ofNullable(getWeapon());
     }
 
     public CircleSegment getShootingSegment() {
