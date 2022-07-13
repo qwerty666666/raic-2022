@@ -51,7 +51,7 @@ public class World {
                 .collect(Collectors.toMap(Obstacle::getId, o -> o));
         this.nonShootThroughObstacles = obstacles.values().stream()
                 .filter(o -> !o.isCanShootThrough())
-                .toList();
+                .collect(Collectors.toList());
 
         this.enemyUnits = new HashMap<>(game.getPlayers().length * constants.getTeamSize());
         this.myUnits = new HashMap<>();
@@ -106,7 +106,7 @@ public class World {
         var disappearedLoot = loots.values().stream()
                 .filter(loot -> getMyUnits().values().stream().anyMatch(unit -> unit.canSee(loot.getPosition())))
                 .filter(loot -> !seeingLoots.contains(loot.getId()))
-                .toList();
+                .collect(Collectors.toList());
         for (var loot: disappearedLoot) {
             loots.remove(loot.getId());
         }
@@ -116,7 +116,7 @@ public class World {
         loots.values().stream()
                 .filter(loot -> !zone.contains(loot.getPosition()))
                 .map(Loot::getId)
-                .toList()
+                .collect(Collectors.toList())
                 .forEach(loots::remove);
     }
 
@@ -255,6 +255,6 @@ public class World {
     public List<AmmoLoot> getAmmoLoots(int weaponId) {
         return ammoLoots.values().stream()
                 .filter(loot -> loot.getWeaponId() == weaponId)
-                .toList();
+                .collect(Collectors.toList());
     }
 }

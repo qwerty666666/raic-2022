@@ -15,6 +15,7 @@ import ai_cup_22.strategy.models.Weapon;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class FightStrategy implements Strategy {
     private final Unit me;
@@ -85,13 +86,13 @@ public class FightStrategy implements Strategy {
     }
 
     private List<Unit> getEnemies() {
-        return World.getInstance().getEnemyUnits().values().stream().toList();
+        return World.getInstance().getEnemyUnits().values().stream().collect(Collectors.toList());
     }
 
     private List<Unit> getEnemiesUnderAttack() {
         return World.getInstance().getEnemyUnits().values().stream()
                 .filter(me::canShoot)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private Unit getNearestEnemy(Collection<Unit> enemies) {

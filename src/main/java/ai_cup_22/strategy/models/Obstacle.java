@@ -44,6 +44,6 @@ public class Obstacle {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof Obstacle o && o.getId() == getId();
+        return (obj instanceof Obstacle) && ((Obstacle)obj).getId() == getId();
     }
 }

@@ -10,9 +10,9 @@ public class AmmoLoot extends Loot {
     public AmmoLoot(ai_cup_22.model.Loot loot) {
         super(loot);
 
-        if (loot.getItem() instanceof Ammo ammo) {
-            count = ammo.getAmount();
-            weaponId = ammo.getWeaponTypeIndex();
+        if (loot.getItem() instanceof Ammo) {
+            count = ((Ammo)loot.getItem()).getAmount();
+            weaponId = ((Ammo)loot.getItem()).getWeaponTypeIndex();
         }
     }
 

@@ -232,6 +232,6 @@ public class Unit {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof Unit u && u.getId() == getId();
+        return (obj instanceof Unit) && ((Unit)obj).getId() == getId();
     }
 }

@@ -9,6 +9,7 @@ import ai_cup_22.strategy.potentialfield.PotentialField;
 import ai_cup_22.strategy.potentialfield.Score;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class SmoothingPathFinder implements PathFinder {
     private final PathFinder pathFinder;
@@ -36,7 +37,7 @@ public class SmoothingPathFinder implements PathFinder {
         var obstacles = World.getInstance().getObstacles().values().stream()
                 .filter(obstacle -> pathRect.contains(obstacle.getCenter()))
                 .map(obstacle -> obstacle.getCircle().enlarge(unitRadius))
-                .toList();
+                .collect(Collectors.toList());
 
         var newPath = new ArrayList<Score>();
 

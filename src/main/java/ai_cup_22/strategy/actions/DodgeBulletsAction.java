@@ -8,13 +8,14 @@ import ai_cup_22.strategy.models.Bullet;
 import ai_cup_22.strategy.models.Unit;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DodgeBulletsAction implements Action {
     @Override
     public void apply(Unit unit, UnitOrder order) {
         var bullets = World.getInstance().getBullets().values().stream()
                 .filter(bullet -> isBulletTreatsUnit(unit, bullet))
-                .toList();
+                .collect(Collectors.toList());
 
         if (bullets.isEmpty()) {
             return;

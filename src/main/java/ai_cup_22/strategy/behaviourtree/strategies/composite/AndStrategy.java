@@ -30,7 +30,7 @@ public class AndStrategy implements Strategy {
                 .add(strategies.stream()
                         .filter(s -> s.getOrder() > MIN_ORDER)
                         .map(Strategy::getAction)
-                        .toList()
+                        .collect(Collectors.toList())
                 );
     }
 

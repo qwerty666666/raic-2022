@@ -130,7 +130,7 @@ public class Graph {
 
         @Override
         public boolean equals(Object obj) {
-            return obj instanceof Node n && score.equals(n.score);
+            return (obj instanceof Node) && score.equals(((Node)obj).score);
         }
     }
 }

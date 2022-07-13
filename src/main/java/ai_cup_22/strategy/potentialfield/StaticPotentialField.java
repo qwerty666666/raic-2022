@@ -9,6 +9,7 @@ import ai_cup_22.strategy.potentialfield.scorecontributors.composite.FirstMatchC
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class StaticPotentialField implements PotentialField {
     public static final double TREE_MAX_INFLUENCE_RADIUS = 2.5;
@@ -129,7 +130,7 @@ public class StaticPotentialField implements PotentialField {
         if (allScores == null) {
             allScores = Arrays.stream(scores)
                     .flatMap(Arrays::stream)
-                    .toList();
+                    .collect(Collectors.toList());
         }
         return allScores;
     }

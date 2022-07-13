@@ -39,8 +39,8 @@ public class ExploreStrategy implements Strategy {
     }
 
     private Position getNewPositionToExplore() {
-        var radius = random.nextDouble(0, getZone().getRadius());
-        var angle = random.nextDouble(0, Math.PI * 2);
+        var radius = random.nextDouble() * getZone().getRadius();
+        var angle = random.nextDouble() * Math.PI * 2;
 
         return getZone().getCenter().move(
                 new Vector(radius * Math.cos(angle), radius * Math.sin(angle))

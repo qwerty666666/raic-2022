@@ -60,7 +60,7 @@ public class Score {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof Score s && position.equals(s.getPosition());
+        return (o instanceof Score) && position.equals(((Score)o).getPosition());
     }
 
     @Override

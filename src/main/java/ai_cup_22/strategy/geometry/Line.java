@@ -3,6 +3,7 @@ package ai_cup_22.strategy.geometry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Line {
     private final Position start;
@@ -97,7 +98,7 @@ public class Line {
 
         return intersectionPositions.stream()
                 .map(p -> p.move(new Vector(circle.getCenter())))
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override

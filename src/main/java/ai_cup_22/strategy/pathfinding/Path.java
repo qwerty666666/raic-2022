@@ -6,6 +6,7 @@ import ai_cup_22.strategy.potentialfield.Score;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Path {
     private final List<Score> path;
@@ -15,7 +16,7 @@ public class Path {
     }
 
     public List<Position> getPathPositions() {
-        return path.stream().map(Score::getPosition).toList();
+        return path.stream().map(Score::getPosition).collect(Collectors.toList());
     }
 
     public List<Score> getScores() {

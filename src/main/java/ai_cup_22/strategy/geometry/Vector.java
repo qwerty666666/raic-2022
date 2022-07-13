@@ -74,6 +74,6 @@ public class Vector {
 
     @Override
     public String toString() {
-        return "{x: %f, y: %f}".formatted(x, y);
+        return String.format("{x: %f, y: %f}", x, y);
     }
 }

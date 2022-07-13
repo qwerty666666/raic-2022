@@ -20,6 +20,7 @@ import ai_cup_22.strategy.potentialfield.scorecontributors.basic.LinearScoreCont
 import ai_cup_22.strategy.potentialfield.scorecontributors.composite.SumCompositeScoreContributor;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class RetreatStrategy implements Strategy {
     private final Unit unit;
@@ -97,7 +98,7 @@ public class RetreatStrategy implements Strategy {
     private ScoreContributor getPotentialFieldScoreContributor() {
         var enemyScoreContributors = World.getInstance().getEnemyUnits().values().stream()
                 .map(enemy -> new LinearScoreContributor(enemy.getPosition(), PotentialField.MIN_VALUE, 0, 30))
-                .toList();
+                .collect(Collectors.toList());
 
         return new SumCompositeScoreContributor()
                 .add(new ZoneScoreContributor())

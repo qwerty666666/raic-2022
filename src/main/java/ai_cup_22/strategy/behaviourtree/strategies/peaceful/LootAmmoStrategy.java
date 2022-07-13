@@ -54,7 +54,7 @@ public class LootAmmoStrategy implements Strategy {
     private List<AmmoLoot> getSuitableAmmoLoots() {
         return World.getInstance().getAmmoLoots(unit.getWeapon().getId()).stream()
                 .filter(loot -> loot.getPosition().getDistanceTo(unit.getPosition()) < MAX_AMMO_DIST)
-                .toList();
+                .collect(Collectors.toList());
     }
 
 
@@ -154,7 +154,7 @@ public class LootAmmoStrategy implements Strategy {
         private ScoreContributor getPotentialFieldScoreContributor() {
             var enemyScoreContributors = World.getInstance().getEnemyUnits().values().stream()
                     .map(enemy -> new LinearScoreContributor(enemy.getPosition(), PotentialField.MIN_VALUE, 0, 15))
-                    .toList();
+                    .collect(Collectors.toList());
 
             return new SumCompositeScoreContributor()
                     .add(new ZoneScoreContributor())

@@ -13,6 +13,7 @@ import ai_cup_22.strategy.models.Unit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class LootShieldStrategy implements Strategy {
     public static final double MAX_LOOT_DIST = 100;
@@ -42,7 +43,7 @@ public class LootShieldStrategy implements Strategy {
     private List<Loot> getSuitableLoots() {
         return World.getInstance().getShieldLoots().values().stream()
                 .filter(loot -> loot.getPosition().getDistanceTo(unit.getPosition()) < MAX_LOOT_DIST)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override

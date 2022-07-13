@@ -55,7 +55,7 @@ public class Position {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof Position p && (Double.compare(p.x, x) == 0 && Double.compare(p.y, y) == 0);
+        return (o instanceof Position) && (Double.compare(((Position) o).x, x) == 0 && Double.compare(((Position) o).y, y) == 0);
     }
 
     @Override
@@ -65,6 +65,6 @@ public class Position {
 
     @Override
     public String toString() {
-        return "{x: %.3f, y: %.3f}".formatted(x, y);
+        return String.format("{x: %.3f, y: %.3f}", x, y);
     }
 }

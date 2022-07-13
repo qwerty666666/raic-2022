@@ -6,6 +6,7 @@ import ai_cup_22.strategy.behaviourtree.Strategy;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MaxOrderCompositeStrategy implements Strategy {
     private final List<Strategy> strategies = new ArrayList<>();
@@ -36,7 +37,7 @@ public class MaxOrderCompositeStrategy implements Strategy {
         var winnerStrategy = getStrategy();
         var loosedStrategies = strategies.stream()
                 .filter(s -> s != winnerStrategy)
-                .toList();
+                .collect(Collectors.toList());
 
         return Strategy.toString(this, winnerStrategy, loosedStrategies);
     }
