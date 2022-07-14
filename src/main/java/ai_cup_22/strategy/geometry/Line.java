@@ -1,7 +1,6 @@
 package ai_cup_22.strategy.geometry;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -65,6 +64,10 @@ public class Line {
         return toVector().rotate(Math.PI / 2).toLine();
     }
 
+    public Line getPerpendicularThroughtPoint(Position position) {
+        return getPerpendicular().move(new Vector(position));
+    }
+
     public Line move(Vector v) {
         return new Line(start.move(v), end.move(v));
     }
@@ -72,7 +75,7 @@ public class Line {
     /**
      * Line used as ray
      */
-    public List<Position> getIntersectionPoints(Circle circle) {
+    public List<Position> getIntersectionPointsAsRay(Circle circle) {
         var intersectionPositions = new ArrayList<Position>();
 
         // rewrite c to align circle to (0, 0)

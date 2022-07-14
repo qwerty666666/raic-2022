@@ -47,10 +47,25 @@ public class Vector {
         return new Vector(x * mul, y * mul);
     }
 
+    public Vector restrictLength(double len) {
+        if (getLength() > len) {
+            return normalizeToLength(len);
+        }
+        return this;
+    }
+
     public Vector normalizeToLength(double len) {
         double mul = len / getLength();
 
        return increase(mul);
+    }
+
+    public Vector add(Vector v) {
+        return new Vector(x + v.x, y + v.y);
+    }
+
+    public Vector subtract(Vector v) {
+        return new Vector(x - v.x, y - v.y);
     }
 
     public Vec2 toVec2() {
@@ -72,8 +87,12 @@ public class Vector {
         return Math.atan(y / x) + (x < 0 ? Math.PI : 0);
     }
 
+    public double getAngleTo(Vector v) {
+        return Math.acos(Math.max(-1., Math.min(1., (x * v.x + y * v.y) / (getLength() * v.getLength()))));
+    }
+
     @Override
     public String toString() {
-        return String.format("{x: %f, y: %f}", x, y);
+        return String.format("{x: %f, y: %f} (%f)", x, y, getLength());
     }
 }

@@ -31,6 +31,14 @@ public class Circle {
         return new Circle(center, radius + added);
     }
 
+    public Circle moveToPosition(Position toPosition) {
+        return new Circle(toPosition, radius);
+    }
+
+    public Circle move(Vector vector) {
+        return new Circle(center.move(vector), radius);
+    }
+
     public Circle enlargeToRadius(double radius) {
         return new Circle(center, radius);
     }

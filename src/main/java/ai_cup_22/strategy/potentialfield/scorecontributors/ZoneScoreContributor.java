@@ -24,7 +24,7 @@ public class ZoneScoreContributor implements ScoreContributor {
     public double getScoreValue(Score score) {
         var zone = World.getInstance().getZone();
         var nearestZonePosition = new Line(zone.getCenter(), score.getPosition())
-                .getIntersectionPoints(zone.getCircle())
+                .getIntersectionPointsAsRay(zone.getCircle())
                 .stream()
                 .min(Comparator.comparingDouble(p -> p.getDistanceTo(score.getPosition())))
                 .orElseThrow();

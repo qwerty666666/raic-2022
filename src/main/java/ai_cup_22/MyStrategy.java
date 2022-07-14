@@ -6,13 +6,19 @@ import ai_cup_22.model.Order;
 import ai_cup_22.model.UnitOrder;
 import ai_cup_22.model.Vec2;
 import ai_cup_22.strategy.World;
+import ai_cup_22.strategy.debug.Colors;
 import ai_cup_22.strategy.debug.DebugData;
-import ai_cup_22.strategy.debug.primitives.PathDrawable;
-import ai_cup_22.strategy.debug.primitives.PotentialFieldDrawable;
+import ai_cup_22.strategy.debug.primitives.CircleDrawable;
+import ai_cup_22.strategy.debug.primitives.Line;
+import ai_cup_22.strategy.debug.primitives.Text;
+import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Position;
-import ai_cup_22.strategy.pathfinding.AStarPathFinder;
-import ai_cup_22.strategy.pathfinding.DijkstraPathFinder;
+import ai_cup_22.strategy.geometry.Vector;
+import ai_cup_22.strategy.models.Obstacle;
+import ai_cup_22.strategy.utils.MovementUtils;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 public class MyStrategy {
     private World world;
@@ -78,13 +84,14 @@ public class MyStrategy {
 //                    new PathDrawable(path.getPathPositions()).draw(debugInterface);
 
 //                    var line = new Line(unit.getPosition(), target);
+//                    DebugData.getInstance().getDefaultLayer().add(new ai_cup_22.strategy.debug.primitives.Line(line, Colors.BLUE_TRANSPARENT));
+
 //                    World.getInstance().getObstacles().values().stream()
 //                            .forEach(obstacle -> {
 //                                line.getIntersectionPoints(obstacle.getCircle()).forEach(p -> {
 //                                    DebugData.getInstance().getDefaultLayer().add(new CircleDrawable(new Circle(p, 0.5), Colors.BLUE_TRANSPARENT));
 //                                });
 //                            });
-//                    DebugData.getInstance().getDefaultLayer().add(new ai_cup_22.strategy.debug.primitives.Line(line, Colors.BLUE_TRANSPARENT));
                 });
             }
 

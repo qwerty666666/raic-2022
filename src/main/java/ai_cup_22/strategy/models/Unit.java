@@ -67,12 +67,12 @@ public class Unit {
         return direction;
     }
 
-    public Vector getSpeedVector() {
+    public Vector getSpeedVectorPerTick() {
         return new Vector(unit.getVelocity()).increase(1. / World.getInstance().getConstants().getTicksPerSecond());
     }
 
     public double getSpeed() {
-        return getSpeedVector().getLength();
+        return getSpeedVectorPerTick().getLength();
     }
 
     public double getMaxForwardSpeedPerTick() {
