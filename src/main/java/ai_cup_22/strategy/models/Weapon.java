@@ -24,6 +24,14 @@ public class Weapon {
         return getDamage() * properties.getRoundsPerSecond();
     }
 
+    public double getMaxDistance() {
+        return properties.getProjectileSpeed();
+    }
+
+    public double getSpeedPerTick() {
+        return properties.getProjectileSpeed() * World.getInstance().getTimePerTick();
+    }
+
     public double getDamage() {
         return properties.getProjectileDamage();
     }

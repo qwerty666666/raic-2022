@@ -72,6 +72,10 @@ public class Line {
         return new Line(start.move(v), end.move(v));
     }
 
+    public Position getMiddlePoint() {
+        return new Position((start.getX() + end.getX()) / 2, (start.getY() + end.getY()) / 2);
+    }
+
     /**
      * Line used as ray
      */

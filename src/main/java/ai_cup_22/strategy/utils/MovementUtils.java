@@ -1,11 +1,16 @@
 package ai_cup_22.strategy.utils;
 
+import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Line;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
+import ai_cup_22.strategy.models.Obstacle;
+import ai_cup_22.strategy.models.Unit;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MovementUtils {
     public static final double MAX_VELOCITY_CHANGE_PER_TICK = 1. / 30;
@@ -49,7 +54,7 @@ public class MovementUtils {
         return restrictVelocitySpeed(position, direction, maxForwardSpeed, maxBackwardSpeed, aim, aimSpeedModifier, nextVelocity);
     }
 
-    public static Vector restrictVelocitySpeed(Position position, Vector direction, double maxForwardSpeed,
+    private static Vector restrictVelocitySpeed(Position position, Vector direction, double maxForwardSpeed,
             double maxBackwardSpeed, double aim, double aimSpeedModifier, Vector movementVector) {
         var maxSpeed = getMaxVelocityInDirection(position, direction, maxForwardSpeed, maxBackwardSpeed, aim,
                 aimSpeedModifier, movementVector);
@@ -57,8 +62,8 @@ public class MovementUtils {
         return maxSpeed < movementVector.getLength() ? movementVector.normalizeToLength(maxSpeed) : movementVector;
     }
 
-    public static Position getPositionAfterCollision(Position curPosition, Vector velocityPerTick, List<Circle> obstacles) {
-        var nextPosition = curPosition.move(velocityPerTick);
+    private static Vector getVelocityAfterCollision(Position curPosition, Vector velocity, List<Circle> obstacles) {
+        var nextPosition = curPosition.move(velocity);
         var trajectory = new Line(curPosition, nextPosition);
 
         // find the nearest obstacle which I collide with
@@ -67,7 +72,7 @@ public class MovementUtils {
                 .filter(circle -> circle.isIntersect(trajectory))
                 .findFirst();
         if (collidingCircle.isEmpty()) {
-            return nextPosition;
+            return velocity;
         }
 
         // find the point on the circle I hit in
@@ -76,8 +81,49 @@ public class MovementUtils {
                 .orElse(nextPosition);
 
         // find projection on perpendicular
-        return new Line(collidingCircle.get().getCenter(), intersectionPosition)
+        nextPosition = new Line(collidingCircle.get().getCenter(), intersectionPosition)
                 .getPerpendicularThroughtPoint(intersectionPosition)
                 .getProjection(nextPosition);
+
+        return new Vector(curPosition, nextPosition);
+    }
+
+    public static Position getMaxPositionIfWalkDirect(Unit unit, Vector directionVelocity, int ticks) {
+        var maxDist = ticks * unit.getMaxForwardSpeedPerTick() + 5;
+
+        var obstacles = World.getInstance().getObstacles().values().stream()
+                .filter(obstacle -> obstacle.getCenter().getDistanceTo(unit.getPosition()) < maxDist)
+                .map(Obstacle::getCircle)
+                .collect(Collectors.toList());
+        var units = Stream.concat(
+                World.getInstance().getMyUnits().values().stream(),
+                World.getInstance().getEnemyUnits().values().stream()
+        )
+                .filter(u -> u.getId() != unit.getId())
+                .map(Unit::getCircle)
+                .collect(Collectors.toList());
+
+        obstacles.addAll(units);
+
+
+        var pos = unit.getPosition();
+        var velocity = unit.getSpeedVectorPerTick();
+        for (int i = 0; i < ticks; i++) {
+            // TODO add check aim
+            velocity = getVelocityOnNextTickAfterCollision(pos, unit.getDirection(), unit.getMaxForwardSpeedPerTick(),
+                    unit.getMaxBackwardSpeedPreTick(), 0, 0, directionVelocity, velocity, obstacles);
+            pos = pos.move(velocity);
+        }
+
+        return pos;
+    }
+
+    private static Vector getVelocityOnNextTickAfterCollision(Position position, Vector direction, double maxForwardSpeed,
+            double maxBackwardSpeed, double aim, double aimSpeedModifier, Vector targetVelocity, Vector currentVelocity,
+            List<Circle> obstacles) {
+        var velocity = getVelocityOnNextTick(position, direction, maxForwardSpeed, maxBackwardSpeed,
+                aim, aimSpeedModifier, targetVelocity, currentVelocity);
+
+        return getVelocityAfterCollision(position, velocity, obstacles);
     }
 }
