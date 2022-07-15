@@ -145,10 +145,13 @@ public class MovementUtils {
         var bulletTrajectory = bullet.getTrajectory();
 
         var unitCircle = unit.getCircle();
+
         var velocity = unit.getVelocityPerTick();
         var bulletPos = bullet.getPosition();
-
         for (int i = 0; i < ticks; i++) {
+
+            // move unit
+
             // TODO add check aim
             velocity = getVelocityOnNextTickAfterCollision(unitCircle.getCenter(), unit.getDirection(), unit.getMaxForwardSpeedPerTick(),
                     unit.getMaxBackwardSpeedPreTick(), 0, 0, directionVelocity, velocity, nonWalkThroughObstacles);
@@ -158,8 +161,13 @@ public class MovementUtils {
             result.dodgePosition = unitCircle.getCenter();
             result.steps.add(unitCircle.getCenter());
 
+            // move bullet
+
             var newBulletPos = bulletPos.move(bullet.getVelocity());
             var tickTrajectory = new Line(bulletPos, newBulletPos);
+            bulletPos = newBulletPos;
+
+            // check that bullet hits unit
 
             if (unitCircle.isIntersect(tickTrajectory)) {
                 var hitUnitPosition = tickTrajectory.getIntersectionPoints(unitCircle).stream()
@@ -167,7 +175,7 @@ public class MovementUtils {
                         .orElse(null);
 
                 var isHitUnit = hitUnitPosition == null ||
-                        bulletTrajectory.getEnd().getDistanceTo(bulletPos) > hitUnitPosition.getDistanceTo(bulletPos);
+                        bulletTrajectory.getEnd().getDistanceTo(bulletTrajectory.getStart()) > hitUnitPosition.getDistanceTo(bulletTrajectory.getStart());
 
                 if (isHitUnit) {
                     result.isHit = true;
@@ -175,7 +183,7 @@ public class MovementUtils {
                 }
             }
 
-            bulletPos = newBulletPos;
+            // check that unit run away from hit trajectory
 
             if (!unitCircle.enlarge(0.35).isIntersect(bulletTrajectory)) {
                 result.isHit = false;
@@ -187,10 +195,26 @@ public class MovementUtils {
     }
 
     public static class DodgeResult {
-        public Position dodgePosition;
-        public boolean isHit;
-        public int ticks;
-        public List<Position> steps = new ArrayList<>();
+        private Position dodgePosition;
+        private boolean isHit;
+        private int ticks;
+        private List<Position> steps = new ArrayList<>();
+
+        public boolean isSuccess() {
+            return !isHit;
+        }
+
+        public Position getDodgePosition() {
+            return dodgePosition;
+        }
+
+        public int getTicks() {
+            return ticks;
+        }
+
+        public List<Position> getSteps() {
+            return steps;
+        }
     }
 
     public static List<Circle> getNonWalkThroughObstaclesInRange(Unit unit, double maxDist) {

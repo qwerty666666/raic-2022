@@ -14,10 +14,10 @@ import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.utils.MovementUtils;
 import ai_cup_22.strategy.utils.MovementUtils.DodgeResult;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -32,20 +32,67 @@ public class DodgeBulletsAction implements Action {
     }
 
     private Vector getVelocityToDodgeNearPossibleBullet(Unit unit) {
-        return World.getInstance().getBullets().values().stream()
+        var bullets = World.getInstance().getBullets().values().stream()
                 .filter(bullet -> bullet.getUnitId() != unit.getId())
                 .filter(bullet -> isBulletTreatsUnit(unit, bullet))
-                .sorted(Comparator.comparingDouble(b -> b.getPosition().getDistanceTo(unit.getPosition())))
-                .map(bullet -> getVelocityToDodgeBullet(unit, bullet))
-                .filter(Objects::nonNull)
-                .findFirst()
+                .sorted(Comparator.comparingDouble(b -> b.getPosition().getDistanceTo(unit.getPosition())));
+
+        // dodge from first possible bullet
+        var directionsToDodge = bullets
+                .map(bullet -> getDirectionsToDodgeBullet(unit, bullet))
+                .filter(dodgeDirections -> dodgeDirections.stream().anyMatch(DodgeDirection::canDodgeBullet))
+                .findFirst().stream()
+                .flatMap(Collection::stream);
+
+        if (DebugData.isEnabled) {
+            directionsToDodge = directionsToDodge
+                    .peek(dodgeDirection -> {
+                        DebugData.getInstance().getDefaultLayer().add(
+                                new Line(unit.getPosition(), unit.getPosition().move(dodgeDirection.getDirection()), Colors.BLUE_TRANSPARENT)
+                        );
+
+                        for (var step: dodgeDirection.getDodgeResult().getSteps()) {
+                            DebugData.getInstance().getDefaultLayer().add(
+                                    new CircleDrawable(
+                                            new Circle(step, unit.getCircle().getRadius()),
+                                            dodgeDirection.canDodgeBullet() ? Colors.GREEN_TRANSPARENT : Colors.RED_TRANSPARENT,
+                                            false
+                                    )
+                            );
+                        }
+                    });
+        }
+
+        return directionsToDodge
+                .min((d1, d2) -> {
+                    if (d1.canDodgeBullet() && !d2.canDodgeBullet()) {
+                        return -1;
+                    }
+                    if (!d1.canDodgeBullet() && d2.canDodgeBullet()) {
+                        return 1;
+                    }
+                    return d1.getPriority() - d2.getPriority();
+                })
+                .map(DodgeDirection::getDirection)
                 .orElse(null);
     }
 
-    private Vector getVelocityToDodgeBullet(Unit unit, Bullet bullet) {
+    private List<DodgeDirection> getDirectionsToDodgeBullet(Unit unit, Bullet bullet) {
+        var directions = getPossibleDirectionsToDodge(unit, bullet);
+
+        for (var d: directions) {
+            d.calculateResult(unit, bullet);
+        }
+
+        return directions;
+    }
+
+    private List<DodgeDirection> getPossibleDirectionsToDodge(Unit unit, Bullet bullet) {
         var bulletVelocity = bullet.getVelocity();
 
         var directionsToDodge = new ArrayList<Vector>();
+
+        // predefined
         directionsToDodge.addAll(List.of(
                 bulletVelocity.rotate(Math.PI / 2),
                 bulletVelocity.rotate(-Math.PI / 2),
@@ -53,6 +100,8 @@ public class DodgeBulletsAction implements Action {
                 bulletVelocity.rotate(-Math.PI / 4),
                 bulletVelocity
         ));
+
+        // tangents to obstacles
         directionsToDodge.addAll(
                 // take first direction which are further to the bullet
                 // (to not run on next bullets)
@@ -65,50 +114,9 @@ public class DodgeBulletsAction implements Action {
                         .collect(Collectors.toList())
         );
 
-        var dodgeDirections = IntStream.range(0, directionsToDodge.size())
+        return IntStream.range(0, directionsToDodge.size())
                 .mapToObj(ind -> new DodgeDirection(directionsToDodge.get(ind).normalizeToLength(10), ind))
                 .collect(Collectors.toList());
-
-//        if (DebugData.isEnabled) {
-//            directionsToDodge.stream()
-//                    .map(direction -> direction.normalizeToLength(10))
-//                    .forEach(d -> DebugData.getInstance().getDefaultLayer().add(new Line(unit.getPosition(), unit.getPosition().move(d), Colors.BLUE_TRANSPARENT)));
-//            directionsToDodge.stream()
-//                    .map(direction -> direction.normalizeToLength(10))
-//                    .filter(direction -> !MovementUtils.isHitBulletIfWalkDirect(unit, direction, bullet))
-//                    .findFirst()
-//                    .ifPresent(d -> DebugData.getInstance().getDefaultLayer().add(new CircleDrawable(new Circle(unit.getPosition().move(d), 0.3), Colors.GREEN_TRANSPARENT)));
-//        }
-
-        return dodgeDirections.stream()
-                .collect(Collectors.toMap(
-                        direction -> direction,
-                        direction -> MovementUtils.tryDodgeByWalkDirect(unit, direction.direction, bullet)
-                ))
-                .entrySet().stream()
-                .peek(e -> {
-                    DebugData.getInstance().getDefaultLayer().add(
-                            new Line(unit.getPosition(), unit.getPosition().move(e.getKey().direction), Colors.BLUE_TRANSPARENT)
-                    );
-
-                    var result = e.getValue();
-                    for (var step: result.steps) {
-                        DebugData.getInstance().getDefaultLayer().add(
-                                new CircleDrawable(new Circle(step, 1), result.isHit ? Colors.RED_TRANSPARENT : Colors.GREEN_TRANSPARENT, false)
-                        );
-                    }
-                })
-                .min((e1, e2) -> {
-                    if (e1.getValue().isHit && !e2.getValue().isHit) {
-                        return 1;
-                    }
-                    if (!e1.getValue().isHit && e2.getValue().isHit) {
-                        return -1;
-                    }
-                    return e1.getKey().priority - e2.getKey().priority;
-                })
-                .map(e -> e.getKey().direction)
-                .orElse(null);
     }
 
     private List<Vector> getTrajectoriesToAvoidNonMoveThroughObstacles(Unit unit) {
@@ -120,16 +128,37 @@ public class DodgeBulletsAction implements Action {
     }
 
     private boolean isBulletTreatsUnit(Unit unit, Bullet bullet) {
-        return unit.getCircle().enlarge(0.4).isIntersect(bullet.getFullLifetimeTrajectory());
+        return unit.getCircle().enlarge(0.35).isIntersect(bullet.getTrajectory());
     }
 
     private static class DodgeDirection {
         Vector direction;
         int priority;
+        DodgeResult result;
 
         public DodgeDirection(Vector direction, int priority) {
             this.direction = direction;
             this.priority = priority;
+        }
+
+        public Vector getDirection() {
+            return direction;
+        }
+
+        public int getPriority() {
+            return priority;
+        }
+
+        public DodgeResult getDodgeResult() {
+            return result;
+        }
+
+        public void calculateResult(Unit unit, Bullet bullet) {
+            result = MovementUtils.tryDodgeByWalkDirect(unit, direction, bullet);
+        }
+
+        public boolean canDodgeBullet() {
+            return result.isSuccess();
         }
     }
 }
