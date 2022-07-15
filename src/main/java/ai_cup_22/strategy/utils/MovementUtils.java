@@ -8,6 +8,7 @@ import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Bullet;
 import ai_cup_22.strategy.models.Obstacle;
 import ai_cup_22.strategy.models.Unit;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -107,7 +108,7 @@ public class MovementUtils {
     public static boolean isHitBulletIfWalkDirect(Unit unit, Vector directionVelocity, Bullet bullet) {
         var ticks = bullet.getRemainingLifetimeTicks();
         var nonWalkThroughObstacles = getNonWalkThroughObstaclesInRange(unit , ticks * unit.getMaxForwardSpeedPerTick() + 5);
-        var nonShootThroughObstacles = getNonShootThroughObstaclesInRange(unit , ticks * unit.getMaxForwardSpeedPerTick() + 5);
+        var bulletTrajectory = bullet.getTrajectory();
 
         var unitCircle = unit.getCircle();
         var velocity = unit.getVelocityPerTick();
@@ -121,36 +122,75 @@ public class MovementUtils {
             var newBulletPos = bulletPos.move(bullet.getVelocity());
             var tickTrajectory = new Line(bulletPos, newBulletPos);
 
-            Position hitObstaclePosition = null;
-            for (var obs: nonShootThroughObstacles) {
-                if (obs.isIntersect(tickTrajectory)) {
-                    hitObstaclePosition = tickTrajectory.getIntersectionPoints(obs).stream()
-                            .min(Comparator.comparingDouble(point -> point.getDistanceTo(tickTrajectory.getStart())))
-                            .orElse(null);
-                }
-            }
-
             if (unitCircle.isIntersect(tickTrajectory)) {
-                if (hitObstaclePosition == null) {
-                    return true;
-                }
-
                 var hitUnitPosition = tickTrajectory.getIntersectionPoints(unitCircle).stream()
                         .min(Comparator.comparingDouble(point -> point.getDistanceTo(tickTrajectory.getStart())))
                         .orElse(null);
 
                 return hitUnitPosition == null ||
-                        hitObstaclePosition.getDistanceTo(bulletPos) > hitUnitPosition.getDistanceTo(bulletPos);
-            }
-
-            if (hitObstaclePosition != null) {
-                return false;
+                        bulletTrajectory.getEnd().getDistanceTo(bulletPos) > hitUnitPosition.getDistanceTo(bulletPos);
             }
 
             bulletPos = newBulletPos;
         }
 
         return false;
+    }
+
+    public static DodgeResult tryDodgeByWalkDirect(Unit unit, Vector directionVelocity, Bullet bullet) {
+        var result = new DodgeResult();
+
+        var ticks = bullet.getRemainingLifetimeTicks();
+        var nonWalkThroughObstacles = getNonWalkThroughObstaclesInRange(unit , ticks * unit.getMaxForwardSpeedPerTick() + 5);
+        var bulletTrajectory = bullet.getTrajectory();
+
+        var unitCircle = unit.getCircle();
+        var velocity = unit.getVelocityPerTick();
+        var bulletPos = bullet.getPosition();
+
+        for (int i = 0; i < ticks; i++) {
+            // TODO add check aim
+            velocity = getVelocityOnNextTickAfterCollision(unitCircle.getCenter(), unit.getDirection(), unit.getMaxForwardSpeedPerTick(),
+                    unit.getMaxBackwardSpeedPreTick(), 0, 0, directionVelocity, velocity, nonWalkThroughObstacles);
+            unitCircle = unitCircle.move(velocity);
+
+            result.ticks += 1;
+            result.dodgePosition = unitCircle.getCenter();
+            result.steps.add(unitCircle.getCenter());
+
+            var newBulletPos = bulletPos.move(bullet.getVelocity());
+            var tickTrajectory = new Line(bulletPos, newBulletPos);
+
+            if (unitCircle.isIntersect(tickTrajectory)) {
+                var hitUnitPosition = tickTrajectory.getIntersectionPoints(unitCircle).stream()
+                        .min(Comparator.comparingDouble(point -> point.getDistanceTo(tickTrajectory.getStart())))
+                        .orElse(null);
+
+                var isHitUnit = hitUnitPosition == null ||
+                        bulletTrajectory.getEnd().getDistanceTo(bulletPos) > hitUnitPosition.getDistanceTo(bulletPos);
+
+                if (isHitUnit) {
+                    result.isHit = true;
+                    break;
+                }
+            }
+
+            bulletPos = newBulletPos;
+
+            if (!unitCircle.enlarge(0.35).isIntersect(bulletTrajectory)) {
+                result.isHit = false;
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    public static class DodgeResult {
+        public Position dodgePosition;
+        public boolean isHit;
+        public int ticks;
+        public List<Position> steps = new ArrayList<>();
     }
 
     public static List<Circle> getNonWalkThroughObstaclesInRange(Unit unit, double maxDist) {
@@ -173,9 +213,8 @@ public class MovementUtils {
     }
 
     public static List<Circle> getNonShootThroughObstaclesInRange(Unit unit, double maxDist) {
-        return World.getInstance().getObstacles().values().stream()
+        return World.getInstance().getNonShootThroughObstacles().stream()
                 .filter(obstacle -> obstacle.getCenter().getDistanceTo(unit.getPosition()) < maxDist)
-                .filter(Obstacle::isCanShootThrough)
                 .map(Obstacle::getCircle)
                 .collect(Collectors.toList());
     }

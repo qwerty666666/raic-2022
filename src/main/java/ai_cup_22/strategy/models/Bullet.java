@@ -5,6 +5,7 @@ import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.geometry.Line;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
+import java.util.Comparator;
 
 public class Bullet {
     private Position position;
@@ -14,6 +15,7 @@ public class Bullet {
     private double lifetime;
     private boolean isSimulated;
     private int unitId;
+    private Position endTrajectoryPosition;
 
     public Bullet(Projectile projectile) {
         this.velocity = new Vector(projectile.getVelocity()).increase(World.getInstance().getTimePerTick());
@@ -29,6 +31,15 @@ public class Bullet {
         lifetime = projectile.getLifeTime();
 
         isSimulated = false;
+
+        if (endTrajectoryPosition == null) {
+            var trajectory = getFullLifetimeTrajectory();
+            endTrajectoryPosition = World.getInstance().getNonShootThroughObstacles().stream()
+                    .filter(obstacle -> obstacle.getCircle().isIntersect(trajectory))
+                    .flatMap(obstacle -> trajectory.getIntersectionPoints(obstacle.getCircle()).stream())
+                    .min(Comparator.comparingDouble(intersectPoint -> intersectPoint.getDistanceTo(position)))
+                    .orElse(trajectory.getEnd());
+        }
 
         return this;
     }
@@ -72,8 +83,12 @@ public class Bullet {
         return new Line(position.move(velocity.reverse()), position);
     }
 
-    public Line getTrajectory() {
+    public Line getFullLifetimeTrajectory() {
         return new Line(position, position.move(velocity.increase(getRemainingLifetimeTicks())));
+    }
+
+    public Line getTrajectory() {
+        return new Line(position, endTrajectoryPosition);
     }
 
     public int getUnitId() {

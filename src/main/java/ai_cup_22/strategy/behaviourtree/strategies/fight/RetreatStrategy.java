@@ -5,9 +5,6 @@ import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.CompositeAction;
 import ai_cup_22.strategy.actions.DodgeBulletsAction;
 import ai_cup_22.strategy.actions.MoveByPathAction;
-import ai_cup_22.strategy.actions.MoveByPotentialFieldAction;
-import ai_cup_22.strategy.actions.MoveByPotentialFieldAction.GetScoreValueStrategy;
-import ai_cup_22.strategy.actions.basic.AimAction;
 import ai_cup_22.strategy.actions.basic.LookToAction;
 import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.geometry.Position;
@@ -89,7 +86,7 @@ public class RetreatStrategy implements Strategy {
                 .filter(bullet -> bullet.getUnitId() != unit.getId())
                 .anyMatch(bullet -> {
                     var safeDist = unit.getMaxForwardSpeedPerTick() + unit.getCircle().getRadius();
-                    var distToUnit = bullet.getTrajectory().getDistanceTo(unit.getPosition());
+                    var distToUnit = bullet.getFullLifetimeTrajectory().getDistanceTo(unit.getPosition());
 
                     return distToUnit <= safeDist;
                 } );
