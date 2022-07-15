@@ -69,6 +69,10 @@ public class MyStrategy {
 
                 for (var unit : world.getMyUnits().values()) {
                     DebugData.getInstance().getCursorPosition().ifPresent(target -> {
+//                        DebugData.getInstance().getDefaultLayer().add(
+//                                new Text(Double.toString(unit.getPotentialField().getScoreValue(target)), target)
+//                        );
+
                         //                     DijkstraPathFinder.minThreatPathFinder(unit.getPotentialField());
                         //                     new PotentialFieldDrawable(unit.getPotentialField()).draw(debugInterface);
 

@@ -16,6 +16,18 @@ public class Weapon {
         this.id = id;
     }
 
+    public boolean isWand() {
+        return id == 0;
+    }
+
+    public boolean isStaff() {
+        return id == 1;
+    }
+
+    public boolean isBow() {
+        return id == 2;
+    }
+
     public int getId() {
         return id;
     }
@@ -42,6 +54,14 @@ public class Weapon {
 
     public double getAimFieldOfView() {
         return properties.getAimFieldOfView();
+    }
+
+    public double getAimSpeedModifier() {
+        return properties.getAimMovementSpeedModifier();
+    }
+
+    public double getAimTime() {
+        return properties.getAimTime();
     }
 
     public int getAimTicks() {

@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class StaticPotentialField implements PotentialField {
-    public static final double TREE_MAX_INFLUENCE_RADIUS = 2.5;
-    public static final double TREE_MIN_SCORE = -50;
+    public static final double TREE_MAX_INFLUENCE_RADIUS = 2;
+    public static final double TREE_MIN_SCORE = -10;
 
     private double startCoord;
     private double stepSize = PotentialField.STEP_SIZE;

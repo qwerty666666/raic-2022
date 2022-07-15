@@ -1,12 +1,15 @@
 package ai_cup_22.strategy.actions;
 
+import ai_cup_22.model.ActionOrder.Aim;
 import ai_cup_22.model.UnitOrder;
 import ai_cup_22.strategy.World;
+import ai_cup_22.strategy.actions.basic.AimAction;
 import ai_cup_22.strategy.actions.basic.MoveToAction;
 import ai_cup_22.strategy.debug.Colors;
 import ai_cup_22.strategy.debug.DebugData;
 import ai_cup_22.strategy.debug.primitives.CircleDrawable;
 import ai_cup_22.strategy.debug.primitives.Line;
+import ai_cup_22.strategy.debug.primitives.Text;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Bullet;
@@ -32,49 +35,63 @@ public class DodgeBulletsAction implements Action {
     }
 
     private Vector getVelocityToDodgeNearPossibleBullet(Unit unit) {
+        // take only bullets that threat me
         var bullets = World.getInstance().getBullets().values().stream()
                 .filter(bullet -> bullet.getUnitId() != unit.getId())
                 .filter(bullet -> isBulletTreatsUnit(unit, bullet))
-                .sorted(Comparator.comparingDouble(b -> b.getPosition().getDistanceTo(unit.getPosition())));
+                .sorted(Comparator.comparingDouble(b -> b.getPosition().getDistanceTo(unit.getPosition())))
+                .collect(Collectors.toList());
 
         // dodge from first possible bullet
-        var directionsToDodge = bullets
+        var directionsToDodge = bullets.stream()
                 .map(bullet -> getDirectionsToDodgeBullet(unit, bullet))
                 .filter(dodgeDirections -> dodgeDirections.stream().anyMatch(DodgeDirection::canDodgeBullet))
                 .findFirst().stream()
-                .flatMap(Collection::stream);
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
 
         if (DebugData.isEnabled) {
-            directionsToDodge = directionsToDodge
-                    .peek(dodgeDirection -> {
-                        DebugData.getInstance().getDefaultLayer().add(
-                                new Line(unit.getPosition(), unit.getPosition().move(dodgeDirection.getDirection()), Colors.BLUE_TRANSPARENT)
-                        );
+            for (var dodgeDirection: directionsToDodge) {
+                DebugData.getInstance().getDefaultLayer().add(
+                        new Line(unit.getPosition(), unit.getPosition().move(dodgeDirection.getDirection()), Colors.BLUE_TRANSPARENT)
+                );
+                DebugData.getInstance().getDefaultLayer().add(
+                        new Text(Double.toString(dodgeDirection.getScore(unit)), unit.getPosition().move(dodgeDirection.getDirection()), 0.2)
+                );
 
-                        for (var step: dodgeDirection.getDodgeResult().getSteps()) {
-                            DebugData.getInstance().getDefaultLayer().add(
-                                    new CircleDrawable(
-                                            new Circle(step, unit.getCircle().getRadius()),
-                                            dodgeDirection.canDodgeBullet() ? Colors.GREEN_TRANSPARENT : Colors.RED_TRANSPARENT,
-                                            false
-                                    )
-                            );
-                        }
-                    });
+                for (var step: dodgeDirection.getDodgeResult().getSteps()) {
+                    DebugData.getInstance().getDefaultLayer().add(
+                            new CircleDrawable(
+                                    new Circle(step, unit.getCircle().getRadius()),
+                                    dodgeDirection.canDodgeBullet() ? Colors.GREEN_TRANSPARENT : Colors.RED_TRANSPARENT,
+                                    false
+                            )
+                    );
+                }
+            }
         }
 
-        return directionsToDodge
-                .min((d1, d2) -> {
-                    if (d1.canDodgeBullet() && !d2.canDodgeBullet()) {
-                        return -1;
-                    }
-                    if (!d1.canDodgeBullet() && d2.canDodgeBullet()) {
-                        return 1;
-                    }
-                    return d1.getPriority() - d2.getPriority();
-                })
-                .map(DodgeDirection::getDirection)
+        // take best direction
+        var bestDirection = directionsToDodge.stream()
+                .min(Comparator.comparing(DodgeDirection::canDodgeBullet).reversed()
+                            .thenComparing(Comparator.comparingDouble((DodgeDirection d) -> d.getScore(unit)).reversed())
+                            .thenComparingDouble(d -> d.getDodgeResult().getTicks())
+                )
                 .orElse(null);
+
+        if (DebugData.isEnabled && bestDirection != null) {
+            for (var step: bestDirection.getDodgeResult().getSteps()) {
+                DebugData.getInstance().getDefaultLayer().add(
+                        new CircleDrawable(
+                                new Circle(step, unit.getCircle().getRadius()),
+                                Colors.ORANGE,
+                                false
+                        )
+                );
+            }
+        }
+
+        return bestDirection == null ? null : bestDirection.getDirection();
     }
 
     private List<DodgeDirection> getDirectionsToDodgeBullet(Unit unit, Bullet bullet) {
@@ -132,9 +149,10 @@ public class DodgeBulletsAction implements Action {
     }
 
     private static class DodgeDirection {
-        Vector direction;
-        int priority;
-        DodgeResult result;
+        private Vector direction;
+        private int priority;
+        private DodgeResult result;
+        private Double score;
 
         public DodgeDirection(Vector direction, int priority) {
             this.direction = direction;
@@ -159,6 +177,18 @@ public class DodgeBulletsAction implements Action {
 
         public boolean canDodgeBullet() {
             return result.isSuccess();
+        }
+
+        public double getScore(Unit unit) {
+            if (score == null) {
+                score = unit.getPotentialField().getScoreValue(getDodgeResult().getDodgePosition());
+            }
+            return score;
+        }
+
+        @Override
+        public String toString() {
+            return direction + " " + canDodgeBullet() + " " + score;
         }
     }
 }

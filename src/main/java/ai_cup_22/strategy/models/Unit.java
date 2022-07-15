@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Optional;
 
 public class Unit {
+    public static final int TICKS_TO_RUN_ASIDE_BY_UNIT_RADIUS = 8;
+    public static final double DEFAULT_SAFE_DIST = 15;
+
     private Circle circle;
     private ai_cup_22.model.Unit unit;
     private Vector direction;
@@ -22,6 +25,7 @@ public class Unit {
     private List<Position> currentPath;
     private BehaviourTree behaviourTree = new BehaviourTree(this);
     private ActionBlockingAction lastAction;
+    private boolean isAiming;
 
     public void updateTick(ai_cup_22.model.Unit unit) {
         this.unit = unit;
@@ -32,6 +36,16 @@ public class Unit {
         if (this.lastAction != null) {
             lastAction.updateTick(this, unit.getAction());
         }
+        this.isAiming = false;
+    }
+
+    public boolean isAiming() {
+        return isAiming;
+    }
+
+    public Unit setAiming(boolean aiming) {
+        isAiming = aiming;
+        return this;
     }
 
     public BehaviourTree getBehaviourTree() {
@@ -160,6 +174,14 @@ public class Unit {
         return unit.getAim();
     }
 
+    public double getAimSpeedModifier() {
+        return getWeaponOptional().map(Weapon::getAimSpeedModifier).orElse(0.);
+    }
+
+    public double getAimChangePerTick() {
+        return getWeaponOptional().map(w -> World.getInstance().getTimePerTick() / w.getAimTime()).orElse(0.);
+    }
+
     public double getDistanceTo(Unit u) {
         return u.getPosition().getDistanceTo(this.getPosition());
     }
@@ -222,7 +244,14 @@ public class Unit {
     }
 
     public double getThreatenDistanceFor(Unit unit) {
-        return 15;
+        return getWeaponOptional()
+                .map(w -> {
+                    if (w.isStaff()) {
+                        return DEFAULT_SAFE_DIST;
+                    }
+                    return w.getSpeedPerTick() * (TICKS_TO_RUN_ASIDE_BY_UNIT_RADIUS + 2) + 1;
+                })
+                .orElse(DEFAULT_SAFE_DIST);
     }
 
     @Override

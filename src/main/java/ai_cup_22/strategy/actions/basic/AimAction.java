@@ -21,6 +21,8 @@ public class AimAction implements Action {
         if (unit.canDoNewAction() &&
                 unit.hasWeapon() && unit.getBulletCount() > 0 &&
                 unit.getRemainingCoolDownTicks() <= unit.getTicksToFullAim()) {
+            unit.setAiming(true);
+
             order.setAction(new Aim(shoot));
         }
     }
