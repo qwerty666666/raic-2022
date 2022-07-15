@@ -45,6 +45,8 @@ public class Graph {
         nodes.values().stream()
                 .sorted(Comparator.comparingDouble(a -> a.getPosition().getSquareDistanceTo(position)))
                 .limit(4)
+                // remove nodes where we can't run
+                .filter(n -> !n.getScore().isUnreachable())
                 .forEach(near -> {
                     near.addAdjacent(node);
                     node.addAdjacent(near);
@@ -54,7 +56,7 @@ public class Graph {
     }
 
     public void removeNode(Node node) {
-        node.getAdjacent().remove(node);
+        node.getAdjacent().forEach(adj -> adj.getAdjacent().remove(node));
         nodes.remove(node.getPosition());
     }
 
