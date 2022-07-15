@@ -28,14 +28,11 @@ public class MoveByPotentialFieldAction implements Action {
     }
 
     private Score getFieldWithMaxScore(Position from, PotentialField potentialField) {
-        return potentialField.getScores().stream()
+        return potentialField.getScoresAround(from).stream()
                 .filter(score -> !score.isUnreachable())
-                .sorted(Comparator.comparingDouble(score -> score.getPosition().getDistanceTo(from)))
-                .limit(4)
                 .max(Comparator.comparingDouble(getScoreValueStrategy.getGetScoreValueFunc()))
                 .orElseThrow();
     }
-
 
     public enum GetScoreValueStrategy {
         WHOLE_SCORE (Score::getScore),

@@ -6,13 +6,13 @@ import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.potentialfield.scorecontributors.basic.ConstantInCircleScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.basic.LinearScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.composite.FirstMatchCompositeScoreContributor;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class StaticPotentialField implements PotentialField {
-    public static final double TREE_MAX_INFLUENCE_RADIUS = 2;
+    public static final double TREE_MAX_INFLUENCE_RADIUS = 1.5;
     public static final double TREE_MIN_SCORE = -10;
 
     private double startCoord;
@@ -20,7 +20,7 @@ public class StaticPotentialField implements PotentialField {
     private int gridSize;
     private Score[][] scores;
 
-    private List<Score> allScores;
+    private Map<Position, Score> allScores;
 
     public StaticPotentialField(World world) {
         initValues();
@@ -55,7 +55,7 @@ public class StaticPotentialField implements PotentialField {
                     .add(new ConstantInCircleScoreContributor(circle, PotentialField.UNREACHABLE_VALUE))
                     .add(new LinearScoreContributor(circle.getCenter(), TREE_MIN_SCORE, 0, circle.getRadius(), influenceRadius));
 
-            getScoresInCircle(new Circle(circle.getCenter(), influenceRadius))
+            getScoresInCircle(new Circle(circle.getCenter(), influenceRadius)).values()
                     .forEach(obstaclesContributor::contribute);
         });
 
@@ -104,8 +104,8 @@ public class StaticPotentialField implements PotentialField {
         return (int) Math.max(0, Math.min(gridSize, (coord - startCoord) / stepSize));
     }
 
-    public List<Score> getScoresInCircle(Circle circle) {
-        var list = new ArrayList<Score>();
+    public Map<Position, Score> getScoresInCircle(Circle circle) {
+        var scores = new LinkedHashMap<Position, Score>();
 
         int minX = getIndex(circle.getCenter().getX() - circle.getRadius());
         int maxX = getIndex(circle.getCenter().getX() + circle.getRadius());
@@ -114,23 +114,23 @@ public class StaticPotentialField implements PotentialField {
 
         for (int x = minX; x < maxX; x++) {
             for (int y = minY; y < maxY; y++) {
-                var score = scores[x][y];
+                var score = this.scores[x][y];
 
                 if (circle.contains(score.getPosition())) {
-                    list.add(score);
+                    scores.put(score.getPosition(), score);
                 }
             }
         }
 
-        return list;
+        return scores;
     }
 
     @Override
-    public List<Score> getScores() {
+    public Map<Position, Score> getScores() {
         if (allScores == null) {
             allScores = Arrays.stream(scores)
                     .flatMap(Arrays::stream)
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toMap(Score::getPosition, s -> s, (x, y) -> y, LinkedHashMap::new));
         }
         return allScores;
     }

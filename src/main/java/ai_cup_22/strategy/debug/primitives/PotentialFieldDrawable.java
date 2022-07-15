@@ -15,7 +15,7 @@ public class PotentialFieldDrawable implements Drawable {
 
     @Override
     public void draw(DebugInterface debugInterface) {
-        potentialField.getScores().stream()
+        potentialField.getScores().values().stream()
                 .filter(score -> score.getScore() != PotentialField.UNREACHABLE_VALUE)
 //                .filter(score -> score.getPosition().getDistanceTo(new Position(0, 0)) < 20)
                 .map(score -> new CircleDrawable(new Circle(score.getPosition(), 0.5), getColor(score.getScore())))

@@ -6,25 +6,28 @@ import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.pathfinding.Graph;
 import java.util.List;
+import java.util.Map;
 
 public class UnitPotentialField implements PotentialField {
     public static final double FIELD_RADIUS = 30;
-    private List<Score> scores;
+    private Map<Position, Score> scores;
     private Unit unit;
     private Graph graph;
+    private Circle circle;
 
     public UnitPotentialField(Unit unit) {
         this.unit = unit;
     }
 
     public void refresh() {
-        scores = World.getInstance().getStaticPotentialField().getScoresInCircle(new Circle(unit.getPosition(), FIELD_RADIUS));
-        scores.forEach(Score::reset);
+        circle = new Circle(unit.getPosition(), FIELD_RADIUS);
+        scores = World.getInstance().getStaticPotentialField().getScoresInCircle(circle);
+        scores.values().forEach(Score::reset);
         graph = null;
     }
 
     @Override
-    public List<Score> getScores() {
+    public Map<Position, Score> getScores() {
         return scores;
     }
 
@@ -39,5 +42,10 @@ public class UnitPotentialField implements PotentialField {
     @Override
     public Position getCenter() {
         return unit.getPosition();
+    }
+
+    @Override
+    public Circle getCircle() {
+        return circle;
     }
 }

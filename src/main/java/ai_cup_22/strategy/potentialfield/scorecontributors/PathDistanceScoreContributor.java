@@ -30,7 +30,7 @@ public class PathDistanceScoreContributor implements ScoreContributor {
     }
 
     private void calculateDistances() {
-        var existedNodes = potentialField.getScores().stream()
+        var existedNodes = potentialField.getScores().values().stream()
                 .filter(score -> score.getScore() != PotentialField.UNREACHABLE_VALUE)
                 .collect(Collectors.toSet());
 
@@ -59,7 +59,7 @@ public class PathDistanceScoreContributor implements ScoreContributor {
     }
 
     private Score getNearestScoreField() {
-        return potentialField.getScores().stream()
+        return potentialField.getScores().values().stream()
                 .min(Comparator.comparingDouble(s -> s.getPosition().getDistanceTo(source)))
                 .orElse(null);
     }

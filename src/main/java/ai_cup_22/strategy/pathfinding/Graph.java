@@ -4,23 +4,28 @@ import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.potentialfield.PotentialField;
 import ai_cup_22.strategy.potentialfield.Score;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Graph {
+    private final PotentialField potentialField;
     private final Map<Position, Node> nodes;
 
     public Graph(PotentialField potentialField) {
-        nodes = buildGraph(potentialField.getScores());
+        this.potentialField = potentialField;
+        nodes = buildGraph(potentialField.getScores().values());
     }
 
-    private Map<Position, Node> buildGraph(List<Score> scores) {
+    private Map<Position, Node> buildGraph(Collection<Score> scores) {
         var graph = scores.stream()
                 // remove nodes where we can't run
                 .filter(score -> !score.isUnreachable())
-                .collect(Collectors.toMap(Score::getPosition, Node::new));
+                .collect(Collectors.toMap(Score::getPosition, Node::new, (x, y) -> y, LinkedHashMap::new));
 
         graph.forEach((pos, node) -> {
             for (var adj: node.getScore().getAdjacent()) {
@@ -42,9 +47,37 @@ public class Graph {
     public Node addNode(Position position) {
         var node = new Node(new Score(position));
 
-        nodes.values().stream()
-                .sorted(Comparator.comparingDouble(a -> a.getPosition().getSquareDistanceTo(position)))
-                .limit(4)
+        // if nearest score is unreachable, we just find the nearest reachable node
+        // from it by BFS
+        var scoresAround = potentialField.getScoresAround(position);
+        if (scoresAround.stream().allMatch(Score::isUnreachable)) {
+            var queue = new LinkedList<Score>();
+            queue.add(scoresAround.get(0));
+
+            var used = new HashSet<Score>();
+            used.add(scoresAround.get(0));
+
+            while (!queue.isEmpty()) {
+                var cur = queue.poll();
+
+                if (!cur.isUnreachable() && nodes.containsKey(cur.getPosition())) {
+                    scoresAround = List.of(cur);
+                    break;
+                }
+
+                cur.getAdjacent().forEach(adj -> {
+                    if (!used.contains(adj)) {
+                        used.add(adj);
+                        queue.add(adj);
+                    }
+                });
+            }
+        }
+
+        // add adjacents
+        scoresAround.stream()
+                .filter(score -> !score.isUnreachable())
+                .map(score -> nodes.get(score.getPosition()))
                 // remove nodes where we can't run
                 .filter(n -> !n.getScore().isUnreachable())
                 .forEach(near -> {

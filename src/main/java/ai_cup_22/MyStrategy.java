@@ -69,8 +69,18 @@ public class MyStrategy {
 
                 for (var unit : world.getMyUnits().values()) {
                     DebugData.getInstance().getCursorPosition().ifPresent(target -> {
+//                        unit.getPotentialField().getScoresNear(target).forEach(point -> {
+//                            if (point == null) {
+//                                DebugData.getInstance().getDefaultLayer().add(new Text("null", unit.getPosition()));
+//                            } else {
+//                                DebugData.getInstance().getDefaultLayer().add(
+//                                        new CircleDrawable(new Circle(point.getPosition(), 1), Colors.BLUE_TRANSPARENT)
+//                                );
+//                            }
+//                        });
+
 //                        DebugData.getInstance().getDefaultLayer().add(
-//                                new Text(Double.toString(unit.getPotentialField().getScoreValue(target)), target)
+//                                new Text(Double.toString(unit.getPotentialField().getScoreValue(target)), target, 0.2)
 //                        );
 
                         //                     DijkstraPathFinder.minThreatPathFinder(unit.getPotentialField());
@@ -79,8 +89,8 @@ public class MyStrategy {
                         //                    var path = new AStarPathFinder(unit.getPotentialField()).findPath(unit.getPosition(), target);
                         //                    new PathDrawable(path.getPathPositions()).draw(debugInterface);
 
-                        //                    var line = new Line(unit.getPosition(), target);
-                        //                    DebugData.getInstance().getDefaultLayer().add(new ai_cup_22.strategy.debug.primitives.Line(line, Colors.BLUE_TRANSPARENT));
+//                                            var line = new ai_cup_22.strategy.geometry.Line(unit.getPosition(), target);
+//                                            DebugData.getInstance().getDefaultLayer().add(new ai_cup_22.strategy.debug.primitives.Line(line, Colors.BLUE_TRANSPARENT));
 
                         //                    World.getInstance().getObstacles().values().stream()
                         //                            .forEach(obstacle -> {

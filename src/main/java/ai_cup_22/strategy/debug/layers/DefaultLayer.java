@@ -53,6 +53,10 @@ public class DefaultLayer extends DrawLayer {
             }
 
             add(new CircleDrawable(new Circle(bullet.getPosition(), 0.3), color));
+
+            if (bullet.isEnemy()) {
+                add(new Line(bullet.getTrajectory(), Colors.RED_TRANSPARENT));
+            }
         });
     }
 

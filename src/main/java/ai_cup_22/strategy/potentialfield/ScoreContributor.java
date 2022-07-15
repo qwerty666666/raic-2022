@@ -14,7 +14,7 @@ public interface ScoreContributor {
     }
 
     default void contribute(PotentialField potentialField) {
-        potentialField.getScores().stream()
+        potentialField.getScores().values().stream()
                 .filter(this::shouldContribute)
                 .forEach(this::contribute);
     }
