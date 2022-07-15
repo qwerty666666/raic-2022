@@ -108,6 +108,12 @@ public class Line {
                 .collect(Collectors.toList());
     }
 
+    public List<Position> getIntersectionPoints(Circle circle) {
+        return getIntersectionPointsAsRay(circle).stream()
+                .filter(this::contains)
+                .collect(Collectors.toList());
+    }
+
     @Override
     public String toString() {
         return "Line{" +

@@ -50,7 +50,17 @@ public class DodgeBulletsAction implements Action {
                 bulletVelocity.rotate(-Math.PI / 4),
                 bulletVelocity
         ));
-        directionsToDodge.addAll(getTrajectoriesToAvoidNonMoveThroughObstacles(unit));
+        directionsToDodge.addAll(
+                // take first direction which are further to the bullet
+                // (to not run on next bullets)
+                getTrajectoriesToAvoidNonMoveThroughObstacles(unit).stream()
+                        .sorted(Comparator.comparingDouble((Vector direction) -> {
+                                return direction.getEndPosition().getDistanceTo(unit.getPosition());
+                            })
+                            .reversed()
+                        )
+                        .collect(Collectors.toList())
+        );
 
         if (DebugData.isEnabled) {
             directionsToDodge.stream()
@@ -71,7 +81,7 @@ public class DodgeBulletsAction implements Action {
     }
 
     private List<Vector> getTrajectoriesToAvoidNonMoveThroughObstacles(Unit unit) {
-        return MovementUtils.getObstaclesInRange(unit, 10).stream()
+        return MovementUtils.getNonWalkThroughObstaclesInRange(unit, 10).stream()
                 .map(circle -> circle.enlarge(unit.getCircle().getRadius()))
                 .flatMap(circle -> circle.getTangentPoints(unit.getPosition()).stream())
                 .map(tangentPoint -> new Vector(unit.getPosition(), tangentPoint))

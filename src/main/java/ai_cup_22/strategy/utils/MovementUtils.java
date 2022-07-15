@@ -90,7 +90,7 @@ public class MovementUtils {
     }
 
     public static Position getMaxPositionIfWalkDirect(Unit unit, Vector directionVelocity, int ticks) {
-        var obstacles = getObstaclesInRange(unit , ticks * unit.getMaxForwardSpeedPerTick() + 5);
+        var obstacles = getNonWalkThroughObstaclesInRange(unit , ticks * unit.getMaxForwardSpeedPerTick() + 5);
 
         var pos = unit.getPosition();
         var velocity = unit.getVelocityPerTick();
@@ -106,7 +106,8 @@ public class MovementUtils {
 
     public static boolean isHitBulletIfWalkDirect(Unit unit, Vector directionVelocity, Bullet bullet) {
         var ticks = bullet.getRemainingLifetimeTicks();
-        var obstacles = getObstaclesInRange(unit , ticks * unit.getMaxForwardSpeedPerTick() + 5);
+        var nonWalkThroughObstacles = getNonWalkThroughObstaclesInRange(unit , ticks * unit.getMaxForwardSpeedPerTick() + 5);
+        var nonShootThroughObstacles = getNonShootThroughObstaclesInRange(unit , ticks * unit.getMaxForwardSpeedPerTick() + 5);
 
         var unitCircle = unit.getCircle();
         var velocity = unit.getVelocityPerTick();
@@ -114,12 +115,36 @@ public class MovementUtils {
         for (int i = 0; i < ticks; i++) {
             // TODO add check aim
             velocity = getVelocityOnNextTickAfterCollision(unitCircle.getCenter(), unit.getDirection(), unit.getMaxForwardSpeedPerTick(),
-                    unit.getMaxBackwardSpeedPreTick(), 0, 0, directionVelocity, velocity, obstacles);
+                    unit.getMaxBackwardSpeedPreTick(), 0, 0, directionVelocity, velocity, nonWalkThroughObstacles);
             unitCircle = unitCircle.move(velocity);
 
             var newBulletPos = bulletPos.move(bullet.getVelocity());
-            if (unitCircle.isIntersect(new Line(bulletPos, newBulletPos))) {
-                return true;
+            var tickTrajectory = new Line(bulletPos, newBulletPos);
+
+            Position hitObstaclePosition = null;
+            for (var obs: nonShootThroughObstacles) {
+                if (obs.isIntersect(tickTrajectory)) {
+                    hitObstaclePosition = tickTrajectory.getIntersectionPoints(obs).stream()
+                            .min(Comparator.comparingDouble(point -> point.getDistanceTo(tickTrajectory.getStart())))
+                            .orElse(null);
+                }
+            }
+
+            if (unitCircle.isIntersect(tickTrajectory)) {
+                if (hitObstaclePosition == null) {
+                    return true;
+                }
+
+                var hitUnitPosition = tickTrajectory.getIntersectionPoints(unitCircle).stream()
+                        .min(Comparator.comparingDouble(point -> point.getDistanceTo(tickTrajectory.getStart())))
+                        .orElse(null);
+
+                return hitUnitPosition == null ||
+                        hitObstaclePosition.getDistanceTo(bulletPos) > hitUnitPosition.getDistanceTo(bulletPos);
+            }
+
+            if (hitObstaclePosition != null) {
+                return false;
             }
 
             bulletPos = newBulletPos;
@@ -128,7 +153,7 @@ public class MovementUtils {
         return false;
     }
 
-    public static List<Circle> getObstaclesInRange(Unit unit, double maxDist) {
+    public static List<Circle> getNonWalkThroughObstaclesInRange(Unit unit, double maxDist) {
         var obstacles = World.getInstance().getObstacles().values().stream()
                 .filter(obstacle -> obstacle.getCenter().getDistanceTo(unit.getPosition()) < maxDist)
                 .map(Obstacle::getCircle)
@@ -145,6 +170,14 @@ public class MovementUtils {
         obstacles.addAll(units);
 
         return obstacles;
+    }
+
+    public static List<Circle> getNonShootThroughObstaclesInRange(Unit unit, double maxDist) {
+        return World.getInstance().getObstacles().values().stream()
+                .filter(obstacle -> obstacle.getCenter().getDistanceTo(unit.getPosition()) < maxDist)
+                .filter(Obstacle::isCanShootThrough)
+                .map(Obstacle::getCircle)
+                .collect(Collectors.toList());
     }
 
     private static Vector getVelocityOnNextTickAfterCollision(Position position, Vector direction, double maxForwardSpeed,
