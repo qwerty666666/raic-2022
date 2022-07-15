@@ -1,5 +1,7 @@
 package ai_cup_22.strategy.geometry;
 
+import java.util.List;
+
 public class Circle {
     private final Position center;
     private final double radius;
@@ -21,6 +23,17 @@ public class Circle {
         return line.getStart().getDistanceTo(center) <= radius ||
                 line.getEnd().getDistanceTo(center) <= radius ||
                 (line.getDistanceTo(center) <= radius && line.contains(line.getProjection(center)));
+    }
+
+    public List<Position> getTangentPoints(Position position) {
+        // cas a = r / dist
+        var angle = Math.acos(radius / center.getDistanceTo(position));
+        var vec = new Vector(center, position).normalizeToLength(radius);
+
+        return List.of(
+                vec.rotate(angle).getEndPosition().move(new Vector(center)),
+                vec.rotate(-angle).getEndPosition().move(new Vector(center))
+        );
     }
 
     public boolean contains(Position p) {

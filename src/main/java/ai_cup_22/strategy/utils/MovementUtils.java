@@ -5,6 +5,7 @@ import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Line;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
+import ai_cup_22.strategy.models.Bullet;
 import ai_cup_22.strategy.models.Obstacle;
 import ai_cup_22.strategy.models.Unit;
 import java.util.Comparator;
@@ -89,25 +90,10 @@ public class MovementUtils {
     }
 
     public static Position getMaxPositionIfWalkDirect(Unit unit, Vector directionVelocity, int ticks) {
-        var maxDist = ticks * unit.getMaxForwardSpeedPerTick() + 5;
-
-        var obstacles = World.getInstance().getObstacles().values().stream()
-                .filter(obstacle -> obstacle.getCenter().getDistanceTo(unit.getPosition()) < maxDist)
-                .map(Obstacle::getCircle)
-                .collect(Collectors.toList());
-        var units = Stream.concat(
-                World.getInstance().getMyUnits().values().stream(),
-                World.getInstance().getEnemyUnits().values().stream()
-        )
-                .filter(u -> u.getId() != unit.getId())
-                .map(Unit::getCircle)
-                .collect(Collectors.toList());
-
-        obstacles.addAll(units);
-
+        var obstacles = getObstaclesInRange(unit , ticks * unit.getMaxForwardSpeedPerTick() + 5);
 
         var pos = unit.getPosition();
-        var velocity = unit.getSpeedVectorPerTick();
+        var velocity = unit.getVelocityPerTick();
         for (int i = 0; i < ticks; i++) {
             // TODO add check aim
             velocity = getVelocityOnNextTickAfterCollision(pos, unit.getDirection(), unit.getMaxForwardSpeedPerTick(),
@@ -116,6 +102,49 @@ public class MovementUtils {
         }
 
         return pos;
+    }
+
+    public static boolean isHitBulletIfWalkDirect(Unit unit, Vector directionVelocity, Bullet bullet) {
+        var ticks = bullet.getRemainingLifetimeTicks();
+        var obstacles = getObstaclesInRange(unit , ticks * unit.getMaxForwardSpeedPerTick() + 5);
+
+        var unitCircle = unit.getCircle();
+        var velocity = unit.getVelocityPerTick();
+        var bulletPos = bullet.getPosition();
+        for (int i = 0; i < ticks; i++) {
+            // TODO add check aim
+            velocity = getVelocityOnNextTickAfterCollision(unitCircle.getCenter(), unit.getDirection(), unit.getMaxForwardSpeedPerTick(),
+                    unit.getMaxBackwardSpeedPreTick(), 0, 0, directionVelocity, velocity, obstacles);
+            unitCircle = unitCircle.move(velocity);
+
+            var newBulletPos = bulletPos.move(bullet.getVelocity());
+            if (unitCircle.isIntersect(new Line(bulletPos, newBulletPos))) {
+                return true;
+            }
+
+            bulletPos = newBulletPos;
+        }
+
+        return false;
+    }
+
+    public static List<Circle> getObstaclesInRange(Unit unit, double maxDist) {
+        var obstacles = World.getInstance().getObstacles().values().stream()
+                .filter(obstacle -> obstacle.getCenter().getDistanceTo(unit.getPosition()) < maxDist)
+                .map(Obstacle::getCircle)
+                .collect(Collectors.toList());
+
+        var units = Stream.concat(
+                        World.getInstance().getMyUnits().values().stream(),
+                        World.getInstance().getEnemyUnits().values().stream()
+                )
+                .filter(u -> u.getId() != unit.getId())
+                .map(Unit::getCircle)
+                .collect(Collectors.toList());
+
+        obstacles.addAll(units);
+
+        return obstacles;
     }
 
     private static Vector getVelocityOnNextTickAfterCollision(Position position, Vector direction, double maxForwardSpeed,

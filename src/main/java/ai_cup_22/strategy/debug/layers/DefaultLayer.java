@@ -14,8 +14,6 @@ import ai_cup_22.strategy.geometry.Vector;
 
 public class DefaultLayer extends DrawLayer {
     public void update(World world) {
-        clear();
-
         addShootLines(world);
         addShootAreas(world);
 

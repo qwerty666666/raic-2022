@@ -52,7 +52,7 @@ public class Bullet {
         return position;
     }
 
-    public Vector getDirection() {
+    public Vector getVelocity() {
         return velocity;
     }
 

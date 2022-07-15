@@ -18,6 +18,8 @@ import ai_cup_22.strategy.models.Obstacle;
 import ai_cup_22.strategy.utils.MovementUtils;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class MyStrategy {
@@ -29,76 +31,70 @@ public class MyStrategy {
     }
 
     public Order getOrder(Game game, DebugInterface debugInterface) {
-        long start = 0;
-        if (DebugData.isEnabled) {
-            start = System.currentTimeMillis();
-        }
+        Map<Integer, UnitOrder> orders = new HashMap<>();
+        long start = System.currentTimeMillis();
 
+        if (DebugData.isEnabled) {
+            DebugData.getInstance().getDefaultLayer().clear();
+        }
 
         if (game.getCurrentTick() == 0) {
-            var s = System.currentTimeMillis();
             initWorld(game);
 //            updateObstaclesDebugLayer();
-            System.out.println(System.currentTimeMillis() - s);
-            return new Order(Collections.emptyMap());
-        }
+        } else {
+            if (game.getCurrentTick() == 1) {
+                world.getStaticPotentialField().buildGraph();
+            }
 
-        if (game.getCurrentTick() == 1) {
-            var s = System.currentTimeMillis();
-            world.getStaticPotentialField().buildGraph();
-            System.out.println(System.currentTimeMillis() - s);
-        }
+            world.updateTick(game);
 
-        world.updateTick(game);
+            for (var unit : world.getMyUnits().values()) {
+                var action = unit.getBehaviourTree().getStrategy().getAction();
 
+                // default action - do nothing
+                orders.computeIfAbsent(unit.getId(), id -> {
+                    var unitOrder = new UnitOrder(new Vec2(0, 0), new Vec2(0, 0), null);
 
-        java.util.HashMap<Integer, UnitOrder> orders = new java.util.HashMap<>();
+                    action.apply(unit, unitOrder);
 
-        for (var unit: world.getMyUnits().values()) {
-            var action = unit.getBehaviourTree().getStrategy().getAction();
-
-            // default action - do nothing
-            orders.computeIfAbsent(unit.getId(), id -> {
-                var unitOrder = new UnitOrder(new Vec2(0, 0), new Vec2(0, 0), null);
-
-                action.apply(unit, unitOrder);
-
-                return unitOrder;
-            });
-        }
-
-
-
-        if (DebugData.isEnabled) {
-            updateUnitsDebugLayer();
-            updateLootsDebugLayer();
-//            updatePositionsDebugLayer();
-            updateDefaultDebugLayer();
-
-            for (var unit: world.getMyUnits().values()) {
-                DebugData.getInstance().getCursorPosition().ifPresent(target -> {
-//                     DijkstraPathFinder.minThreatPathFinder(unit.getPotentialField());
-//                     new PotentialFieldDrawable(unit.getPotentialField()).draw(debugInterface);
-
-//                    var path = new AStarPathFinder(unit.getPotentialField()).findPath(unit.getPosition(), target);
-//                    new PathDrawable(path.getPathPositions()).draw(debugInterface);
-
-//                    var line = new Line(unit.getPosition(), target);
-//                    DebugData.getInstance().getDefaultLayer().add(new ai_cup_22.strategy.debug.primitives.Line(line, Colors.BLUE_TRANSPARENT));
-
-//                    World.getInstance().getObstacles().values().stream()
-//                            .forEach(obstacle -> {
-//                                line.getIntersectionPoints(obstacle.getCircle()).forEach(p -> {
-//                                    DebugData.getInstance().getDefaultLayer().add(new CircleDrawable(new Circle(p, 0.5), Colors.BLUE_TRANSPARENT));
-//                                });
-//                            });
+                    return unitOrder;
                 });
             }
 
-            DebugData.getInstance().getDefaultLayer().show(debugInterface);
+            if (DebugData.isEnabled) {
+                updateUnitsDebugLayer();
+                updateLootsDebugLayer();
+                //            updatePositionsDebugLayer();
+                updateDefaultDebugLayer();
 
-            System.out.println(World.getInstance().getCurrentTick() + " " + (System.currentTimeMillis() - start));
+                for (var unit : world.getMyUnits().values()) {
+                    DebugData.getInstance().getCursorPosition().ifPresent(target -> {
+                        //                     DijkstraPathFinder.minThreatPathFinder(unit.getPotentialField());
+                        //                     new PotentialFieldDrawable(unit.getPotentialField()).draw(debugInterface);
+
+                        //                    var path = new AStarPathFinder(unit.getPotentialField()).findPath(unit.getPosition(), target);
+                        //                    new PathDrawable(path.getPathPositions()).draw(debugInterface);
+
+                        //                    var line = new Line(unit.getPosition(), target);
+                        //                    DebugData.getInstance().getDefaultLayer().add(new ai_cup_22.strategy.debug.primitives.Line(line, Colors.BLUE_TRANSPARENT));
+
+                        //                    World.getInstance().getObstacles().values().stream()
+                        //                            .forEach(obstacle -> {
+                        //                                obstacle.getCircle().getTangentPoints(unit.getPosition()).forEach(p -> {
+                        //                                    DebugData.getInstance().getDefaultLayer().add(new CircleDrawable(new Circle(p, 0.5), Colors.BLUE_TRANSPARENT));
+                        //                                });
+                        //                                line.getIntersectionPoints(obstacle.getCircle()).forEach(p -> {
+                        //                                    DebugData.getInstance().getDefaultLayer().add(new CircleDrawable(new Circle(p, 0.5), Colors.BLUE_TRANSPARENT));
+                        //                                });
+                        //                            });
+                    });
+                }
+
+                DebugData.getInstance().getDefaultLayer().show(debugInterface);
+            }
         }
+
+        System.out.println(World.getInstance().getCurrentTick() + " " + (System.currentTimeMillis() - start));
 
         return new Order(orders);
     }
