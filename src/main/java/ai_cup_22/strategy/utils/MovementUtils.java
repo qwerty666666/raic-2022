@@ -1,6 +1,7 @@
 package ai_cup_22.strategy.utils;
 
 import ai_cup_22.strategy.World;
+import ai_cup_22.strategy.debug.DebugData;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Line;
 import ai_cup_22.strategy.geometry.Position;
@@ -118,18 +119,42 @@ public class MovementUtils {
         return pos;
     }
 
-    public static DodgeResult tryDodgeByWalkDirect(Unit unit, Vector directionVelocity, Bullet bullet) {
+    public static DodgeResult tryDodgeByWalkDirect(Unit unit, Vector directionVelocity, Bullet bullet,
+            boolean shouldSimulateAim, boolean shouldRotateToDirection) {
         var result = new DodgeResult();
+        result.dodgePosition = unit.getPosition();
 
         var ticks = bullet.getRemainingLifetimeTicks();
         var nonWalkThroughObstacles = getNonWalkThroughObstaclesInRange(unit , ticks * unit.getMaxForwardSpeedPerTick() + 5);
         var bulletTrajectory = bullet.getTrajectory();
-
+//DebugData.getInstance().getDefaultLayer().addText(Double.toString(unit.getAim()), unit.getPosition());
         var unitCircle = unit.getCircle();
         var aim = unit.getAim();
         var velocity = unit.getVelocityPerTick();
         var bulletPos = bullet.getPosition();
+        var remainingCoolDownTicks = unit.getRemainingCoolDownTicks();
+        var ticksToFullAim = unit.getTicksToFullAim();
         for (int i = 0; i < ticks; i++) {
+
+            // move unit
+
+            velocity = getVelocityOnNextTickAfterCollision(
+                    unitCircle.getCenter(), unit.getDirection(), velocity,
+                    unit.getMaxForwardSpeedPerTick(), unit.getMaxBackwardSpeedPreTick(),
+                    aim, unit.getAimSpeedModifier(),
+                    directionVelocity,
+                    nonWalkThroughObstacles
+            );
+            unitCircle = unitCircle.move(velocity);
+            var shouldAim = shouldSimulateAim && (unit.isAiming() || remainingCoolDownTicks <= ticksToFullAim);
+//DebugData.getInstance().getDefaultLayer().addCircle(bulletPos);
+//DebugData.getInstance().getDefaultLayer().addText(Double.toString(aim), bulletPos);
+            aim = MathUtils.restrict(0, 1, aim + (shouldAim ? unit.getAimChangePerTick() : -unit.getAimChangePerTick()));
+            remainingCoolDownTicks--;
+
+            result.ticks += 1;
+            result.dodgePosition = unitCircle.getCenter();
+            result.steps.add(unitCircle.getCenter());
 
             // move bullet
 
@@ -152,22 +177,6 @@ public class MovementUtils {
                     break;
                 }
             }
-
-            // move unit
-
-            velocity = getVelocityOnNextTickAfterCollision(
-                    unitCircle.getCenter(), unit.getDirection(), velocity,
-                    unit.getMaxForwardSpeedPerTick(), unit.getMaxBackwardSpeedPreTick(),
-                    unit.getAim(), unit.getAimSpeedModifier(),
-                    directionVelocity,
-                    nonWalkThroughObstacles
-            );
-            unitCircle = unitCircle.move(velocity);
-            aim = MathUtils.restrict(0, 1, aim + (unit.isAiming() ? unit.getAimChangePerTick() : -unit.getAimChangePerTick()));
-
-            result.ticks += 1;
-            result.dodgePosition = unitCircle.getCenter();
-            result.steps.add(unitCircle.getCenter());
 
             // check that unit run away from hit trajectory
 

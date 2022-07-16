@@ -102,7 +102,7 @@ public class Unit {
     }
 
     public int getTicksToFullAim() {
-        return getWeapon().getAimTicks();
+        return getWeaponOptional().map(Weapon::getAimTicks).orElse(0);
     }
 
     public double getMaxSpeedPerTick() {

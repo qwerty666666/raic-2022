@@ -6,6 +6,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Weapon {
+    public static final int WAND_ID = 0;
+    public static final int STAFF_ID = 1;
+    public static final int BOW_ID = 2;
+
     private static Map<Integer, Weapon> weapons = new HashMap<>();
 
     private final WeaponProperties properties;
@@ -17,15 +21,15 @@ public class Weapon {
     }
 
     public boolean isWand() {
-        return id == 0;
+        return id == WAND_ID;
     }
 
     public boolean isStaff() {
-        return id == 1;
+        return id == STAFF_ID;
     }
 
     public boolean isBow() {
-        return id == 2;
+        return id == BOW_ID;
     }
 
     public int getId() {

@@ -16,12 +16,14 @@ public class Bullet {
     private boolean isSimulated;
     private int unitId;
     private Position endTrajectoryPosition;
+    private int type;
 
     public Bullet(Projectile projectile) {
         this.velocity = new Vector(projectile.getVelocity()).increase(World.getInstance().getTimePerTick());
         this.id = projectile.getId();
         this.isEnemy = projectile.getShooterPlayerId() != World.getInstance().getMyId();
         this.unitId = projectile.getShooterId();
+        this.type = projectile.getWeaponTypeIndex();
 
         updateTick(projectile);
     }
@@ -93,6 +95,18 @@ public class Bullet {
 
     public int getUnitId() {
         return unitId;
+    }
+
+    public boolean isWand() {
+        return type == Weapon.WAND_ID;
+    }
+
+    public boolean isStaff() {
+        return type == Weapon.STAFF_ID;
+    }
+
+    public boolean isBow() {
+        return type == Weapon.BOW_ID;
     }
 
     @Override

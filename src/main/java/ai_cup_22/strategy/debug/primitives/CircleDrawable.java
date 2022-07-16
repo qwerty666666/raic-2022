@@ -26,7 +26,7 @@ public class CircleDrawable implements Drawable {
         if (fill) {
             debugInterface.addCircle(center.toVec2(), radius, color);
         } else {
-            debugInterface.addRing(center.toVec2(), radius, 0.1, color);
+            debugInterface.addRing(center.toVec2(), radius, 0.03, color);
         }
     }
 }
