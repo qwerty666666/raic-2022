@@ -134,22 +134,40 @@ public class MovementUtils {
         var bulletPos = bullet.getPosition();
         var remainingCoolDownTicks = unit.getRemainingCoolDownTicks();
         var ticksToFullAim = unit.getTicksToFullAim();
+        var lookDirection = unit.getDirection();
+        var nonAimRotationSpeed = World.getInstance().getConstants().getRotationSpeed();
+
+        var targetDirectionAngle = MathUtils.normalizeAngle(directionVelocity.getAngle());
+        var lookDirectionAngle = MathUtils.normalizeAngle(lookDirection.getAngle());
+        var rotateSign = Math.signum(targetDirectionAngle - lookDirectionAngle) *
+                (Math.abs(targetDirectionAngle - lookDirectionAngle) < Math.PI ? 1 : -1);
+
         for (int i = 0; i < ticks; i++) {
 
             // move unit
 
+            if (shouldRotateToDirection) {
+                var rotationSpeedPerTick = (nonAimRotationSpeed - (nonAimRotationSpeed - unit.getAimRotationSpeed()) * aim) *
+                        World.getInstance().getTimePerTick();
+                lookDirection = lookDirection.rotate(rotateSign *
+                        Math.min(rotationSpeedPerTick, lookDirection.getAngleTo(directionVelocity) - rotationSpeedPerTick)
+                );
+            }
+
             velocity = getVelocityOnNextTickAfterCollision(
-                    unitCircle.getCenter(), unit.getDirection(), velocity,
+                    unitCircle.getCenter(), lookDirection, velocity,
                     unit.getMaxForwardSpeedPerTick(), unit.getMaxBackwardSpeedPreTick(),
                     aim, unit.getAimSpeedModifier(),
                     directionVelocity,
                     nonWalkThroughObstacles
             );
             unitCircle = unitCircle.move(velocity);
+
             var shouldAim = shouldSimulateAim && (unit.isAiming() || remainingCoolDownTicks <= ticksToFullAim);
 //DebugData.getInstance().getDefaultLayer().addCircle(bulletPos);
 //DebugData.getInstance().getDefaultLayer().addText(Double.toString(aim), bulletPos);
             aim = MathUtils.restrict(0, 1, aim + (shouldAim ? unit.getAimChangePerTick() : -unit.getAimChangePerTick()));
+
             remainingCoolDownTicks--;
 
             result.ticks += 1;

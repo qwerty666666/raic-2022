@@ -7,7 +7,8 @@ import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Unit;
 
 public class LookToAction implements Action {
-    private final Position target;
+    private Position target;
+    private Vector vector;
 
     public LookToAction(Unit target) {
         this(target.getPosition());
@@ -17,10 +18,20 @@ public class LookToAction implements Action {
         this.target = target;
     }
 
+    public LookToAction(Vector vector) {
+        this.vector = vector;
+    }
+
     @Override
     public void apply(Unit unit, UnitOrder order) {
-        var velocity = new Vector(unit.getPosition(), target);
+        Vector targetVector;
 
-        order.setTargetDirection(velocity.toVec2());
+        if (vector != null) {
+            targetVector = vector;
+        } else {
+            targetVector = new Vector(unit.getPosition(), target);
+        }
+
+        order.setTargetDirection(targetVector.normalizeToLength(10).toVec2());
     }
 }

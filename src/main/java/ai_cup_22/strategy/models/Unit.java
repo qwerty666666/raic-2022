@@ -105,6 +105,11 @@ public class Unit {
         return getWeaponOptional().map(Weapon::getAimTicks).orElse(0);
     }
 
+    public double getAimRotationSpeed() {
+        return getWeaponOptional().map(Weapon::getAimRotationSpeed)
+                .orElseGet(() -> World.getInstance().getConstants().getRotationSpeed());
+    }
+
     public double getMaxSpeedPerTick() {
         return World.getInstance().getConstants().getMaxUnitForwardSpeed() * World.getInstance().getTimePerTick();
     }

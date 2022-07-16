@@ -3,6 +3,7 @@ package ai_cup_22.strategy.actions;
 import ai_cup_22.debugging.Color;
 import ai_cup_22.model.UnitOrder;
 import ai_cup_22.strategy.World;
+import ai_cup_22.strategy.actions.basic.LookToAction;
 import ai_cup_22.strategy.actions.basic.MoveToAction;
 import ai_cup_22.strategy.debug.Colors;
 import ai_cup_22.strategy.debug.DebugData;
@@ -33,6 +34,10 @@ public class DodgeBulletsAction implements Action {
             if (!dodgeDirection.isWithAim()) {
                 order.setAction(null);
             }
+
+            if (dodgeDirection.isWithRotateToDirection()) {
+                new LookToAction(dodgeDirection.getDirection()).apply(unit, order);
+            }
         }
     }
 
@@ -47,7 +52,7 @@ public class DodgeBulletsAction implements Action {
         // dodge from first possible bullet
         var directionsToDodge = bullets.stream()
                 .map(bullet -> tryDodgeBullet(unit, bullet))
-//                .filter(dodgeDirections -> dodgeDirections.stream().anyMatch(DodgeDirection::canDodgeBullet))
+                .filter(dodgeDirections -> dodgeDirections.stream().anyMatch(DodgeDirection::canDodgeBullet))
                 .findFirst().stream()
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());

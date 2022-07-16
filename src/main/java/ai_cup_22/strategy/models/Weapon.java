@@ -72,6 +72,10 @@ public class Weapon {
         return (int)Math.ceil(properties.getAimTime() / World.getInstance().getTimePerTick());
     }
 
+    public double getAimRotationSpeed() {
+        return properties.getAimRotationSpeed();
+    }
+
     public int getMaxBulletCount() {
         return properties.getMaxInventoryAmmo();
     }

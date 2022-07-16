@@ -87,6 +87,9 @@ public class Vector {
         return Math.atan(y / x) + (x < 0 ? Math.PI : 0);
     }
 
+    /**
+     * [0, Pi]
+     */
     public double getAngleTo(Vector v) {
         return Math.acos(Math.max(-1., Math.min(1., (x * v.x + y * v.y) / (getLength() * v.getLength()))));
     }
