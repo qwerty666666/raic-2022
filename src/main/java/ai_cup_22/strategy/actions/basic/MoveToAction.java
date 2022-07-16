@@ -5,7 +5,6 @@ import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Unit;
-import java.util.List;
 
 public class MoveToAction implements Action {
     private final Position target;

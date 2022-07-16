@@ -16,6 +16,11 @@ public class FirstMatchCompositeStrategy implements Strategy {
         return this;
     }
 
+    public FirstMatchCompositeStrategy add(Strategy strategy) {
+        strategies.put(strategy, () -> true);
+        return this;
+    }
+
     @Override
     public double getOrder() {
         return getStrategy().getOrder();

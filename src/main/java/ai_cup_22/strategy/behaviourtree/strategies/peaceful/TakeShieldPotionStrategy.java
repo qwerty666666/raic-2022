@@ -8,7 +8,6 @@ import ai_cup_22.strategy.models.Unit;
 
 public class TakeShieldPotionStrategy implements Strategy {
     private final Unit unit;
-    private final double shieldPotionHealth = World.getInstance().getConstants().getShieldPerPotion();
 
     public TakeShieldPotionStrategy(Unit unit) {
         this.unit = unit;
@@ -25,6 +24,10 @@ public class TakeShieldPotionStrategy implements Strategy {
     }
 
     private boolean shouldTakePotion() {
+        if (!unit.canDoNewAction()) {
+            return false;
+        }
+
         if (unit.getShieldPotions() == 0) {
             return false;
         }
@@ -38,8 +41,9 @@ public class TakeShieldPotionStrategy implements Strategy {
     }
 
     private double getMinDistToEnemyToSafelyRetreatForDisabledTime(Unit enemy) {
-        var speedDiff = (enemy.getMaxForwardSpeedPerTick() - unit.getMaxBackwardSpeedPreTick());
-        var retreatDistance = speedDiff * unit.getTicksToNewActionBeAvailable();
+        var speedDiff = (enemy.getMaxForwardSpeedPerTick() - unit.getMaxBackwardSpeedPerTick());
+        var retreatDistance = speedDiff * World.getInstance().getConstants().getShieldPotionUseTime() /
+                World.getInstance().getTimePerTick();
 
         return enemy.getThreatenDistanceFor(unit) + retreatDistance;
     }

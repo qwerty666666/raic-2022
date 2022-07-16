@@ -17,7 +17,7 @@ import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.utils.MovementUtils;
 import ai_cup_22.strategy.utils.MovementUtils.DodgeResult;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,7 +28,9 @@ public class DodgeBulletsAction implements Action {
     public void apply(Unit unit, UnitOrder order) {
         var dodgeDirection = getBestDodgeDirection(unit);
 
-        if (dodgeDirection != null) {
+        if (dodgeDirection != null && dodgeDirection.canDodgeBullet()) {
+            unit.setCurrentPath(Collections.emptyList());
+
             new MoveToAction(unit.getPosition().move(dodgeDirection.getDirection())).apply(unit, order);
 
             if (!dodgeDirection.isWithAim()) {
@@ -50,19 +52,32 @@ public class DodgeBulletsAction implements Action {
                 .collect(Collectors.toList());
 
         // dodge from first possible bullet
-        var directionsToDodge = bullets.stream()
-                .map(bullet -> tryDodgeBullet(unit, bullet))
-                .filter(dodgeDirections -> dodgeDirections.stream().anyMatch(DodgeDirection::canDodgeBullet))
-                .findFirst().stream()
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
+        List<DodgeDirection> directionsToDodge = Collections.emptyList();
+
+        for (var bullet: bullets) {
+            directionsToDodge = tryDodgeBullet(unit, bullet);
+
+            if (directionsToDodge.stream().noneMatch(DodgeDirection::canDodgeBullet)) {
+                if (DebugData.isEnabled) {
+                    DebugData.getInstance().getDefaultLayer().addCircle(bullet.getPosition(), 0.2, Colors.RED_TRANSPARENT);
+                }
+            } else {
+                break;
+            }
+        }
 
         // take best direction
         var bestDirection = directionsToDodge.stream()
-                .min(Comparator.comparing(DodgeDirection::canDodgeBullet).reversed()
-                            .thenComparing(Comparator.comparingDouble((DodgeDirection d) -> d.getScore(unit)).reversed())
-                            .thenComparingDouble(d -> d.getDodgeResult().getTicks())
-                )
+                .min((d1, d2) -> {
+                    if (!d1.canDodgeBullet() && !d2.canDodgeBullet()) {
+                        return d2.getDodgeResult().getTicks() - d1.getDodgeResult().getTicks();
+                    } else {
+                        return Comparator.comparing(DodgeDirection::canDodgeBullet).reversed()
+                                .thenComparing(Comparator.comparingDouble((DodgeDirection d) -> d.getScore(unit)).reversed())
+                                .thenComparingDouble(d -> d.getDodgeResult().getTicks())
+                                .compare(d1, d2);
+                    }
+                })
                 .orElse(null);
 
         drawDebugDodgeResult(unit, directionsToDodge, bestDirection);
@@ -79,28 +94,14 @@ public class DodgeBulletsAction implements Action {
                 DebugData.getInstance().getDefaultLayer().add(
                         new Text(Double.toString(dodgeDirection.getScore(unit)), unit.getPosition().move(dodgeDirection.getDirection()), 0.2)
                 );
-
-//                for (var step: dodgeDirection.getDodgeResult().getSteps()) {
-//                    Color color;
-//                    if (!dodgeDirection.canDodgeBullet()) {
-//                        color = Colors.RED_TRANSPARENT;
-//                    } else if (dodgeDirection.isWithRotateToDirection()) {
-//                        color = Colors.ORANGE_TRANSPARENT;
-//                    } else if (!dodgeDirection.isWithAim()) {
-//                        color = Colors.YELLOW_TRANSPARENT;
-//                    } else {
-//                        color = Colors.GREEN_TRANSPARENT;
-//                    }
-//                    DebugData.getInstance().getDefaultLayer().add(
-//                            new CircleDrawable(new Circle(step, unit.getCircle().getRadius()), color, false)
-//                    );
-//                }
             }
 
             if (bestDirection != null) {
                 for (var step: bestDirection.getDodgeResult().getSteps()) {
                     Color color;
-                    if (bestDirection.isWithRotateToDirection()) {
+                    if (!bestDirection.canDodgeBullet()) {
+                        color = Colors.RED_TRANSPARENT;
+                    } else if (bestDirection.isWithRotateToDirection()) {
                         color = Colors.ORANGE_TRANSPARENT;
                     } else if (!bestDirection.isWithAim()) {
                         color = Colors.YELLOW_TRANSPARENT;

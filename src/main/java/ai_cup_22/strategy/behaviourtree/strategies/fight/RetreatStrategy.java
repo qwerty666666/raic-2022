@@ -3,7 +3,6 @@ package ai_cup_22.strategy.behaviourtree.strategies.fight;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.CompositeAction;
-import ai_cup_22.strategy.actions.DodgeBulletsAction;
 import ai_cup_22.strategy.actions.MoveByPathAction;
 import ai_cup_22.strategy.actions.basic.LookToAction;
 import ai_cup_22.strategy.behaviourtree.Strategy;
@@ -37,20 +36,14 @@ public class RetreatStrategy implements Strategy {
                 .map(Unit::getPosition)
                 .orElseGet(() -> unit.getPosition().move(unit.getDirection()));
 
-        if (isThereAreThreatenBullets()) {
-            return new CompositeAction()
-                    .add(new LookToAction(lookPoint))
-                    .add(new DodgeBulletsAction());
-        } else {
-            getPotentialFieldScoreContributor().contribute(unit.getPotentialField());
+        getPotentialFieldScoreContributor().contribute(unit.getPotentialField());
 
-            var pathFinder = DijkstraPathFinder.minThreatPathFinder(unit.getPotentialField());
-            var path = pathFinder.findPath(unit.getPosition(), getBestPointToRetreat());
+        var pathFinder = DijkstraPathFinder.minThreatPathFinder(unit.getPotentialField());
+        var path = pathFinder.findPath(unit.getPosition(), getBestPointToRetreat());
 
-            return new CompositeAction()
-                    .add(new MoveByPathAction(path))
-                    .add(new LookToAction(lookPoint));
-        }
+        return new CompositeAction()
+                .add(new MoveByPathAction(path))
+                .add(new LookToAction(lookPoint));
     }
 
     private Position getBestPointToRetreat() {

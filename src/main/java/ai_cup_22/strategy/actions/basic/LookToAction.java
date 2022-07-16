@@ -30,6 +30,7 @@ public class LookToAction implements Action {
             targetVector = vector;
         } else {
             targetVector = new Vector(unit.getPosition(), target);
+            unit.setLookPosition(target);
         }
 
         order.setTargetDirection(targetVector.normalizeToLength(10).toVec2());

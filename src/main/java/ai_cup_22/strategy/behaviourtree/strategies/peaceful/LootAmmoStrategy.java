@@ -1,24 +1,24 @@
 package ai_cup_22.strategy.behaviourtree.strategies.peaceful;
 
+import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
-import ai_cup_22.strategy.actions.TakeLootAction;
-import ai_cup_22.strategy.behaviourtree.strategies.composite.FirstMatchCompositeStrategy;
-import ai_cup_22.strategy.behaviourtree.strategies.NullStrategy;
 import ai_cup_22.strategy.behaviourtree.Strategy;
+import ai_cup_22.strategy.behaviourtree.strategies.NullStrategy;
+import ai_cup_22.strategy.behaviourtree.strategies.composite.FirstMatchCompositeStrategy;
+import ai_cup_22.strategy.behaviourtree.strategies.fight.FightStrategy;
 import ai_cup_22.strategy.distributions.FirstMatchDistributor;
 import ai_cup_22.strategy.distributions.LinearDistributor;
-import ai_cup_22.strategy.models.AmmoLoot;
 import ai_cup_22.strategy.models.Loot;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.pathfinding.AStarPathFinder;
 import ai_cup_22.strategy.pathfinding.Path;
-import ai_cup_22.strategy.potentialfield.scorecontributors.basic.LinearScoreContributor;
 import ai_cup_22.strategy.potentialfield.PotentialField;
 import ai_cup_22.strategy.potentialfield.Score;
 import ai_cup_22.strategy.potentialfield.ScoreContributor;
-import ai_cup_22.strategy.potentialfield.scorecontributors.composite.SumCompositeScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.ZoneScoreContributor;
+import ai_cup_22.strategy.potentialfield.scorecontributors.basic.LinearScoreContributor;
+import ai_cup_22.strategy.potentialfield.scorecontributors.composite.SumCompositeScoreContributor;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -26,19 +26,22 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class LootAmmoStrategy implements Strategy {
-    public static final double MAX_AMMO_DIST = 100;
-
     private final Unit unit;
-    private final ExploreStrategy exploreStrategy;
     private final Strategy delegate;
+    private final double maxLootDist;
 
-    public LootAmmoStrategy(Unit unit, ExploreStrategy exploreStrategy) {
+    public LootAmmoStrategy(Unit unit, ExploreStrategy exploreStrategy, FightStrategy fightStrategy) {
+        this(unit, exploreStrategy, fightStrategy, Constants.MAX_LOOT_STRATEGY_DIST);
+    }
+
+    public LootAmmoStrategy(Unit unit, ExploreStrategy exploreStrategy, FightStrategy fightStrategy, double maxLootDist) {
         this.unit = unit;
-        this.exploreStrategy = exploreStrategy;
+        this.maxLootDist = maxLootDist;
+
         this.delegate = new FirstMatchCompositeStrategy()
                 .add(() -> !unit.hasWeapon(), new NullStrategy())
-                .add(() -> unit.getBulletCount() == 0, new LootAmmoForceStrategy())
-                .add(() -> true, new LootNearestAmmoStrategy());
+                .add(() -> unit.getBulletCount() == 0, new LootAmmoForceStrategy(unit, exploreStrategy, fightStrategy))
+                .add(() -> true, new LootNearestAmmoStrategy(unit, exploreStrategy, fightStrategy));
     }
 
     @Override
@@ -51,24 +54,34 @@ public class LootAmmoStrategy implements Strategy {
         return delegate.getAction();
     }
 
-    private List<AmmoLoot> getSuitableAmmoLoots() {
+    private List<Loot> getSuitableAmmoLoots() {
         return World.getInstance().getAmmoLoots(unit.getWeapon().getId()).stream()
-                .filter(loot -> loot.getPosition().getDistanceTo(unit.getPosition()) < MAX_AMMO_DIST)
+                .filter(loot -> loot.getPosition().getDistanceTo(unit.getPosition()) < maxLootDist)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public String toString() {
+        return Strategy.toString(this, delegate);
     }
 
 
 
-    public class LootNearestAmmoStrategy implements Strategy {
+
+    public class LootNearestAmmoStrategy extends BaseLootStrategy {
+        protected LootNearestAmmoStrategy(Unit unit, ExploreStrategy exploreStrategy, FightStrategy fightStrategy) {
+            super(unit, exploreStrategy, fightStrategy);
+        }
+
         @Override
         public double getOrder() {
-            return getNearestAmmoLoot()
+            return getBestLoot()
                     .filter(this::canTakeLootOnlyAfterDisabledTime)
                     .map(ammo -> {
                         var dist = unit.getPosition().getDistanceTo(ammo.getPosition());
                         var maxBullets = unit.getMaxBulletCount();
 
-                        var distMul = new LinearDistributor(0, MAX_AMMO_DIST, 1, 0)
+                        var distMul = new LinearDistributor(0, maxLootDist, 1, 0)
                                 .get(dist);
                         var countMul = new FirstMatchDistributor()
                                 // 0.125 -- dist < MAX_DIST * 0.2
@@ -82,15 +95,8 @@ public class LootAmmoStrategy implements Strategy {
         }
 
         @Override
-        public Action getAction() {
-            return getNearestAmmoLoot()
-                    .map(ammo -> (Action) new TakeLootAction(ammo))
-                    .orElse(exploreStrategy.getAction());
-        }
-
-        private Optional<AmmoLoot> getNearestAmmoLoot() {
-            return getSuitableAmmoLoots().stream()
-                    .min(Comparator.comparingDouble(loot -> unit.getPosition().getDistanceTo(loot.getPosition())));
+        protected List<Loot> getSuitableLoots() {
+            return getSuitableAmmoLoots();
         }
 
         private boolean canTakeLootOnlyAfterDisabledTime(Loot loot) {
@@ -107,7 +113,11 @@ public class LootAmmoStrategy implements Strategy {
 
 
 
-    public class LootAmmoForceStrategy implements Strategy {
+    public class LootAmmoForceStrategy extends BaseLootStrategy {
+        protected LootAmmoForceStrategy(Unit unit, ExploreStrategy exploreStrategy, FightStrategy fightStrategy) {
+            super(unit, exploreStrategy, fightStrategy);
+        }
+
         @Override
         public double getOrder() {
             return MAX_ORDER;
@@ -120,15 +130,21 @@ public class LootAmmoStrategy implements Strategy {
                 return exploreStrategy.getAction();
             }
 
-            getPotentialFieldScoreContributor().contribute(unit.getPotentialField());
-
-            return new TakeLootAction(getBestAmmo());
+            return super.getAction();
         }
 
-        private Loot getBestAmmo() {
+        @Override
+        protected List<Loot> getSuitableLoots() {
+            return getSuitableAmmoLoots();
+        }
+
+        @Override
+        protected Optional<Loot> getBestLoot() {
+            getPotentialFieldScoreContributor().contribute(unit.getPotentialField());
+
             var pathFinder = new AStarPathFinder(unit.getPotentialField());
 
-            var paths = getSuitableAmmoLoots().stream()
+            var paths = getSuitableLoots().stream()
                     .collect(Collectors.toMap(
                             loot -> loot,
                             loot -> pathFinder.findPath(unit.getPosition(), loot.getPosition())
@@ -136,19 +152,21 @@ public class LootAmmoStrategy implements Strategy {
 
             // search by min sum of treats on the path
             // and min by distance if there is no treat on the path
-            return paths.entrySet().stream()
+            var loot = paths.entrySet().stream()
                     .min(
                             Comparator.comparingDouble(
-                                            (Entry<AmmoLoot, Path> e) -> e.getValue().getScores().stream()
+                                            (Entry<Loot, Path> e) -> e.getValue().getScores().stream()
                                                     .filter(score -> score.getNonStaticScore() < 0)
                                                     .mapToDouble(Score::getNonStaticScore)
                                                     .sum()
                                     )
                                     .reversed()
-                                    .thenComparingDouble((Entry<AmmoLoot, Path> e) -> e.getValue().getDistance())
+                                    .thenComparingDouble((Entry<Loot, Path> e) -> e.getValue().getDistance())
                     )
-                    .orElseThrow()
+                    .get()
                     .getKey();
+
+            return Optional.ofNullable(loot);
         }
 
         private ScoreContributor getPotentialFieldScoreContributor() {
@@ -165,10 +183,5 @@ public class LootAmmoStrategy implements Strategy {
         public String toString() {
             return Strategy.toString(this);
         }
-    }
-
-    @Override
-    public String toString() {
-        return Strategy.toString(this, delegate);
     }
 }

@@ -1,10 +1,10 @@
 package ai_cup_22.strategy.behaviourtree.strategies.fight;
 
+import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.basic.AimAction;
 import ai_cup_22.strategy.actions.CompositeAction;
-import ai_cup_22.strategy.actions.DodgeBulletsAction;
 import ai_cup_22.strategy.actions.HoldDistanceAction;
 import ai_cup_22.strategy.actions.basic.LookToAction;
 import ai_cup_22.strategy.actions.MoveToWithPathfindingAction;
@@ -12,6 +12,7 @@ import ai_cup_22.strategy.actions.ShootAction;
 import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.models.Weapon;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -26,6 +27,10 @@ public class FightStrategy implements Strategy {
 
     @Override
     public double getOrder() {
+        if (isOnSafeDistance()) {
+            return 0.2;   // allow loot strategy to win
+        }
+
         return MAX_ORDER;
     }
 
@@ -36,25 +41,26 @@ public class FightStrategy implements Strategy {
         }
 
         var enemiesUnderAttack = getEnemiesUnderAttack();
+        var targetEnemy = getTargetEnemy();
 
         if (!enemiesUnderAttack.isEmpty()) {
-            // shoot to the nearest enemy
-            var targetEnemy = getNearestEnemy(enemiesUnderAttack);
-
+            // shoot target enemy
             return new CompositeAction()
                     .add(new HoldDistanceAction(targetEnemy.getPosition(), getBestDistanceToEnemy(targetEnemy)))
-                    .add(new ShootAction(targetEnemy))
-                    .add(new DodgeBulletsAction());
+                    .add(new ShootAction(targetEnemy));
         } else {
-            // aim to the nearest enemy
-            var target = getNearestEnemy(getEnemies());
-
+            // aim to target enemy
             return new CompositeAction()
-                    .add(new MoveToWithPathfindingAction(target.getPosition()))
-                    .add(new LookToAction(target))
-                    .add(new AimAction())
-                    .add(new DodgeBulletsAction());
+                    .add(new MoveToWithPathfindingAction(targetEnemy.getPosition()))
+                    .add(new LookToAction(targetEnemy))
+                    .add(new AimAction());
         }
+
+    }
+
+    public boolean isOnSafeDistance() {
+        return World.getInstance().getEnemyUnits().values().stream()
+                .allMatch(enemy -> enemy.getDistanceTo(me) > Constants.SAFE_DIST);
     }
 
     private double getBestDistanceToEnemy(Unit enemy) {
@@ -85,20 +91,32 @@ public class FightStrategy implements Strategy {
         return timeToKillEnemy * 1.5 < timeToKillMe;
     }
 
-    private List<Unit> getEnemies() {
-        return World.getInstance().getEnemyUnits().values().stream().collect(Collectors.toList());
+    private List<Unit> getEnemiesUnderAttack() {
+        var weaponMaxDistance = me.getWeaponOptional().map(Weapon::getMaxDistance).orElse(0.);
+
+        return World.getInstance().getEnemyUnits().values().stream()
+                .filter(enemy -> me.canShoot(enemy) && me.getDistanceTo(enemy) < weaponMaxDistance)
+                .collect(Collectors.toList());
     }
 
-    private List<Unit> getEnemiesUnderAttack() {
-        return World.getInstance().getEnemyUnits().values().stream()
-                .filter(me::canShoot)
-                .collect(Collectors.toList());
+    private List<Unit> getEnemies() {
+        return new ArrayList<>(World.getInstance().getEnemyUnits().values());
     }
 
     private Unit getNearestEnemy(Collection<Unit> enemies) {
         return enemies.stream()
                 .min(Comparator.comparingDouble(enemy -> enemy.getDistanceTo(me)))
                 .orElse(null);
+    }
+
+    public Unit getTargetEnemy() {
+        var enemiesUnderAttack = getEnemiesUnderAttack();
+
+        if (!enemiesUnderAttack.isEmpty()) {
+            return getNearestEnemy(getEnemiesUnderAttack());
+        }
+
+        return getNearestEnemy(getEnemies());
     }
 
     @Override
