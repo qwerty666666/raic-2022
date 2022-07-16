@@ -1,7 +1,6 @@
 package ai_cup_22.strategy.utils;
 
 import ai_cup_22.strategy.World;
-import ai_cup_22.strategy.debug.DebugData;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Line;
 import ai_cup_22.strategy.geometry.Position;
@@ -107,7 +106,7 @@ public class MovementUtils {
         for (int i = 0; i < ticks; i++) {
             velocity = getVelocityOnNextTickAfterCollision(
                     pos, unit.getDirection(), velocity,
-                    unit.getMaxForwardSpeedPerTick(), unit.getMaxBackwardSpeedPreTick(),
+                    unit.getMaxForwardSpeedPerTick(), unit.getMaxBackwardSpeedPerTick(),
                     unit.getAim(), unit.getAimSpeedModifier(),
                     directionVelocity,
                     obstacles
@@ -135,62 +134,43 @@ public class MovementUtils {
         var remainingCoolDownTicks = unit.getRemainingCoolDownTicks();
         var ticksToFullAim = unit.getTicksToFullAim();
         var lookDirection = unit.getDirection();
-        var nonAimRotationSpeed = World.getInstance().getConstants().getRotationSpeed();
-
-        var targetDirectionAngle = MathUtils.normalizeAngle(directionVelocity.getAngle());
-        var lookDirectionAngle = MathUtils.normalizeAngle(lookDirection.getAngle());
-        var rotateSign = Math.signum(targetDirectionAngle - lookDirectionAngle) *
-                (Math.abs(targetDirectionAngle - lookDirectionAngle) < Math.PI ? 1 : -1);
 
         for (int i = 0; i < ticks; i++) {
 
             // move unit
-
-            if (shouldRotateToDirection) {
-                var rotationSpeedPerTick = (nonAimRotationSpeed - (nonAimRotationSpeed - unit.getAimRotationSpeed()) * aim) *
-                        World.getInstance().getTimePerTick();
-                lookDirection = lookDirection.rotate(rotateSign *
-                        Math.min(rotationSpeedPerTick, lookDirection.getAngleTo(directionVelocity) - rotationSpeedPerTick)
-                );
-            }
-
-            velocity = getVelocityOnNextTickAfterCollision(
-                    unitCircle.getCenter(), lookDirection, velocity,
-                    unit.getMaxForwardSpeedPerTick(), unit.getMaxBackwardSpeedPreTick(),
-                    aim, unit.getAimSpeedModifier(),
-                    directionVelocity,
-                    nonWalkThroughObstacles
-            );
-            unitCircle = unitCircle.move(velocity);
 
             var shouldAim = shouldSimulateAim && (unit.isAiming() || remainingCoolDownTicks <= ticksToFullAim);
 //DebugData.getInstance().getDefaultLayer().addCircle(bulletPos);
 //DebugData.getInstance().getDefaultLayer().addText(Double.toString(aim), bulletPos);
             aim = MathUtils.restrict(0, 1, aim + (shouldAim ? unit.getAimChangePerTick() : -unit.getAimChangePerTick()));
 
-            remainingCoolDownTicks--;
+            if (shouldRotateToDirection) {
+                lookDirection = simulateRotateTickToDirection(lookDirection, directionVelocity, aim, unit.getAimRotationSpeed());
+            } else if (unit.getLookPosition() != null) {
+                lookDirection = simulateRotateTickToDirection(lookDirection, new Vector(unit.getPosition(), unit.getLookPosition()),
+                        aim, unit.getAimRotationSpeed());
+            }
 
-            result.ticks += 1;
-            result.dodgePosition = unitCircle.getCenter();
-            result.steps.add(unitCircle.getCenter());
+            velocity = getVelocityOnNextTickAfterCollision(
+                    unitCircle.getCenter(), lookDirection, velocity,
+                    unit.getMaxForwardSpeedPerTick(), unit.getMaxBackwardSpeedPerTick(),
+                    aim, unit.getAimSpeedModifier(),
+                    directionVelocity,
+                    nonWalkThroughObstacles
+            );
+            var newUnitCircle = unitCircle.move(velocity);
 
             // move bullet
 
-            var newBulletPos = bulletPos.move(bullet.getVelocity());
+            var newBulletPos = bulletPos.move(bullet.getVelocity()).getDistanceTo(bulletTrajectory.getStart()) >
+                    bulletTrajectory.getLength() ? bulletTrajectory.getEnd() : bulletPos.move(bullet.getVelocity());
             var tickTrajectory = new Line(bulletPos, newBulletPos);
             bulletPos = newBulletPos;
 
             // check that bullet hits unit
 
-            if (unitCircle.isIntersect(tickTrajectory)) {
-                var hitUnitPosition = tickTrajectory.getIntersectionPoints(unitCircle).stream()
-                        .min(Comparator.comparingDouble(point -> point.getDistanceTo(tickTrajectory.getStart())))
-                        .orElse(null);
-
-                var isHitUnit = hitUnitPosition == null ||
-                        bulletTrajectory.getEnd().getDistanceTo(bulletTrajectory.getStart()) > hitUnitPosition.getDistanceTo(bulletTrajectory.getStart());
-
-                if (isHitUnit) {
+            if (isBulletHitCircle(tickTrajectory, unitCircle) || isBulletHitCircle(tickTrajectory, newUnitCircle)) {
+                if (isBulletHitInTick(tickTrajectory, unitCircle, newUnitCircle)) {
                     result.isHit = true;
                     break;
                 }
@@ -202,9 +182,68 @@ public class MovementUtils {
                 result.isHit = false;
                 break;
             }
+
+            // go to next iteration cycle
+
+            unitCircle = newUnitCircle;
+            remainingCoolDownTicks--;
+
+            result.ticks += 1;
+            result.dodgePosition = unitCircle.getCenter();
+            result.steps.add(unitCircle.getCenter());
         }
 
         return result;
+    }
+
+    private static Vector simulateRotateTickToDirection(Vector curLookDirection, Vector targetLookDirection, double aim, double aimRotationSpeedPerSec) {
+        var nonAimRotationSpeed = World.getInstance().getConstants().getRotationSpeed();
+
+        var targetDirectionAngle = MathUtils.normalizeAngle(targetLookDirection.getAngle());
+        var lookDirectionAngle = MathUtils.normalizeAngle(curLookDirection.getAngle());
+
+        var rotateSign = Math.signum(targetDirectionAngle - lookDirectionAngle) *
+                (Math.abs(targetDirectionAngle - lookDirectionAngle) < Math.PI ? 1 : -1);
+        var rotationSpeedPerTick = (nonAimRotationSpeed - (nonAimRotationSpeed - aimRotationSpeedPerSec) * aim) *
+                World.getInstance().getTimePerTick();
+
+        return curLookDirection.rotate(rotateSign *
+                Math.min(rotationSpeedPerTick, curLookDirection.getAngleTo(targetLookDirection) - rotationSpeedPerTick)
+        );
+    }
+
+    private static boolean isBulletHitInTick(Line bulletTickTrajectory, Circle oldPosition, Circle newPosition) {
+        var x0 = oldPosition.getCenter().getX();
+        var y0 = oldPosition.getCenter().getY();
+
+        var x1 = bulletTickTrajectory.getStart().getX();
+        var y1 = bulletTickTrajectory.getStart().getY();
+
+        var v0x = (newPosition.getCenter().getX() - x0);
+        var v0y = (newPosition.getCenter().getY() - y0);
+
+        var v1x = (bulletTickTrajectory.getEnd().getX() - x1);
+        var v1y = (bulletTickTrajectory.getEnd().getY() - y1);
+
+        var a = Math.pow(v1x - v0x, 2) + Math.pow(v1y - v0y, 2);
+        var b = 2 * (v1x - v0x) * (x1 - x0) + 2 * (v1y - v0y) * (y1 - y0);
+        var c = (x1 * x1 - 2 * x1 * x0 + x0 * x0) + (y1 * y1 - 2 * y1 * y0 + y0 * y0) - 1;
+
+        return b * b - 4 * a * c >= 0;
+    }
+
+    private static boolean isBulletHitCircle(Line bulletTickTrajectory, Circle unitCircle) {
+        if (unitCircle.isIntersect(bulletTickTrajectory)) {
+            var hitUnitPosition = bulletTickTrajectory.getIntersectionPoints(unitCircle).stream()
+                    .min(Comparator.comparingDouble(point -> point.getDistanceTo(bulletTickTrajectory.getStart())))
+                    .orElse(null);
+
+            return hitUnitPosition == null ||
+                    bulletTickTrajectory.getEnd().getDistanceTo(bulletTickTrajectory.getStart()) >
+                            hitUnitPosition.getDistanceTo(bulletTickTrajectory.getStart());
+        }
+
+        return false;
     }
 
     public static List<Circle> getNonWalkThroughObstaclesInRange(Unit unit, double maxDist) {

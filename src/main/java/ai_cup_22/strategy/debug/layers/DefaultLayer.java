@@ -43,16 +43,9 @@ public class DefaultLayer extends DrawLayer {
 
     private void addBullets(World world) {
         world.getBullets().values().forEach(bullet -> {
-            Color color;
             if (bullet.isSimulated()) {
-                color = Colors.ORANGE_TRANSPARENT;
-            } else if (bullet.isEnemy()) {
-                color = Colors.RED_TRANSPARENT;
-            } else {
-                color = Colors.GREEN_TRANSPARENT;
+                add(new CircleDrawable(new Circle(bullet.getPosition(), 0.3), Colors.ORANGE_TRANSPARENT));
             }
-
-            add(new CircleDrawable(new Circle(bullet.getPosition(), 0.3), color));
 
             if (bullet.isEnemy()) {
                 add(new Line(bullet.getTrajectory(), Colors.RED_TRANSPARENT));

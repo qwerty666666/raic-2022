@@ -26,6 +26,7 @@ public class Unit {
     private BehaviourTree behaviourTree = new BehaviourTree(this);
     private ActionBlockingAction lastAction;
     private boolean isAiming;
+    private Position lookPosition;
 
     public void updateTick(ai_cup_22.model.Unit unit) {
         this.unit = unit;
@@ -37,6 +38,16 @@ public class Unit {
             lastAction.updateTick(this, unit.getAction());
         }
         this.isAiming = false;
+        this.lookPosition = null;
+    }
+
+    public Unit setLookPosition(Position lookPosition) {
+        this.lookPosition = lookPosition;
+        return this;
+    }
+
+    public Position getLookPosition() {
+        return lookPosition;
     }
 
     public boolean isAiming() {
@@ -93,7 +104,7 @@ public class Unit {
         return World.getInstance().getConstants().getMaxUnitForwardSpeed() *  World.getInstance().getTimePerTick();
     }
 
-    public double getMaxBackwardSpeedPreTick() {
+    public double getMaxBackwardSpeedPerTick() {
         return World.getInstance().getConstants().getMaxUnitBackwardSpeed() *  World.getInstance().getTimePerTick();
     }
 
