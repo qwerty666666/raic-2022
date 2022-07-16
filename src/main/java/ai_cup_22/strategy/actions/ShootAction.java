@@ -19,8 +19,8 @@ public class ShootAction implements Action {
 
     @Override
     public void apply(Unit unit, UnitOrder order) {
-        var shouldShoot = shouldShoot(unit, target);
         var bestPositionToShoot = getBestPositionToShoot(unit, target);
+        var shouldShoot = shouldShoot(unit, bestPositionToShoot, target);
 
         new CompositeAction()
                 .add(new AimAction(shouldShoot))
@@ -28,19 +28,21 @@ public class ShootAction implements Action {
                 .apply(unit, order);
     }
 
-    private boolean shouldShoot(Unit me, Unit enemy) {
-        // TODO check best position is not hit tree
-        if (!me.getShootingSegment().contains(target.getPosition())) {
+    private boolean shouldShoot(Unit me, Position targetPosition, Unit enemy) {
+        if (!me.canDoNewAction() && me.isCoolDown()) {
             return false;
         }
 
-        if (!me.canShoot(target)) {
+        if (!me.getShootingSegment().contains(targetPosition)) {
+            return false;
+        }
+
+        if (!me.canShoot(targetPosition, enemy)) {
             return false;
         }
 
         var bulletMaxDistance = me.getWeaponOptional().map(Weapon::getMaxDistance).orElse(0.);
-
-        return me.getDistanceTo(enemy) - me.getCircle().getRadius() < bulletMaxDistance;
+        return me.getPosition().getDistanceTo(targetPosition) < bulletMaxDistance + 2;
     }
 
     private Position getBestPositionToShoot(Unit me, Unit enemy) {

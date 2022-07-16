@@ -113,19 +113,27 @@ public class Unit {
         return Math.max(0, unit.getNextShotTick() - World.getInstance().getCurrentTick());
     }
 
+    public boolean isCoolDown() {
+        return getRemainingCoolDownTicks() <= 0;
+    }
+
     public boolean canSee(Position p) {
         return getViewSegment().contains(p);
     }
 
-    public boolean canShoot(Unit enemy) {
-        var line = new Line(getPosition(), enemy.getPosition());
+    public boolean canShoot(Position position, Unit targetUnit) {
+        var line = new Line(getPosition(), position);
 
         return World.getInstance().getNonShootThroughObstacles().stream()
                 .noneMatch(obstacle -> obstacle.getCircle().isIntersect(line))
                 &&
                 World.getInstance().getAllUnits().values().stream()
-                        .filter(u -> u.getId() != this.getId() && u.getId() != enemy.getId())
+                        .filter(u -> u.getId() != this.getId() && u.getId() != targetUnit.getId())
                         .noneMatch(u -> u.getCircle().isIntersect(line));
+    }
+
+    public boolean canShoot(Unit enemy) {
+        return canShoot(enemy.getPosition(), enemy);
     }
 
     public boolean hasWeapon() {
