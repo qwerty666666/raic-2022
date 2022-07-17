@@ -3,6 +3,7 @@ package ai_cup_22.strategy.behaviourtree.strategies.fight;
 import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
+import ai_cup_22.strategy.actions.MoveByPotentialFieldAction;
 import ai_cup_22.strategy.actions.basic.AimAction;
 import ai_cup_22.strategy.actions.CompositeAction;
 import ai_cup_22.strategy.actions.HoldDistanceAction;
@@ -12,6 +13,8 @@ import ai_cup_22.strategy.actions.ShootAction;
 import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.models.Weapon;
+import ai_cup_22.strategy.potentialfield.scorecontributors.basic.LinearScoreContributor;
+import ai_cup_22.strategy.potentialfield.scorecontributors.composite.FirstMatchCompositeScoreContributor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -44,9 +47,11 @@ public class FightStrategy implements Strategy {
         var targetEnemy = getTargetEnemy();
 
         if (!enemiesUnderAttack.isEmpty()) {
+            contributeToPotentialField();
+
             // shoot target enemy
             return new CompositeAction()
-                    .add(new HoldDistanceAction(targetEnemy.getPosition(), getBestDistanceToEnemy(targetEnemy)))
+                    .add(new MoveByPotentialFieldAction())
                     .add(new ShootAction(targetEnemy));
         } else {
             // aim to target enemy
@@ -55,7 +60,6 @@ public class FightStrategy implements Strategy {
                     .add(new LookToAction(targetEnemy))
                     .add(new AimAction());
         }
-
     }
 
     public boolean isOnSafeDistance() {
@@ -117,6 +121,28 @@ public class FightStrategy implements Strategy {
         }
 
         return getNearestEnemy(getEnemies());
+    }
+
+    private void contributeToPotentialField() {
+        var targetEnemy = getTargetEnemy();
+        var safeDistant = getBestDistanceToEnemy(targetEnemy);
+
+        var contributor = new FirstMatchCompositeScoreContributor("Target Enemy")
+                .add(new LinearScoreContributor(
+                        targetEnemy.getPosition(),
+                        Constants.PF_ENEMY_THREATEN_DIST_MIN_SCORE,
+                        Constants.PF_ENEMY_THREATEN_DIST_MAX_SCORE,
+                        safeDistant
+                ))
+                .add(new LinearScoreContributor(
+                        targetEnemy.getPosition(),
+                        Constants.PF_ENEMY_HOLD_DISTANCE_MAX_SCORE,
+                        Constants.PF_ENEMY_HOLD_DISTANCE_MIN_SCORE,
+                        safeDistant,
+                        safeDistant + Constants.PF_ENEMY_HOLD_DISTANCE_DIST
+                ));
+
+        contributor.contribute(me.getPotentialField());
     }
 
     @Override

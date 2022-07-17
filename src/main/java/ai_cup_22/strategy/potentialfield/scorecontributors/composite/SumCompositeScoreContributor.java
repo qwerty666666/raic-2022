@@ -1,12 +1,12 @@
 package ai_cup_22.strategy.potentialfield.scorecontributors.composite;
 
 import ai_cup_22.strategy.potentialfield.Score;
-import ai_cup_22.strategy.potentialfield.ScoreContributor;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 public class SumCompositeScoreContributor extends BaseCompositeScoreContributor {
+    public SumCompositeScoreContributor(String contributionReason) {
+        super(contributionReason);
+    }
+
     @Override
     public boolean shouldContribute(Score score) {
         return contributors.stream().anyMatch(c -> c.shouldContribute(score));
@@ -17,5 +17,12 @@ public class SumCompositeScoreContributor extends BaseCompositeScoreContributor 
         return contributors.stream()
                 .mapToDouble(contributor -> contributor.getScoreValue(score))
                 .sum();
+    }
+
+    @Override
+    public void contribute(Score score) {
+        for (var c: contributors) {
+            c.contribute(score);
+        }
     }
 }

@@ -62,6 +62,6 @@ public class AStarPathFinder implements PathFinder {
 
         // build path
 
-        return Path.from(to);
+        return Path.from(to, graph);
     }
 }

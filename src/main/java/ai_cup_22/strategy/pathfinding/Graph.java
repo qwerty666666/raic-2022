@@ -5,6 +5,7 @@ import ai_cup_22.strategy.potentialfield.PotentialField;
 import ai_cup_22.strategy.potentialfield.Score;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -47,6 +48,22 @@ public class Graph {
     public Node addNode(Position position) {
         var node = new Node(new Score(position));
 
+        getNearestReachableNodes(position)
+                .forEach(near -> {
+                    near.addAdjacent(node);
+                    node.addAdjacent(near);
+                });
+
+        return node;
+    }
+
+    public Node getNearestNode(Position position) {
+        return getNearestReachableNodes(position).stream()
+                .min(Comparator.comparingDouble(node -> node.getPosition().getSquareDistanceTo(position)))
+                .orElseThrow();
+    }
+
+    private List<Node> getNearestReachableNodes(Position position) {
         // if nearest score is unreachable, we just find the nearest reachable node
         // from it by BFS
         var scoresAround = potentialField.getScoresAround(position);
@@ -73,19 +90,10 @@ public class Graph {
                 });
             }
         }
-
-        // add adjacents
-        scoresAround.stream()
+        return scoresAround.stream()
                 .filter(score -> !score.isUnreachable())
                 .map(score -> nodes.get(score.getPosition()))
-                // remove nodes where we can't run
-                .filter(n -> !n.getScore().isUnreachable())
-                .forEach(near -> {
-                    near.addAdjacent(node);
-                    node.addAdjacent(near);
-                });
-
-        return node;
+                .collect(Collectors.toList());
     }
 
     public void removeNode(Node node) {
@@ -96,6 +104,7 @@ public class Graph {
     public static class Node {
         private Score score;
         private double priority;
+        private double threatSumOnPath;
         private Node parent;
         private List<Node> adjacent = new ArrayList<>();
         private double dist;
@@ -103,6 +112,15 @@ public class Graph {
 
         public Node(Score score) {
             this.score = score;
+        }
+
+        public Node setThreatSumOnPath(double threatSumOnPath) {
+            this.threatSumOnPath = threatSumOnPath;
+            return this;
+        }
+
+        public double getThreatSumOnPath() {
+            return threatSumOnPath;
         }
 
         public Position getPosition() {

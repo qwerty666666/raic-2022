@@ -5,6 +5,7 @@ import ai_cup_22.strategy.pathfinding.Graph.Node;
 import ai_cup_22.strategy.potentialfield.Score;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,9 +34,13 @@ public class Path {
         return dist;
     }
 
-    public static Path from(Node to) {
+    public static Path from(Node to, Graph graph) {
         if (to.getParent() == null) {
-            return null;
+            var pos = to.getPosition();
+            to = graph.getNodes().values().stream()
+                    .filter(node -> node.getParent() != null)
+                    .min(Comparator.comparingDouble(node -> node.getPosition().getSquareDistanceTo(pos)))
+                    .orElseThrow();
         }
 
         var path = new ArrayList<Score>();

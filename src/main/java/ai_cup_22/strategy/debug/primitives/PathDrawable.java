@@ -16,7 +16,7 @@ public class PathDrawable implements Drawable {
     public void draw(DebugInterface debugInterface) {
         if (path != null) {
             for (int i = 0; i < path.size() - 1; i++) {
-                new Line(path.get(i), path.get(i + 1), Colors.BLUE).draw(debugInterface);
+                new Line(path.get(i), path.get(i + 1), Colors.BROWN_TRANSPARENT).draw(debugInterface);
             }
         }
     }

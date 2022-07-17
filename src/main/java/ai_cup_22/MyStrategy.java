@@ -10,11 +10,14 @@ import ai_cup_22.strategy.debug.Colors;
 import ai_cup_22.strategy.debug.DebugData;
 import ai_cup_22.strategy.debug.primitives.CircleDrawable;
 import ai_cup_22.strategy.debug.primitives.Line;
+import ai_cup_22.strategy.debug.primitives.PathDrawable;
+import ai_cup_22.strategy.debug.primitives.PotentialFieldDrawable;
 import ai_cup_22.strategy.debug.primitives.Text;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Obstacle;
+import ai_cup_22.strategy.pathfinding.DijkstraPathFinder;
 import ai_cup_22.strategy.utils.MovementUtils;
 import java.util.Collections;
 import java.util.Comparator;
@@ -83,8 +86,8 @@ public class MyStrategy {
 //                                new Text(Double.toString(unit.getPotentialField().getScoreValue(target)), target, 0.2)
 //                        );
 
-                        //                     DijkstraPathFinder.minThreatPathFinder(unit.getPotentialField());
-                        //                     new PotentialFieldDrawable(unit.getPotentialField()).draw(debugInterface);
+//                        var pathFinder = new DijkstraPathFinder(unit.getPotentialField(), unit.getPosition());
+//                        new PathDrawable(pathFinder.findPath(unit.getPosition(), target).getPathPositions()).draw(debugInterface);
 
                         //                    var path = new AStarPathFinder(unit.getPotentialField()).findPath(unit.getPosition(), target);
                         //                    new PathDrawable(path.getPathPositions()).draw(debugInterface);

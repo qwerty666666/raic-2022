@@ -8,27 +8,14 @@ import java.util.HashSet;
 import java.util.PriorityQueue;
 
 public class DijkstraPathFinder implements PathFinder {
-    public static final DistanceFunction NON_STATIC_SCORE_DIST_FUNCTION = (from, to) -> to.getScore().getNonStaticScore();
-    public static final Comparator<Double> MAX_DIST_BEST_DIST_FUNCTION = (d1, d2) -> Double.compare(d2, d1);
-
     private final Graph graph;
     private final Position startPosition;
-    private final DistanceFunction distFunction;
-    private final Comparator<Double> distanceComparator;
 
-    public DijkstraPathFinder(PotentialField potentialField, Position startPosition, DistanceFunction distFunction,
-            Comparator<Double> distanceComparator) {
+    public DijkstraPathFinder(PotentialField potentialField, Position startPosition) {
         this.graph = potentialField.getGraph();
         this.startPosition = startPosition;
-        this.distFunction = distFunction;
-        this.distanceComparator = distanceComparator;
 
         calculateAllDistances();
-    }
-
-    public static DijkstraPathFinder minThreatPathFinder(PotentialField potentialField) {
-        return new DijkstraPathFinder(potentialField, potentialField.getCenter(), NON_STATIC_SCORE_DIST_FUNCTION,
-                MAX_DIST_BEST_DIST_FUNCTION);
     }
 
     private void calculateAllDistances() {
@@ -40,7 +27,12 @@ public class DijkstraPathFinder implements PathFinder {
 
         // iterate over graph
 
-        var queue = new PriorityQueue<Node>((a, b) -> distanceComparator.compare(a.getDist(), b.getDist()));
+        var minScoreValue = getMinScoreValue(graph);
+
+        var queue = new PriorityQueue<>(
+                Comparator.comparingDouble(Node::getPriority)
+                        .thenComparing(Node::getSteps)
+        );
         queue.add(from);
 
         var visited = new HashSet<Node>();
@@ -52,32 +44,35 @@ public class DijkstraPathFinder implements PathFinder {
             cur.getAdjacent().forEach(adj -> {
                 boolean shouldUpdate;
 
+                var newPriority = Math.max(0, cur.getPriority() + (-adj.getScoreValue() - minScoreValue));
+
                 if (visited.contains(adj)) {
-                    // we need this because we can search for furthest path
-                    if (adj.getParent() != cur) {
-                        shouldUpdate = false;
-                    } else {
-                        var cmp = distanceComparator.compare(adj.getDist(), adj.getDist() + distFunction.getDistanceTo(cur, adj));
+                    var cmp = Double.compare(adj.getPriority(), newPriority);
 
-                        // if distances are the same then choose path with the fewer steps
-                        if (cmp == 0) {
-                            cmp = cur.getSteps() + 1 < adj.getSteps() ? -1 : 1;
-                        }
-
-                        shouldUpdate = cmp < 0;
+                    // if distances are the same then choose path with the fewer steps
+                    if (cmp == 0) {
+                        cmp = cur.getSteps() + 1 < adj.getSteps() ? 1 : -1;
                     }
+
+                    shouldUpdate = cmp > 0;
                 } else {
                     shouldUpdate = true;
                 }
 
                 if (shouldUpdate) {
-                    adj.setDist(adj.getDist() + distFunction.getDistanceTo(cur, adj));
+                    adj.setDist(cur.getDist() + cur.getPosition().getDistanceTo(adj.getPosition()));
                     adj.setParent(cur);
                     adj.setSteps(cur.getSteps() + 1);
+                    adj.setPriority(newPriority);
+                    adj.setThreatSumOnPath(cur.getThreatSumOnPath() + adj.getScore().getThreatScore());
+
+                    if (visited.contains(adj)) {
+                        queue.remove(adj);
+                    } else {
+                        visited.add(adj);
+                    }
 
                     queue.add(adj);
-
-                    visited.add(adj);
                 }
             });
         }
@@ -87,20 +82,23 @@ public class DijkstraPathFinder implements PathFinder {
         if (!isFromExisted) {
             graph.removeNode(from);
         }
+
+        // set threat to priority
+
+        for (var node: graph.getNodes().values()) {
+            node.setPriority(-1 * (node.getPriority() + node.getSteps() * minScoreValue));
+        }
     }
 
     @Override
     public Path findPath(Position startPosition, Position destination) {
-        return Path.from(getNearestNode(destination));
+        return Path.from(graph.getNearestNode(destination), graph);
     }
 
-    private Node getNearestNode(Position p) {
-        return graph.getNodes().values().stream()
-                .min(Comparator.comparingDouble(node -> node.getPosition().getSquareDistanceTo(p)))
-                .orElseThrow();
-    }
-
-    public interface DistanceFunction {
-        double getDistanceTo(Node from, Node to);
+    private double getMinScoreValue(Graph graph) {
+        return -graph.getNodes().values().stream()
+                .mapToDouble(Node::getScoreValue)
+                .filter(score -> score > 0)
+                .sum();
     }
 }

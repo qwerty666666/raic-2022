@@ -112,4 +112,8 @@ public interface PotentialField {
 
         return scoresNear;
     }
+
+    default void reset() {
+        getScores().values().forEach(Score::reset);
+    }
 }

@@ -174,7 +174,7 @@ public class LootAmmoStrategy implements Strategy {
                     .map(enemy -> new LinearScoreContributor(enemy.getPosition(), PotentialField.MIN_VALUE, 0, 15))
                     .collect(Collectors.toList());
 
-            return new SumCompositeScoreContributor()
+            return new SumCompositeScoreContributor("loot ammo force")
                     .add(new ZoneScoreContributor())
                     .add(enemyScoreContributors);
         }

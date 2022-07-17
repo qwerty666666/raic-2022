@@ -26,19 +26,24 @@ public class ZoneScoreContributor implements ScoreContributor {
         var nearestZonePosition = new Line(zone.getCenter(), score.getPosition())
                 .getIntersectionPointsAsRay(zone.getCircle())
                 .stream()
-                .min(Comparator.comparingDouble(p -> p.getDistanceTo(score.getPosition())))
+                .min(Comparator.comparingDouble(p -> p.getSquareDistanceTo(score.getPosition())))
                 .orElseThrow();
 
         var distToNewZone = new Line(zone.getNewCenter(), nearestZonePosition).getLength() - zone.getNewRadius();
         var zoneSpeedPerTick = distToNewZone / zone.getTicksToNewZone();
 
-        return new FirstMatchCompositeScoreContributor()
+        return new FirstMatchCompositeScoreContributor("Zone")
                 .add(new ConstantOutCircleScoreContributor(zone.getCircle().enlarge(10), PotentialField.MIN_VALUE))
-                .add(() -> isScoreOutOfZone(score, zone),
+                .add(s -> isScoreOutOfZone(s, zone),
                         new LinearScoreContributor(nearestZonePosition, MIN_SCORE, PotentialField.MIN_VALUE, 10)
                 )
                 .add(new LinearScoreContributor(nearestZonePosition, MIN_SCORE, 0, RADIUS_TICKS * zoneSpeedPerTick))
                 .getScoreValue(score);
+    }
+
+    @Override
+    public String getContributionReason() {
+        return "Zone";
     }
 
     private boolean isScoreOutOfZone(Score score, Zone zone) {

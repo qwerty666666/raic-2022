@@ -1,24 +1,25 @@
 package ai_cup_22.strategy.potentialfield.scorecontributors.basic;
 
+import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.potentialfield.Score;
 import ai_cup_22.strategy.potentialfield.ScoreContributor;
 
 public class LinearScoreContributor implements ScoreContributor {
     private final Position position;
-    private final double maxScore;
-    private final double minScore;
+    private final double nearestScore;
+    private final double furthestScore;
     private final double minDist;
     private final double maxDist;
 
-    public LinearScoreContributor(Position position, double maxScore, double minScore, double maxDist) {
-        this(position, maxScore, minScore, 0, maxDist);
+    public LinearScoreContributor(Position position, double nearestScore, double furthestScore, double maxDist) {
+        this(position, nearestScore, furthestScore, 0, maxDist);
     }
 
-    public LinearScoreContributor(Position position, double maxScore, double minScore, double minDist, double maxDist) {
+    public LinearScoreContributor(Position position, double nearestScore, double furthestScore, double minDist, double maxDist) {
         this.position = position;
-        this.maxScore = maxScore;
-        this.minScore = minScore;
+        this.nearestScore = nearestScore;
+        this.furthestScore = furthestScore;
         this.minDist = minDist;
         this.maxDist = maxDist;
     }
@@ -40,6 +41,10 @@ public class LinearScoreContributor implements ScoreContributor {
             return 0;
         }
 
-        return maxScore - ((this.position.getDistanceTo(score.getPosition()) - minDist) / (maxDist - minDist) * (maxScore - minScore));
+        if (World.getInstance().getCurrentTick() == 78 && score.getPosition().equals(new Position(120, -59))) {
+            int a = 0;
+        }
+
+        return nearestScore - ((this.position.getDistanceTo(score.getPosition()) - minDist) / (maxDist - minDist) * (nearestScore - furthestScore));
     }
 }

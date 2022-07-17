@@ -91,21 +91,21 @@ public class Line {
         double x0 = -a * c / s;
         double y0 = -b * c / s;
 
+        var originOffset = new Vector(circle.getCenter());
+
         if (c * c > r * r * s + eps) {
             // no points
         } else if (Math.abs(c * c - r * r * s) < eps) {
-            intersectionPositions.add(new Position(x0, y0));
+            intersectionPositions.add(new Position(x0, y0).move(originOffset));
         } else {
             double d = r * r - c * c / s;
             double mult = Math.sqrt(d / s);
 
-            intersectionPositions.add(new Position(x0 + b * mult, y0 - a * mult));
-            intersectionPositions.add(new Position(x0 - b * mult, y0 + a * mult));
+            intersectionPositions.add(new Position(x0 + b * mult, y0 - a * mult).move(originOffset));
+            intersectionPositions.add(new Position(x0 - b * mult, y0 + a * mult).move(originOffset));
         }
 
-        return intersectionPositions.stream()
-                .map(p -> p.move(new Vector(circle.getCenter())))
-                .collect(Collectors.toList());
+        return intersectionPositions;
     }
 
     public List<Position> getIntersectionPoints(Circle circle) {

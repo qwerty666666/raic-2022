@@ -51,7 +51,7 @@ public class StaticPotentialField implements PotentialField {
             var circle = obstacle.getCircle().enlarge(unitRadius);
             var influenceRadius = circle.getRadius() + TREE_MAX_INFLUENCE_RADIUS;
 
-            var obstaclesContributor = new FirstMatchCompositeScoreContributor()
+            var obstaclesContributor = new FirstMatchCompositeScoreContributor("Tree", true)
                     .add(new ConstantInCircleScoreContributor(circle, PotentialField.UNREACHABLE_VALUE))
                     .add(new LinearScoreContributor(circle.getCenter(), TREE_MIN_SCORE, 0, circle.getRadius(), influenceRadius));
 
