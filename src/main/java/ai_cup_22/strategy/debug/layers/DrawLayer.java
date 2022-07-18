@@ -43,6 +43,10 @@ public class DrawLayer {
         add(new CircleDrawable(new Circle(position, radius), color));
     }
 
+    public void addRing(Position position, double radius, Color color) {
+        add(new CircleDrawable(new Circle(position, radius), color, false));
+    }
+
     public void addLine(Position p1, Position p2, Color color) {
         add(new Line(p1, p2, color));
     }

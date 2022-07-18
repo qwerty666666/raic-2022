@@ -80,7 +80,7 @@ public class Line {
      * Line used as ray
      */
     public List<Position> getIntersectionPointsAsRay(Circle circle) {
-        var intersectionPositions = new ArrayList<Position>();
+        var intersectionPositions = new ArrayList<Position>(2);
 
         // rewrite c to align circle to (0, 0)
         var c = this.c + (a * circle.getCenter().getX() + b * circle.getCenter().getY());

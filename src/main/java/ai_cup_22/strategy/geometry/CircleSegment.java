@@ -50,4 +50,17 @@ public class CircleSegment {
 
         return angleToPosition < getMaxAngle();
     }
+
+    public boolean contains(Circle circle) {
+        if (this.circle.getCenter().getDistanceTo(circle.getCenter()) + circle.getRadius() >= this.getRadius()) {
+            return false;
+        }
+
+        if (!contains(circle.getCenter())) {
+            return false;
+        }
+
+        return circle.getTangentPoints(this.circle.getCenter()).stream()
+                .allMatch(this::contains);
+    }
 }

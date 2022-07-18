@@ -1,6 +1,6 @@
 package ai_cup_22.strategy.debug.layers;
 
-import ai_cup_22.debugging.Color;
+import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.debug.Colors;
 import ai_cup_22.strategy.debug.DebugData;
@@ -20,10 +20,22 @@ public class DefaultLayer extends DrawLayer {
         addUnitPaths(world);
         addUnitStrategies(world);
         addUnitShields(world);
+        addPhantomUnits(world);
 
         addBullets(world);
 
         addCursorPosition();
+    }
+
+    private void addPhantomUnits(World world) {
+        world.getEnemyUnits().values().forEach(unit -> {
+            addCircle(unit.getPosition(), unit.getCircle().getRadius(), Colors.RED_TRANSPARENT);
+        });
+        world.getPhantomEnemies().values().forEach(unit -> {
+            addCircle(unit.getPosition(), unit.getCircle().getRadius(), Colors.RED_TRANSPARENT);
+            addText(Integer.toString(unit.getTicksSinceLastUpdate()), unit.getPosition());
+            addRing(unit.getPossibleLocationCircle().getCenter(), unit.getPossibleLocationCircle().getRadius(), Colors.GRAY_TRANSPARENT);
+        });
     }
 
     private void addUnitStrategies(World world) {
@@ -79,10 +91,14 @@ public class DefaultLayer extends DrawLayer {
     }
 
     private void addShootAreas(World world) {
-        for (var unit: world.getAllUnits().values()) {
+        for (var unit: world.getMyUnits().values()) {
             if (unit.hasWeapon()) {
                 add(new CircleSegment(unit.getShootingSegment(), Colors.LIGHT_BLUE_TRANSPARENT));
-//                if (unit.isMe()) add(new CircleSegment(unit.getViewSegment(), Colors.YELLOW_TRANSPARENT));
+            }
+        }
+        for (var unit: world.getEnemyUnits().values()) {
+            if (unit.hasWeapon()) {
+                add(new CircleSegment(unit.getShootingSegment(), Colors.LIGHT_BLUE_TRANSPARENT));
             }
         }
     }

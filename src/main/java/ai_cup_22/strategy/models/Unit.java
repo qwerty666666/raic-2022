@@ -1,5 +1,6 @@
 package ai_cup_22.strategy.models;
 
+import ai_cup_22.model.Sound;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.basic.ActionBlockingAction;
 import ai_cup_22.strategy.behaviourtree.BehaviourTree;
@@ -18,27 +19,82 @@ public class Unit {
     public static final int TICKS_TO_RUN_ASIDE_BY_UNIT_RADIUS = 8;
     public static final double DEFAULT_SAFE_DIST = 15;
 
+    private static int idGenerator = -10000000;
+
+    private int id;
     private Circle circle;
     private ai_cup_22.model.Unit unit;
     private Vector direction;
-    private UnitPotentialField potentialField = new UnitPotentialField(this);
+    private UnitPotentialField potentialField;
     private List<Position> currentPath;
     private BehaviourTree behaviourTree = new BehaviourTree(this);
     private ActionBlockingAction lastAction;
     private boolean isAiming;
     private Position lookPosition;
+    private boolean isPhantom;
+    private int lastUpdateTick;
+    private Integer weapon;
+
+    public Unit() {
+        id = idGenerator++;
+    }
 
     public void updateTick(ai_cup_22.model.Unit unit) {
+        this.id = unit.getId();
         this.unit = unit;
         this.circle = new Circle(new Position(unit.getPosition()), World.getInstance().getConstants().getUnitRadius());
         this.direction = new Vector(unit.getDirection());
-        this.potentialField.refresh();
         this.currentPath = Collections.emptyList();
         if (this.lastAction != null) {
             lastAction.updateTick(this, unit.getAction());
         }
         this.isAiming = false;
         this.lookPosition = null;
+        this.lastUpdateTick = World.getInstance().getCurrentTick();
+        this.isPhantom = false;
+        this.weapon = unit.getWeapon();
+
+        if (isMe()) {
+            if (this.potentialField == null) {
+                this.potentialField = new UnitPotentialField(this);
+            }
+            this.potentialField.refresh();
+        }
+    }
+
+    public void updateBySound(Sound sound) {
+        this.circle = new Circle(new Position(sound.getPosition()), World.getInstance().getConstants().getUnitRadius());
+        this.lastUpdateTick = World.getInstance().getCurrentTick();
+
+        var soundProperties = World.getInstance().getConstants().getSounds()[sound.getTypeIndex()];
+        if (soundProperties.getName().equals("Wand")) {
+            weapon = Weapon.WAND_ID;
+        } else if (soundProperties.getName().equals("Staff")) {
+            weapon = Weapon.STAFF_ID;
+        } else if (soundProperties.getName().equals("Bow")) {
+            weapon = Weapon.BOW_ID;
+        }
+    }
+
+    public Unit setPhantom(boolean phantom) {
+        isPhantom = phantom;
+        return this;
+    }
+
+    public boolean isPhantom() {
+        return isPhantom;
+    }
+
+    public int getLastUpdateTick() {
+        return lastUpdateTick;
+    }
+
+    public int getTicksSinceLastUpdate() {
+        return World.getInstance().getCurrentTick() - lastUpdateTick;
+    }
+
+    public Circle getPossibleLocationCircle() {
+        return new Circle(getPosition(), getTicksSinceLastUpdate() * ai_cup_22.strategy.Constants.UNIT_MAX_SPEED_PER_TICK);
     }
 
     public Unit setLookPosition(Position lookPosition) {
@@ -77,7 +133,7 @@ public class Unit {
     }
 
     public int getId() {
-        return unit.getId();
+        return id;
     }
 
     public boolean isMe() {
@@ -143,8 +199,12 @@ public class Unit {
         return World.getInstance().getNonShootThroughObstacles().stream()
                 .noneMatch(obstacle -> obstacle.getCircle().isIntersect(line))
                 &&
-                World.getInstance().getAllUnits().values().stream()
-                        .filter(u -> u.getId() != this.getId() && u.getId() != targetUnit.getId())
+                World.getInstance().getMyUnits().values().stream()
+                        .filter(u -> u.getId() != this.getId())
+                        .noneMatch(u -> u.getCircle().isIntersect(line))
+                &&
+                World.getInstance().getEnemyUnits().values().stream()
+                        .filter(u -> u.getId() != targetUnit.getId())
                         .noneMatch(u -> u.getCircle().isIntersect(line));
     }
 
@@ -165,10 +225,10 @@ public class Unit {
     }
 
     public Weapon getWeapon() {
-        if (unit.getWeapon() == null) {
+        if (weapon == null) {
             return null;
         }
-        return Weapon.get(unit.getWeapon());
+        return Weapon.get(weapon);
     }
 
     public Optional<Weapon> getWeaponOptional() {
@@ -273,7 +333,7 @@ public class Unit {
                     if (w.isStaff()) {
                         return DEFAULT_SAFE_DIST;
                     }
-                    return w.getSpeedPerTick() * (TICKS_TO_RUN_ASIDE_BY_UNIT_RADIUS + 2) + 1;
+                    return w.getSpeedPerTick() * (TICKS_TO_RUN_ASIDE_BY_UNIT_RADIUS + 1) + 2;
                 })
                 .orElse(DEFAULT_SAFE_DIST);
     }
@@ -286,5 +346,10 @@ public class Unit {
     @Override
     public boolean equals(Object obj) {
         return (obj instanceof Unit) && ((Unit)obj).getId() == getId();
+    }
+
+    @Override
+    public String toString() {
+        return getId() + " " + getPosition();
     }
 }

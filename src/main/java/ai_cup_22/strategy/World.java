@@ -4,6 +4,10 @@ import ai_cup_22.model.Constants;
 import ai_cup_22.model.Game;
 import ai_cup_22.model.Item.ShieldPotions;
 import ai_cup_22.model.Item.Weapon;
+import ai_cup_22.strategy.debug.Colors;
+import ai_cup_22.strategy.debug.DebugData;
+import ai_cup_22.strategy.geometry.Circle;
+import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.models.AmmoLoot;
 import ai_cup_22.strategy.models.Bullet;
 import ai_cup_22.strategy.models.Loot;
@@ -11,7 +15,9 @@ import ai_cup_22.strategy.models.Obstacle;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.models.Zone;
 import ai_cup_22.strategy.potentialfield.StaticPotentialField;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -30,8 +36,8 @@ public class World {
     private final List<Obstacle> nonShootThroughObstacles;
 
     private final Map<Integer, Unit> enemyUnits;
+    private final Map<Integer, Unit> phantomEnemies;
     private final Map<Integer, Unit> myUnits;
-    private final Map<Integer, Unit> allUnits;
 
     private StaticPotentialField staticPotentialField;
     private Zone zone;
@@ -54,8 +60,8 @@ public class World {
                 .collect(Collectors.toList());
 
         this.enemyUnits = new HashMap<>(game.getPlayers().length * constants.getTeamSize());
+        this.phantomEnemies = new HashMap<>(game.getPlayers().length * constants.getTeamSize());
         this.myUnits = new HashMap<>();
-        this.allUnits = new HashMap<>();
 
         this.zone = new Zone();
     }
@@ -163,24 +169,105 @@ public class World {
     }
 
     private void updateUnits(Game game) {
-        var spottedUnitIds = Arrays.stream(game.getUnits())
-                .map(u -> u.getId())
-                .collect(Collectors.toSet());
+        var removedEnemyIds = new HashSet<>(enemyUnits.keySet());
+        var removedMyUnitIds = new HashSet<>(myUnits.keySet());
 
-        myUnits.entrySet().removeIf(e -> !spottedUnitIds.contains(e.getKey()));
-        enemyUnits.entrySet().removeIf(e -> !spottedUnitIds.contains(e.getKey()));
-        allUnits.entrySet().removeIf(e -> !spottedUnitIds.contains(e.getKey()));
+        // update units in view field
 
         for (var u: game.getUnits()) {
-            Unit unit = allUnits.computeIfAbsent(u.getId(), uu -> new Unit());
+            Unit unit;
 
             if (u.getPlayerId() == getMyId()) {
-                myUnits.put(u.getId(), unit);
+                removedMyUnitIds.remove(u.getId());
+                unit = myUnits.computeIfAbsent(u.getId(), id -> new Unit());
             } else {
-                enemyUnits.put(u.getId(), unit);
+                removedEnemyIds.remove(u.getId());
+
+                if (phantomEnemies.containsKey(u.getId())) {
+                    unit = phantomEnemies.remove(u.getId());
+                } else {
+                    unit = enemyUnits.computeIfAbsent(u.getId(), id -> new Unit());
+                }
             }
 
             unit.updateTick(u);
+        }
+
+        for (var phantom: new ArrayList<>(phantomEnemies.values())) {
+            if (myUnits.values().stream().anyMatch(me -> me.getViewSegment().contains(phantom.getPosition()))) {
+                phantomEnemies.remove(phantom.getId());
+            }
+        }
+
+        // remove died units + make phantom units out of view field
+
+        for (var id: removedMyUnitIds) {
+            myUnits.remove(id);
+        }
+
+        for (var id: removedEnemyIds) {
+            var unit = enemyUnits.get(id);
+            var enemyPossibleLocation = unit.getCircle().enlargeToRadius(ai_cup_22.strategy.Constants.UNIT_MAX_SPEED_PER_TICK);
+
+            if (myUnits.values().stream().noneMatch(me -> me.getViewSegment().contains(enemyPossibleLocation))) {
+                unit.setPhantom(true);
+                phantomEnemies.put(id, unit);
+            }
+
+            enemyUnits.remove(id);
+        }
+
+        // handle sounds
+
+        for (var sound: game.getSounds()) {
+            if (sound.getTypeIndex() > 3) {
+                continue;
+            }
+
+            var soundProperties = constants.getSounds()[sound.getTypeIndex()];
+            var soundPosition = new Position(sound.getPosition());
+            var myUnit = myUnits.get(sound.getUnitId());
+
+            var isSeenEnemySound = enemyUnits.values().stream()
+                    .anyMatch(unit -> {
+                        var dist = unit.getDistanceTo(myUnit);
+                        if (dist > soundProperties.getDistance()) {
+                            return false;
+                        }
+
+                        return new Circle(unit.getPosition(), dist * sound.getTypeIndex()).contains(soundPosition);
+                    });
+
+            if (isSeenEnemySound) {
+                continue;
+            }
+
+            var ownerPhantom = phantomEnemies.values().stream()
+                    .filter(unit -> {
+                        if (sound.getTypeIndex() > 0 && unit.getWeapon() != null && unit.getWeapon().getId() != (sound.getTypeIndex() - 1)) {
+                            return false;
+                        }
+
+                        return unit.getPossibleLocationCircle()
+                                .enlarge(5)
+                                .contains(soundPosition);
+                    })
+                    .min(Comparator.comparingDouble(unit -> unit.getPosition().getSquareDistanceTo(soundPosition)));
+            if (ownerPhantom.isPresent()) {
+                ownerPhantom.get().updateBySound(sound);
+            } else {
+                var newPhantom = new Unit();
+                newPhantom.updateBySound(sound);
+                phantomEnemies.put(newPhantom.getId(), newPhantom);
+            }
+        }
+
+        // remove stale phantoms
+
+        for (var unit: new ArrayList<>(phantomEnemies.values())) {
+            if (unit.getTicksSinceLastUpdate() >= ai_cup_22.strategy.Constants.PHANTOM_UNIT_LIFE_MAX_TICKS) {
+                phantomEnemies.remove(unit.getId());
+            }
         }
     }
 
@@ -224,10 +311,6 @@ public class World {
         return nonShootThroughObstacles;
     }
 
-    public Map<Integer, Unit> getAllUnits() {
-        return allUnits;
-    }
-
     public StaticPotentialField getStaticPotentialField() {
         return staticPotentialField;
     }
@@ -256,5 +339,9 @@ public class World {
         return ammoLoots.values().stream()
                 .filter(loot -> loot.getWeaponId() == weaponId)
                 .collect(Collectors.toList());
+    }
+
+    public Map<Integer, Unit> getPhantomEnemies() {
+        return phantomEnemies;
     }
 }
