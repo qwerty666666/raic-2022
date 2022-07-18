@@ -1,10 +1,8 @@
 package ai_cup_22.strategy.potentialfield.scorecontributors.composite;
 
-import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.potentialfield.Score;
 import ai_cup_22.strategy.potentialfield.ScoreContributor;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class FirstMatchCompositeScoreContributor extends BaseCompositeScoreContributor {
@@ -26,6 +24,14 @@ public class FirstMatchCompositeScoreContributor extends BaseCompositeScoreContr
         return getFirstMatchScoreContributor(score)
                 .map(c -> c.getScoreValue(score))
                 .orElse(0.);
+    }
+
+    @Override
+    public String getContributionReason(Score score) {
+        return getFirstMatchScoreContributor(score)
+                .map(contributor -> contributor.getContributionReason(score))
+                .filter(Objects::nonNull)
+                .orElse(contributionReason);
     }
 
     private Optional<ScoreContributor> getFirstMatchScoreContributor(Score score) {

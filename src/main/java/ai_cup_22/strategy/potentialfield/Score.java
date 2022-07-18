@@ -31,6 +31,10 @@ public class Score {
         return threatScore;
     }
 
+    public List<Contribution> getContributions() {
+        return contributions;
+    }
+
     public boolean isUnreachable() {
         return getScore() == PotentialField.UNREACHABLE_VALUE;
     }

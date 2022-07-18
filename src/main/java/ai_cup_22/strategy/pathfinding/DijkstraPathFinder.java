@@ -65,6 +65,7 @@ public class DijkstraPathFinder implements PathFinder {
                     adj.setSteps(cur.getSteps() + 1);
                     adj.setPriority(newPriority);
                     adj.setThreatSumOnPath(cur.getThreatSumOnPath() + adj.getScore().getThreatScore());
+                    adj.setStepsUnderThreat(cur.getStepsUnderThreat() + (adj.getScore().getThreatScore() < 0 ? 1 : 0));
 
                     if (visited.contains(adj)) {
                         queue.remove(adj);

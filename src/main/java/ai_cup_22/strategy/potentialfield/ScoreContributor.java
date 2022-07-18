@@ -12,11 +12,11 @@ public interface ScoreContributor {
     default void contribute(Score score) {
         if (shouldContribute(score)) {
             var value = getScoreValue(score);
-            score.increaseScore(new Contribution(getContributionReason(), value, isStatic()));
+            score.increaseScore(new Contribution(getContributionReason(score), value, isStatic()));
         }
     }
 
-    default String getContributionReason() {
+    default String getContributionReason(Score score) {
         return getClass().getSimpleName();
     }
 

@@ -47,7 +47,7 @@ public class RetreatStrategy implements Strategy {
 
     private ScoreContributor getPotentialFieldScoreContributor() {
         var enemyScoreContributors = World.getInstance().getEnemyUnits().values().stream()
-                .map(enemy -> new LinearScoreContributor(enemy.getPosition(), PotentialField.MIN_VALUE, 0, 30))
+                .map(enemy -> new LinearScoreContributor(enemy.getPosition(), PotentialField.MIN_VALUE, 0, 50))
                 .collect(Collectors.toList());
 
         return new SumCompositeScoreContributor("retreat")

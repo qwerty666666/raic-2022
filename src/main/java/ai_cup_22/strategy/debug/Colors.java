@@ -15,5 +15,5 @@ public class Colors {
     public static Color ORANGE_TRANSPARENT = new Color(1, 0.7, 0, 0.3);
     public static Color ORANGE = new Color(1, 0.7, 0, 1);
     public static Color BLACK = new Color(0, 0, 0, 1);
-    public static Color BROWN_TRANSPARENT = new Color(204. / 255, 126. / 255, 0, 0.3);
+    public static Color BROWN_TRANSPARENT = new Color(1, 0.5, 0, 0.6);
 }

@@ -42,7 +42,7 @@ public class ZoneScoreContributor implements ScoreContributor {
     }
 
     @Override
-    public String getContributionReason() {
+    public String getContributionReason(Score score) {
         return "Zone";
     }
 

@@ -142,9 +142,13 @@ public class MyStrategy {
     }
 
     public void debugUpdate(int displayedTick, DebugInterface debugInterface) {
+        debugInterface.setAutoFlush(false);
+
         updateCursorPosition(debugInterface);
 
         DebugData.getInstance().draw(debugInterface);
+
+        debugInterface.flush();
     }
 
     private void updateCursorPosition(DebugInterface debugInterface) {

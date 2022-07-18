@@ -1,8 +1,8 @@
 package ai_cup_22.strategy.potentialfield;
 
 public abstract class BaseScoreContributor implements ScoreContributor {
-    private final String contributionReason;
-    private final boolean isStatic;
+    protected final String contributionReason;
+    protected final boolean isStatic;
 
     public BaseScoreContributor(String contributionReason) {
         this(contributionReason, false);
@@ -14,7 +14,7 @@ public abstract class BaseScoreContributor implements ScoreContributor {
     }
 
     @Override
-    public String getContributionReason() {
+    public String getContributionReason(Score score) {
         return contributionReason;
     }
 

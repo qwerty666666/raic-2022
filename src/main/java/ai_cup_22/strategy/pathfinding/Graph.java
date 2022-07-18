@@ -108,6 +108,7 @@ public class Graph {
         private Node parent;
         private List<Node> adjacent = new ArrayList<>();
         private double dist;
+        private int stepsUnderThreat;
         private int steps;
 
         public Node(Score score) {
@@ -116,6 +117,15 @@ public class Graph {
 
         public Node setThreatSumOnPath(double threatSumOnPath) {
             this.threatSumOnPath = threatSumOnPath;
+            return this;
+        }
+
+        public int getStepsUnderThreat() {
+            return stepsUnderThreat;
+        }
+
+        public Node setStepsUnderThreat(int stepsUnderThreat) {
+            this.stepsUnderThreat = stepsUnderThreat;
             return this;
         }
 

@@ -1,11 +1,10 @@
 package ai_cup_22.strategy.potentialfield.scorecontributors.basic;
 
-import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.geometry.Position;
+import ai_cup_22.strategy.potentialfield.BaseScoreContributor;
 import ai_cup_22.strategy.potentialfield.Score;
-import ai_cup_22.strategy.potentialfield.ScoreContributor;
 
-public class LinearScoreContributor implements ScoreContributor {
+public class LinearScoreContributor extends BaseScoreContributor {
     private final Position position;
     private final double nearestScore;
     private final double furthestScore;
@@ -16,7 +15,17 @@ public class LinearScoreContributor implements ScoreContributor {
         this(position, nearestScore, furthestScore, 0, maxDist);
     }
 
+    public LinearScoreContributor(String contributionReason, Position position, double nearestScore, double furthestScore, double maxDist) {
+        this(contributionReason, position, nearestScore, furthestScore, 0, maxDist);
+    }
+
     public LinearScoreContributor(Position position, double nearestScore, double furthestScore, double minDist, double maxDist) {
+        this(null, position, nearestScore, furthestScore, minDist, maxDist);
+    }
+
+    public LinearScoreContributor(String contributionReason, Position position, double nearestScore, double furthestScore, double minDist, double maxDist) {
+        super(contributionReason);
+
         this.position = position;
         this.nearestScore = nearestScore;
         this.furthestScore = furthestScore;
@@ -26,7 +35,7 @@ public class LinearScoreContributor implements ScoreContributor {
 
     @Override
     public boolean shouldContribute(Score score) {
-        if (!ScoreContributor.super.shouldContribute(score)) {
+        if (!super.shouldContribute(score)) {
             return false;
         }
 
@@ -39,10 +48,6 @@ public class LinearScoreContributor implements ScoreContributor {
     public double getScoreValue(Score score) {
         if (!this.shouldContribute(score)) {
             return 0;
-        }
-
-        if (World.getInstance().getCurrentTick() == 78 && score.getPosition().equals(new Position(120, -59))) {
-            int a = 0;
         }
 
         return nearestScore - ((this.position.getDistanceTo(score.getPosition()) - minDist) / (maxDist - minDist) * (nearestScore - furthestScore));
