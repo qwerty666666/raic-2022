@@ -33,7 +33,8 @@ public class MoveByPotentialFieldAction implements Action {
                 .orElseThrow()
                 .getKey();
 
-        return Path.from(bestNode,graph);
+        return Path.from(bestNode,graph)
+                .smooth(3);
     }
 
     public static Map<Node, Double> getNodeScores(Graph graph) {

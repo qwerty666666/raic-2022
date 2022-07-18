@@ -4,7 +4,6 @@ import ai_cup_22.model.UnitOrder;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.pathfinding.AStarPathFinder;
-import ai_cup_22.strategy.pathfinding.SmoothingPathFinder;
 
 public class MoveToWithPathfindingAction implements Action {
     private final Position target;
@@ -15,8 +14,10 @@ public class MoveToWithPathfindingAction implements Action {
 
     @Override
     public void apply(Unit unit, UnitOrder order) {
-        var pathFinder = new SmoothingPathFinder(new AStarPathFinder(unit.getPotentialField()));
+        var pathFinder = new AStarPathFinder(unit.getPotentialField());
         var path = pathFinder.findPath(unit.getPosition(), target);
+
+        path.smooth();
 
         new MoveByPathAction(path).apply(unit, order);
     }
