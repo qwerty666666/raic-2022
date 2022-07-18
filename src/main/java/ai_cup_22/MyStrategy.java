@@ -6,24 +6,12 @@ import ai_cup_22.model.Order;
 import ai_cup_22.model.UnitOrder;
 import ai_cup_22.model.Vec2;
 import ai_cup_22.strategy.World;
-import ai_cup_22.strategy.debug.Colors;
 import ai_cup_22.strategy.debug.DebugData;
-import ai_cup_22.strategy.debug.primitives.CircleDrawable;
-import ai_cup_22.strategy.debug.primitives.Line;
-import ai_cup_22.strategy.debug.primitives.PathDrawable;
-import ai_cup_22.strategy.debug.primitives.PotentialFieldDrawable;
-import ai_cup_22.strategy.debug.primitives.Text;
-import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Position;
-import ai_cup_22.strategy.geometry.Vector;
-import ai_cup_22.strategy.models.Obstacle;
-import ai_cup_22.strategy.pathfinding.DijkstraPathFinder;
-import ai_cup_22.strategy.utils.MovementUtils;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 public class MyStrategy {
     private World world;
@@ -141,20 +129,36 @@ public class MyStrategy {
         DebugData.getInstance().getPositionsLayer().reinit(world);
     }
 
+    private void updateMouseDebugLayer() {
+        DebugData.getInstance().getMouseLayer().update(world);
+    }
+
+
     public void debugUpdate(int displayedTick, DebugInterface debugInterface) {
         debugInterface.setAutoFlush(false);
 
-        updateCursorPosition(debugInterface);
+        updateCursor(debugInterface);
 
         DebugData.getInstance().draw(debugInterface);
 
         debugInterface.flush();
     }
 
-    private void updateCursorPosition(DebugInterface debugInterface) {
+    private void updateCursor(DebugInterface debugInterface) {
         var position = debugInterface.getState().getCursorWorldPosition();
 
         DebugData.getInstance().setCursorPosition(position == null ? null : new Position(position));
+
+        if (Arrays.asList(debugInterface.getState().getPressedKeys()).contains("MouseRight")) {
+            DebugData.getInstance().setClickPosition(
+                    DebugData.getInstance().getClickPosition()
+                            .map(p -> (Position) null)
+                            .filter(Objects::nonNull)
+                            .orElse(new Position(debugInterface.getState().getCursorWorldPosition()))
+            );
+        }
+
+        updateMouseDebugLayer();
     }
 
     public void finish() {

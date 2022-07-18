@@ -4,6 +4,7 @@ import ai_cup_22.DebugInterface;
 import ai_cup_22.strategy.debug.layers.DefaultLayer;
 import ai_cup_22.strategy.debug.layers.DrawLayer;
 import ai_cup_22.strategy.debug.layers.LootsLayer;
+import ai_cup_22.strategy.debug.layers.MouseLayer;
 import ai_cup_22.strategy.debug.layers.ObstaclesLayer;
 import ai_cup_22.strategy.debug.layers.PositionsLayer;
 import ai_cup_22.strategy.debug.layers.UnitsLayer;
@@ -22,22 +23,26 @@ public class DebugData {
     private static DebugData instance;
 
     private Optional<Position> cursorPosition = Optional.empty();
+    private Optional<Position> clickPosition = Optional.empty();
 
     private final ObstaclesLayer obstaclesLayer = new ObstaclesLayer();
     private final PositionsLayer positionsLayer = new PositionsLayer();
     private final DefaultLayer defaultLayer = new DefaultLayer();
     private final UnitsLayer unitsLayer = new UnitsLayer();
     private final LootsLayer lootsLayer = new LootsLayer();
+    private final MouseLayer mouseLayer = new MouseLayer();
 
     private final Map<String, DrawLayer> layers = new HashMap<>() {{
         put("D", defaultLayer);
         put("L", lootsLayer);
+        put("M", mouseLayer);
         put("I", positionsLayer);
         put("O", obstaclesLayer);
         put("U", unitsLayer);
     }};
     private Set<String> turnedOnLayers = new HashSet<>() {{
         add("D");
+        add("M");
     }};
 
     public void setCursorPosition(Position cursorPosition) {
@@ -46,6 +51,15 @@ public class DebugData {
 
     public Optional<Position> getCursorPosition() {
         return cursorPosition;
+    }
+
+    public Optional<Position> getClickPosition() {
+        return clickPosition;
+    }
+
+    public DebugData setClickPosition(Position clickPosition) {
+        this.clickPosition = Optional.ofNullable(clickPosition);
+        return this;
     }
 
     public LootsLayer getLootsLayer() {
@@ -66,6 +80,10 @@ public class DebugData {
 
     public DefaultLayer getDefaultLayer() {
         return defaultLayer;
+    }
+
+    public MouseLayer getMouseLayer() {
+        return mouseLayer;
     }
 
     public void draw(DebugInterface debugInterface) {

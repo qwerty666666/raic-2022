@@ -136,6 +136,16 @@ public class MovementUtils {
         var lookDirection = unit.getDirection();
 
         for (int i = 0; i < ticks; i++) {
+//            if (World.getInstance().getCurrentTick() > 1415)
+//            System.out.println(World.getInstance().getCurrentTick() + " " + i + " | " +
+//                    unitCircle + " | cur: " +
+//                    lookDirection.normalizeToLength(1) + " (" + lookDirection.getAngle() + ") | target: " +
+//                    new Vector(unitCircle.getCenter(), unit.getLookPosition()).normalizeToLength(1)  + " (" + new Vector(unitCircle.getCenter(), unit.getLookPosition()).getAngle() + ") | " /*+ " | " +
+//                    simulateRotateTickToDirection(lookDirection, new Vector(unitCircle.getCenter(), unit.getLookPosition()),
+//                            aim, unit.getAimRotationSpeed()) + " | " +
+//                    simulateRotateTickToDirection(lookDirection, new Vector(unitCircle.getCenter(), unit.getLookPosition()),
+//                            MathUtils.restrict(0, 1, aim + unit.getAimChangePerTick()), unit.getAimRotationSpeed()) + ""*/
+//            );
 
             // move unit
 
@@ -147,7 +157,7 @@ public class MovementUtils {
             if (shouldRotateToDirection) {
                 lookDirection = simulateRotateTickToDirection(lookDirection, directionVelocity, aim, unit.getAimRotationSpeed());
             } else if (unit.getLookPosition() != null) {
-                lookDirection = simulateRotateTickToDirection(lookDirection, new Vector(unit.getPosition(), unit.getLookPosition()),
+                lookDirection = simulateRotateTickToDirection(lookDirection, new Vector(unitCircle.getCenter(), unit.getLookPosition()),
                         aim, unit.getAimRotationSpeed());
             }
 
@@ -196,20 +206,26 @@ public class MovementUtils {
         return result;
     }
 
-    private static Vector simulateRotateTickToDirection(Vector curLookDirection, Vector targetLookDirection, double aim, double aimRotationSpeedPerSec) {
+    private static Vector simulateRotateTickToDirection(Vector curLookDirection, Vector targetLookDirection, double aim,
+            double aimRotationSpeedPerSec) {
         var nonAimRotationSpeed = World.getInstance().getConstants().getRotationSpeed();
 
         var targetDirectionAngle = MathUtils.normalizeAngle(targetLookDirection.getAngle());
         var lookDirectionAngle = MathUtils.normalizeAngle(curLookDirection.getAngle());
 
-        var rotateSign = Math.signum(targetDirectionAngle - lookDirectionAngle) *
-                (Math.abs(targetDirectionAngle - lookDirectionAngle) < Math.PI ? 1 : -1);
-        var rotationSpeedPerTick = (nonAimRotationSpeed - (nonAimRotationSpeed - aimRotationSpeedPerSec) * aim) *
-                World.getInstance().getTimePerTick();
+//        var rotateSign = Math.signum(targetDirectionAngle - lookDirectionAngle) *
+//                (Math.abs(targetDirectionAngle - lookDirectionAngle) < Math.PI ? 1 : -1);
+        var rotationSpeedPerTick = Math.toRadians((nonAimRotationSpeed - (nonAimRotationSpeed - aimRotationSpeedPerSec) * aim) *
+                World.getInstance().getTimePerTick());
 
-        return curLookDirection.rotate(rotateSign *
-                Math.min(rotationSpeedPerTick, curLookDirection.getAngleTo(targetLookDirection) - rotationSpeedPerTick)
-        );
+        var diff = targetDirectionAngle - lookDirectionAngle;
+        if (diff > Math.PI) {
+            diff = diff - Math.PI * 2;
+        } else if (diff < -Math.PI) {
+            diff = Math.PI * 2 + diff;
+        }
+
+        return curLookDirection.rotate(-Math.signum(diff) * Math.min(rotationSpeedPerTick, Math.abs(diff)));
     }
 
     private static boolean isBulletHitInTick(Line bulletTickTrajectory, Circle oldPosition, Circle newPosition) {

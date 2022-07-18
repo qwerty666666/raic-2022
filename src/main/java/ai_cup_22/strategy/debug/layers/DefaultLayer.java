@@ -23,7 +23,7 @@ public class DefaultLayer extends DrawLayer {
 
         addBullets(world);
 
-//        addCursorPosition();
+        addCursorPosition();
     }
 
     private void addUnitStrategies(World world) {
@@ -59,7 +59,10 @@ public class DefaultLayer extends DrawLayer {
 
     private void addCursorPosition() {
         DebugData.getInstance().getCursorPosition().ifPresent(position -> {
-            add(new Text(position.toString(), position));
+            DebugData.getInstance().getClickPosition().ifPresent(clickedPos -> {
+                add(new Text(Double.toString(position.getDistanceTo(clickedPos)), position, 0.2, new Vector(1, 0.5)));
+                add(new Line(position, clickedPos, Colors.GRAY_TRANSPARENT));
+            });
         });
     }
 

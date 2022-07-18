@@ -54,7 +54,10 @@ public class DodgeBulletsAction implements Action {
         // dodge from first possible bullet
         List<DodgeDirection> directionsToDodge = Collections.emptyList();
 
+        Bullet bulletToDodge = null;
         for (var bullet: bullets) {
+            bulletToDodge = bullet;
+
             directionsToDodge = tryDodgeBullet(unit, bullet);
 
             if (directionsToDodge.stream().noneMatch(DodgeDirection::canDodgeBullet)) {
@@ -67,12 +70,25 @@ public class DodgeBulletsAction implements Action {
         }
 
         // take best direction
+        var bulletFinal = bulletToDodge;
         var bestDirection = directionsToDodge.stream()
                 .min((d1, d2) -> {
                     if (!d1.canDodgeBullet() && !d2.canDodgeBullet()) {
                         return d2.getDodgeResult().getTicks() - d1.getDodgeResult().getTicks();
                     } else {
                         return Comparator.comparing(DodgeDirection::canDodgeBullet).reversed()
+                                .thenComparing((dd1, dd2) -> {
+                                    var dist1 = bulletFinal.getTrajectory().getDistanceTo(dd1.getDodgeResult().getDodgePosition());
+                                    var dist2 = bulletFinal.getTrajectory().getDistanceTo(dd2.getDodgeResult().getDodgePosition());
+                                    var dist = 0.2;
+                                    if (dist1 < dist && dist2 >= dist) {
+                                        return -1;
+                                    }
+                                    if (dist1 >= dist && dist2 < dist) {
+                                        return 1;
+                                    }
+                                    return 0;
+                                })
                                 .thenComparing(Comparator.comparingDouble((DodgeDirection d) -> d.getScore(unit)).reversed())
                                 .thenComparingDouble(d -> d.getDodgeResult().getTicks())
                                 .compare(d1, d2);
@@ -189,7 +205,7 @@ public class DodgeBulletsAction implements Action {
     }
 
     private boolean isBulletTreatsUnit(Unit unit, Bullet bullet) {
-        return unit.getCircle().enlarge(0.5).isIntersect(bullet.getTrajectory());
+        return unit.getCircle().enlarge(1).isIntersect(bullet.getTrajectory());
     }
 
     private static class DodgeDirection {
