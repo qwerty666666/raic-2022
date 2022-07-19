@@ -1,7 +1,6 @@
 package ai_cup_22.strategy.models;
 
 import ai_cup_22.model.Item.Ammo;
-import ai_cup_22.strategy.geometry.Position;
 
 public class AmmoLoot extends Loot {
     private int count;

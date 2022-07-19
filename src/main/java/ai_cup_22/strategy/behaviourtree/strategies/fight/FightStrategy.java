@@ -121,13 +121,21 @@ public class FightStrategy implements Strategy {
 
     public Unit getTargetEnemy() {
         var enemiesAround = getEnemiesInFightRange();
-        var enemiesUnderAttack = getEnemiesUnderAttack(enemiesAround);
 
-        if (!enemiesUnderAttack.isEmpty()) {
-            return getNearestEnemy(enemiesUnderAttack);
+        var spawnedEnemies = enemiesAround.stream()
+                .filter(Unit::isSpawned)
+                .collect(Collectors.toList());
+
+        if (spawnedEnemies.isEmpty()) {
+            return getNearestEnemy(enemiesAround);
+        } else {
+            var enemiesUnderAttack = getEnemiesUnderAttack(spawnedEnemies);
+            if (!enemiesUnderAttack.isEmpty()) {
+                return getNearestEnemy(spawnedEnemies);
+            }
+
+            return getNearestEnemy(spawnedEnemies);
         }
-
-        return getNearestEnemy(enemiesAround);
     }
 
     private void contributeToPotentialField() {
@@ -161,6 +169,7 @@ public class FightStrategy implements Strategy {
         // other enemies
         World.getInstance().getEnemyUnits().values().stream()
                 .filter(enemy -> enemy != targetEnemy)
+                .filter(Unit::isSpawned)
                 .forEach(enemy -> {
                     contributor.add(new LinearScoreContributor(
                             "Enemy " + enemy.getPosition(),
@@ -174,6 +183,7 @@ public class FightStrategy implements Strategy {
         // phantom enemies
         World.getInstance().getPhantomEnemies().values().stream()
                 .filter(enemy -> enemy.getDistanceTo(me) < 50)
+                .filter(Unit::isSpawned)
                 .forEach(enemy -> {
                     contributor.add(new LinearScoreContributor(
                             "Phantom Enemy " + enemy.getPosition(),
@@ -181,6 +191,19 @@ public class FightStrategy implements Strategy {
                             Constants.PF_PHANTOM_ENEMY_MIN_SCORE,
                             Constants.PF_PHANTOM_ENEMY_MAX_SCORE,
                             getThreatenDistanceForNonTargetEnemy(targetEnemy, enemy, me)
+                    ));
+                });
+
+        // my units
+        World.getInstance().getMyUnits().values().stream()
+                .filter(unit -> unit.getId() != me.getId() && unit.isSpawned())
+                .forEach(unit -> {
+                    contributor.add(new LinearScoreContributor(
+                            "My Units: " + unit.getPosition(),
+                            unit.getPosition(),
+                            Constants.PF_ALLY_MIN_SCORE,
+                            Constants.PF_ALLY_MAX_SCORE,
+                            Constants.PF_ALLY_DIST
                     ));
                 });
 

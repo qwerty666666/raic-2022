@@ -1,5 +1,6 @@
 package ai_cup_22.strategy.behaviourtree.strategies.peaceful;
 
+import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.CompositeAction;
 import ai_cup_22.strategy.actions.TakeLootAction;
@@ -9,6 +10,7 @@ import ai_cup_22.strategy.behaviourtree.strategies.fight.FightStrategy;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.models.Loot;
 import ai_cup_22.strategy.models.Unit;
+import org.graalvm.word.WordBase;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -27,10 +29,13 @@ public abstract class BaseLootStrategy implements Strategy {
     @Override
     public Action getAction() {
         return getBestLoot()
-                .map(loot -> (Action) new CompositeAction()
-                            .add(new TakeLootAction(loot))
-                            .add(new LookToAction(getLookToPosition(loot)))
-                )
+                .map(loot -> {
+                    World.getInstance().getGlobalStrategy().markLootAsTaken(loot);
+
+                    return (Action) new CompositeAction()
+                                    .add(new TakeLootAction(loot))
+                                    .add(new LookToAction(getLookToPosition(loot)));
+                })
                 .orElse(exploreStrategy.getAction());
     }
 
@@ -44,6 +49,7 @@ public abstract class BaseLootStrategy implements Strategy {
 
     protected Optional<Loot> getBestLoot() {
         return getSuitableLoots().stream()
+                .filter(loot -> !World.getInstance().getGlobalStrategy().isLootTaken(loot))
                 .min(Comparator.comparingDouble(loot -> unit.getPosition().getDistanceTo(loot.getPosition())));
     }
 

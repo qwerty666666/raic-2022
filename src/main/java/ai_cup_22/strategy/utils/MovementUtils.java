@@ -275,6 +275,7 @@ public class MovementUtils {
                         World.getInstance().getEnemyUnits().values().stream()
                 )
                 .filter(u -> u.getId() != unit.getId())
+                .filter(u -> !u.isPhantom() && u.isSpawned())
                 .filter(u -> u.getDistanceTo(unit) < maxDist)
                 .map(Unit::getCircle)
                 .collect(Collectors.toList());

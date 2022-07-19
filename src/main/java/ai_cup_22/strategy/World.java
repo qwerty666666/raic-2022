@@ -4,8 +4,7 @@ import ai_cup_22.model.Constants;
 import ai_cup_22.model.Game;
 import ai_cup_22.model.Item.ShieldPotions;
 import ai_cup_22.model.Item.Weapon;
-import ai_cup_22.strategy.debug.Colors;
-import ai_cup_22.strategy.debug.DebugData;
+import ai_cup_22.strategy.behaviourtree.GlobalStrategy;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.models.AmmoLoot;
@@ -49,6 +48,8 @@ public class World {
     private Map<Integer, Loot> shieldLoots = new HashMap<>();
     private Map<Integer, AmmoLoot> ammoLoots = new HashMap<>();
 
+    private GlobalStrategy globalStrategy = new GlobalStrategy();
+
     private World(Constants constants, Game game) {
         this.constants = constants;
         this.myId = game.getMyId();
@@ -84,6 +85,8 @@ public class World {
         updateBullets(game);
         updatePhantomUnits(game);
         updateLoot(game);
+
+        globalStrategy.updateTick();
     }
 
     private void updateLoot(Game game) {
@@ -396,5 +399,9 @@ public class World {
 
     public Map<Integer, Unit> getPhantomEnemies() {
         return phantomEnemies;
+    }
+
+    public GlobalStrategy getGlobalStrategy() {
+        return globalStrategy;
     }
 }

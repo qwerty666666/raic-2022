@@ -9,6 +9,7 @@ import ai_cup_22.strategy.behaviourtree.strategies.composite.FirstMatchComposite
 import ai_cup_22.strategy.behaviourtree.strategies.fight.FightStrategy;
 import ai_cup_22.strategy.distributions.FirstMatchDistributor;
 import ai_cup_22.strategy.distributions.LinearDistributor;
+import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.models.Loot;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.pathfinding.AStarPathFinder;
@@ -139,12 +140,18 @@ public class LootAmmoStrategy implements Strategy {
         }
 
         @Override
+        protected Position getLookToPosition(Loot loot) {
+            return loot.getPosition();
+        }
+
+        @Override
         protected Optional<Loot> getBestLoot() {
             getPotentialFieldScoreContributor().contribute(unit.getPotentialField());
 
             var pathFinder = new AStarPathFinder(unit.getPotentialField());
 
             var paths = getSuitableLoots().stream()
+                    .filter(loot -> !World.getInstance().getGlobalStrategy().isLootTaken(loot))
                     .collect(Collectors.toMap(
                             loot -> loot,
                             loot -> pathFinder.findPath(unit.getPosition(), loot.getPosition())

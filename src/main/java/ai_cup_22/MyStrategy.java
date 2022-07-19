@@ -8,7 +8,9 @@ import ai_cup_22.model.Vec2;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.debug.DebugData;
 import ai_cup_22.strategy.geometry.Position;
+import ai_cup_22.strategy.models.Unit;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -39,18 +41,23 @@ public class MyStrategy {
 
             world.updateTick(game);
 
-            for (var unit : world.getMyUnits().values()) {
-                var action = unit.getBehaviourTree().getStrategy().getAction();
+            world.getMyUnits().values().stream()
+                    .sorted(Comparator.comparing(Unit::isSpawned).reversed()
+                            .thenComparingDouble(Unit::getId)
+                    )
+                    .forEach(unit -> {
+                        var action = unit.getBehaviourTree().getStrategy().getAction();
 
-                // default action - do nothing
-                orders.computeIfAbsent(unit.getId(), id -> {
-                    var unitOrder = new UnitOrder(new Vec2(0, 0), new Vec2(0, 0), null);
+                        // default action - do nothing
+                        orders.computeIfAbsent(unit.getId(), id -> {
+                            var unitOrder = new UnitOrder(new Vec2(0, 0), new Vec2(0, 0), null);
 
-                    action.apply(unit, unitOrder);
+                            action.apply(unit, unitOrder);
 
-                    return unitOrder;
-                });
-            }
+                            return unitOrder;
+                        });
+                    });
+
 
             if (DebugData.isEnabled) {
                 updateUnitsDebugLayer();

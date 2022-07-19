@@ -101,6 +101,21 @@ public class Unit {
         return isPhantom;
     }
 
+    public boolean isSpawned() {
+        return getRemainingSpawnTicks() <= 0;
+    }
+
+    public int getRemainingSpawnTicks() {
+        if (unit == null) {
+            return 0;
+        }
+
+        var remainingSpawnTime = unit.getRemainingSpawnTime() == null ? 0 : unit.getRemainingSpawnTime();
+
+        return Math.max(0, lastUpdateTick + (int) (Math.ceil(remainingSpawnTime / World.getInstance().getTimePerTick())) -
+                World.getInstance().getCurrentTick());
+    }
+
     public int getLastUpdateTick() {
         return lastUpdateTick;
     }
