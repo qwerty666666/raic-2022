@@ -1,7 +1,5 @@
 package ai_cup_22.debugging;
 
-import ai_cup_22.util.StreamUtil;
-
 /**
  * Point + color
  */
