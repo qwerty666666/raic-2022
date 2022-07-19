@@ -35,6 +35,10 @@ public class Unit {
     private int lastUpdateTick = -1;
     private Integer weapon;
 
+    public Unit(int id) {
+        this.id = id;
+    }
+
     public Unit() {
         id = idGenerator++;
     }
@@ -212,11 +216,11 @@ public class Unit {
                 .noneMatch(obstacle -> obstacle.getCircle().isIntersect(line))
                 &&
                 World.getInstance().getMyUnits().values().stream()
-                        .filter(u -> u.getId() != this.getId())
+                        .filter(u -> u.getId() != this.getId() && u.isSpawned())
                         .noneMatch(u -> u.getCircle().isIntersect(line))
                 &&
                 World.getInstance().getEnemyUnits().values().stream()
-                        .filter(u -> u.getId() != targetUnit.getId())
+                        .filter(u -> u.getId() != targetUnit.getId() && u.isSpawned())
                         .noneMatch(u -> u.getCircle().isIntersect(line));
     }
 

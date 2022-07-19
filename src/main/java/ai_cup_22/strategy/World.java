@@ -289,12 +289,17 @@ public class World {
                 phantomEnemy = phantomEnemies.get(unitId);
             } else {
                 phantomEnemy = phantomEnemies.values().stream()
-                        .filter(phantom -> (phantom.getWeapon() == null || phantom.getWeapon().getId() == bullet.getWeaponId()) &&
-                                phantom.getPossibleLocationCircle().contains(bulletStartPosition)
-                        )
+                        .filter(phantom -> {
+                            if (phantom.getId() >= 0) {
+                                return phantom.getId() == unitId;
+                            } else {
+                                return (phantom.getWeapon() == null || phantom.getWeapon().getId() == bullet.getWeaponId()) &&
+                                        phantom.getPossibleLocationCircle().contains(bulletStartPosition);
+                            }
+                        })
                         .min(Comparator.comparingDouble(phantom -> phantom.getPosition().getSquareDistanceTo(bulletStartPosition)))
                         .orElseGet(() -> {
-                            var newPhantom = new Unit();
+                            var newPhantom = new Unit(unitId);
                             newPhantom.setPhantom(true);
                             phantomEnemies.put(unitId, newPhantom);
                             return newPhantom;

@@ -1,6 +1,5 @@
 package ai_cup_22.strategy.debug.layers;
 
-import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.debug.Colors;
 import ai_cup_22.strategy.debug.DebugData;
@@ -30,10 +29,15 @@ public class DefaultLayer extends DrawLayer {
     private void addPhantomUnits(World world) {
         world.getEnemyUnits().values().forEach(unit -> {
             addCircle(unit.getPosition(), unit.getCircle().getRadius(), Colors.RED_TRANSPARENT);
+//            addText(unit.getId() + "", unit.getPosition());
         });
         world.getPhantomEnemies().values().forEach(unit -> {
             addCircle(unit.getPosition(), unit.getCircle().getRadius(), Colors.RED_TRANSPARENT);
-            addText(Integer.toString(unit.getTicksSinceLastUpdate()), unit.getPosition());
+            if (unit.getId() >= 0) {
+                addText(unit.getId() + " (" + unit.getTicksSinceLastUpdate() + ")", unit.getPosition());
+            } else {
+                addText("(" + unit.getTicksSinceLastUpdate() + ")", unit.getPosition());
+            }
             addRing(unit.getPossibleLocationCircle().getCenter(), unit.getPossibleLocationCircle().getRadius(), Colors.GRAY_TRANSPARENT);
         });
     }

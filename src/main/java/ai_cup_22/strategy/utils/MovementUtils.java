@@ -177,6 +177,8 @@ public class MovementUtils {
             var tickTrajectory = new Line(bulletPos, newBulletPos);
             bulletPos = newBulletPos;
 
+            bulletTrajectory = new Line(bulletPos, bulletTrajectory.getEnd());
+
             // check that bullet hits unit
 
             if (isBulletHitCircle(tickTrajectory, unitCircle) || isBulletHitCircle(tickTrajectory, newUnitCircle)) {

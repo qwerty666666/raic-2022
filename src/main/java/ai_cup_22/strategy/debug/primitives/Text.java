@@ -1,7 +1,6 @@
 package ai_cup_22.strategy.debug.primitives;
 
 import ai_cup_22.DebugInterface;
-import ai_cup_22.model.Vec2;
 import ai_cup_22.strategy.debug.Colors;
 import ai_cup_22.strategy.geometry.Vector;
 
