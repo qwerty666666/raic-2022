@@ -32,7 +32,7 @@ public class Unit {
     private boolean isAiming;
     private Position lookPosition;
     private boolean isPhantom;
-    private int lastUpdateTick;
+    private int lastUpdateTick = -1;
     private Integer weapon;
 
     public Unit() {
@@ -73,6 +73,18 @@ public class Unit {
             weapon = Weapon.STAFF_ID;
         } else if (soundProperties.getName().equals("Bow")) {
             weapon = Weapon.BOW_ID;
+        }
+
+        isPhantom = true;
+    }
+
+    public void updateByBullet(Bullet bullet) {
+        if (lastUpdateTick < bullet.getStartTick()) {
+            this.circle = new Circle(bullet.getTrajectoryForFullLifetime().getStart(), World.getInstance().getConstants().getUnitRadius());
+            this.lastUpdateTick = bullet.getStartTick();
+            this.weapon = bullet.getWeaponId();
+            this.isPhantom = true;
+            this.id = bullet.getUnitId();
         }
     }
 
@@ -333,7 +345,7 @@ public class Unit {
                     if (w.isStaff()) {
                         return DEFAULT_SAFE_DIST;
                     }
-                    return w.getSpeedPerTick() * (TICKS_TO_RUN_ASIDE_BY_UNIT_RADIUS + 1) + 2;
+                    return 2 + w.getSpeedPerTick() + w.getSpeedPerTick() * (TICKS_TO_RUN_ASIDE_BY_UNIT_RADIUS + 2);
                 })
                 .orElse(DEFAULT_SAFE_DIST);
     }

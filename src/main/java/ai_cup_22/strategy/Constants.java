@@ -16,4 +16,9 @@ public class Constants {
 
     public static final double PF_NON_TARGET_ENEMY_MIN_SCORE = PF_ENEMY_THREATEN_DIST_MIN_SCORE;
     public static final double PF_NON_TARGET_ENEMY_MAX_SCORE = PF_ENEMY_THREATEN_DIST_MAX_SCORE;
+
+    public static final double PF_PHANTOM_ENEMY_MIN_SCORE = PF_ENEMY_THREATEN_DIST_MIN_SCORE;
+    public static final double PF_PHANTOM_ENEMY_MAX_SCORE = PF_ENEMY_THREATEN_DIST_MAX_SCORE;
+
+    public static final double PF_RETREAT_ENEMY_DIST = 44;
 }

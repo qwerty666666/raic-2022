@@ -2,7 +2,6 @@ package ai_cup_22.strategy.actions;
 
 import ai_cup_22.model.UnitOrder;
 import ai_cup_22.strategy.actions.basic.LookToAction;
-import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Unit;
 
 public class RotateAction implements Action {

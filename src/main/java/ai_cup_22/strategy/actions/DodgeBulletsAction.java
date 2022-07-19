@@ -205,7 +205,7 @@ public class DodgeBulletsAction implements Action {
     }
 
     private boolean isBulletTreatsUnit(Unit unit, Bullet bullet) {
-        return unit.getCircle().enlarge(1).isIntersect(bullet.getTrajectory());
+        return unit.getCircle().enlarge(2).isIntersect(bullet.getTrajectory());
     }
 
     private static class DodgeDirection {

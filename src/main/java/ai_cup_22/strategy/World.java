@@ -43,6 +43,7 @@ public class World {
     private Zone zone;
 
     private Map<Integer, Bullet> bullets = new HashMap<>();
+    private Set<Bullet> consideredForPhantomsBullets = new HashSet<>();
 
     private Map<Integer, Loot> weaponLoots = new HashMap<>();
     private Map<Integer, Loot> shieldLoots = new HashMap<>();
@@ -81,6 +82,7 @@ public class World {
         updateZone(game);
         updateUnits(game);
         updateBullets(game);
+        updatePhantomUnits(game);
         updateLoot(game);
     }
 
@@ -216,6 +218,9 @@ public class World {
 
             enemyUnits.remove(id);
         }
+    }
+
+    private void updatePhantomUnits(Game game) {
 
         // handle sounds
 
@@ -235,7 +240,7 @@ public class World {
                             return false;
                         }
 
-                        return new Circle(unit.getPosition(), dist * sound.getTypeIndex()).contains(soundPosition);
+                        return new Circle(unit.getPosition(), dist * soundProperties.getOffset() + 1).contains(soundPosition);
                     });
 
             if (isSeenEnemySound) {
@@ -258,8 +263,45 @@ public class World {
             } else {
                 var newPhantom = new Unit();
                 newPhantom.updateBySound(sound);
+                newPhantom.setPhantom(true);
                 phantomEnemies.put(newPhantom.getId(), newPhantom);
             }
+        }
+
+        // consider bullets that are fired by unit out of view field
+
+        for (var bullet: bullets.values()) {
+            if (consideredForPhantomsBullets.contains(bullet)) {
+                continue;
+            }
+            consideredForPhantomsBullets.add(bullet);
+
+            var unitId = bullet.getUnitId();
+
+            if (myUnits.containsKey(unitId) || enemyUnits.containsKey(unitId)) {
+                continue;
+            }
+
+            var bulletStartPosition = bullet.getTrajectoryForFullLifetime().getStart();
+
+            Unit phantomEnemy;
+            if (phantomEnemies.containsKey(unitId)) {
+                phantomEnemy = phantomEnemies.get(unitId);
+            } else {
+                phantomEnemy = phantomEnemies.values().stream()
+                        .filter(phantom -> (phantom.getWeapon() == null || phantom.getWeapon().getId() == bullet.getWeaponId()) &&
+                                phantom.getPossibleLocationCircle().contains(bulletStartPosition)
+                        )
+                        .min(Comparator.comparingDouble(phantom -> phantom.getPosition().getSquareDistanceTo(bulletStartPosition)))
+                        .orElseGet(() -> {
+                            var newPhantom = new Unit();
+                            newPhantom.setPhantom(true);
+                            phantomEnemies.put(unitId, newPhantom);
+                            return newPhantom;
+                        });
+            }
+
+            phantomEnemy.updateByBullet(bullet);
         }
 
         // remove stale phantoms
@@ -305,6 +347,12 @@ public class World {
 
     public Map<Integer, Unit> getMyUnits() {
         return myUnits;
+    }
+
+    public List<Unit> getAllEnemyUnits() {
+        var res = new ArrayList<>(enemyUnits.values());
+        res.addAll(phantomEnemies.values());
+        return res;
     }
 
     public List<Obstacle> getNonShootThroughObstacles() {

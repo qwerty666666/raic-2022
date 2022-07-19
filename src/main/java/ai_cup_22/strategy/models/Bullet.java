@@ -35,7 +35,7 @@ public class Bullet {
         isSimulated = false;
 
         if (endTrajectoryPosition == null) {
-            var trajectory = getFullLifetimeTrajectory();
+            var trajectory = getTrajectoryWithoutObstacles();
             endTrajectoryPosition = World.getInstance().getNonShootThroughObstacles().stream()
                     .filter(obstacle -> obstacle.getCircle().isIntersect(trajectory))
                     .flatMap(obstacle -> trajectory.getIntersectionPoints(obstacle.getCircle()).stream())
@@ -85,12 +85,30 @@ public class Bullet {
         return new Line(position.move(velocity.reverse()), position);
     }
 
-    public Line getFullLifetimeTrajectory() {
+    public Line getTrajectoryWithoutObstacles() {
         return new Line(position, position.move(velocity.increase(getRemainingLifetimeTicks())));
     }
 
     public Line getTrajectory() {
         return new Line(position, endTrajectoryPosition);
+    }
+
+    public int getPassedTicks() {
+        var maxTicks = World.getInstance().getConstants().getWeapons()[type].getProjectileLifeTime() *
+                World.getInstance().getConstants().getTicksPerSecond();
+        return (int) maxTicks - getRemainingLifetimeTicks();
+    }
+
+    public int getStartTick() {
+        return World.getInstance().getCurrentTick() - getPassedTicks();
+    }
+
+    public Line getTrajectoryForFullLifetime() {
+        return new Line(position.move(velocity.increase(getPassedTicks()).reverse()), endTrajectoryPosition);
+    }
+
+    public int getWeaponId() {
+        return type;
     }
 
     public int getUnitId() {
@@ -112,5 +130,20 @@ public class Bullet {
     @Override
     public String toString() {
         return position.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Bullet bullet = (Bullet) o;
+
+        return id == bullet.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
     }
 }

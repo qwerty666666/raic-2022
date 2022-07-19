@@ -1,11 +1,13 @@
 package ai_cup_22.strategy.behaviourtree;
 
+import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.behaviourtree.strategies.composite.AndStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.composite.FirstMatchCompositeStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.composite.MaxOrderCompositeStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.fight.DodgeBulletsStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.fight.FightStrategy;
+import ai_cup_22.strategy.behaviourtree.strategies.fight.GoToPhantomEnemyStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.fight.RegenerateHealthStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.fight.RetreatStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.peaceful.ExploreStrategy;
@@ -23,6 +25,7 @@ public class BehaviourTree {
     private RetreatStrategy retreatStrategy;
     private RegenerateHealthStrategy regenerateHealthStrategy;
     private DodgeBulletsStrategy dodgeBulletsStrategy;
+    private GoToPhantomEnemyStrategy goToPhantomEnemyStrategy;
     private Unit unit;
 
     public BehaviourTree(Unit unit) {
@@ -35,6 +38,7 @@ public class BehaviourTree {
         retreatStrategy = new RetreatStrategy(unit);
         regenerateHealthStrategy = new RegenerateHealthStrategy(unit, retreatStrategy);
         dodgeBulletsStrategy = new DodgeBulletsStrategy(unit);
+        goToPhantomEnemyStrategy = new GoToPhantomEnemyStrategy(unit);
     }
 
     public Strategy getStrategy() {
@@ -44,12 +48,12 @@ public class BehaviourTree {
                         // force loot ammo
                         .add(() -> unit.getBulletCount() == 0, lootAmmoStrategy)
                         // fight
-                        .add(() -> isThereAreEnemiesInViewRange(unit), new AndStrategy()
+                        .add(() -> isThereAreEnemiesAround(unit), new AndStrategy()
                                 .add(new FirstMatchCompositeStrategy()
                                         // I am on safe dist from enemies
                                         .add(() -> fightStrategy.isOnSafeDistance(), new MaxOrderCompositeStrategy()
-                                                .add(new LootAmmoStrategy(unit, exploreStrategy, fightStrategy, 30))
-                                                .add(new LootShieldStrategy(unit, exploreStrategy, fightStrategy, 30))
+                                                .add(new LootAmmoStrategy(unit, exploreStrategy, fightStrategy, Constants.SAFE_DIST))
+                                                .add(new LootShieldStrategy(unit, exploreStrategy, fightStrategy, Constants.SAFE_DIST))
                                                 .add(fightStrategy)
                                         )
                                         // I can fight with enemies
@@ -59,6 +63,13 @@ public class BehaviourTree {
                                         )
                                 )
                                 .add(regenerateHealthStrategy)
+                        )
+                        // go to phantom enemy
+                        .add(() -> isThereArePhantomEnemies(unit), new MaxOrderCompositeStrategy()
+                                .add(goToPhantomEnemyStrategy)
+                                .add(regenerateHealthStrategy)
+                                .add(lootShieldStrategy)
+                                .add(lootAmmoStrategy)
                         )
                         // just explore
                         .add(() -> true, new MaxOrderCompositeStrategy()
@@ -70,7 +81,12 @@ public class BehaviourTree {
                 .add(dodgeBulletsStrategy);
     }
 
-    private boolean isThereAreEnemiesInViewRange(Unit unit) {
-        return !World.getInstance().getEnemyUnits().isEmpty();
+    private boolean isThereAreEnemiesAround(Unit unit) {
+        return World.getInstance().getAllEnemyUnits().stream()
+                .anyMatch(enemy -> enemy.getDistanceTo(unit) < 50);
+    }
+
+    private boolean isThereArePhantomEnemies(Unit unit) {
+        return !World.getInstance().getPhantomEnemies().isEmpty();
     }
 }

@@ -29,6 +29,10 @@ public class ShootAction implements Action {
     }
 
     private boolean shouldShoot(Unit me, Position targetPosition, Unit enemy) {
+        if (enemy.isPhantom()) {
+            return false;
+        }
+
         if (!me.canDoNewAction() && me.isCoolDown()) {
             return false;
         }
@@ -46,6 +50,10 @@ public class ShootAction implements Action {
     }
 
     private Position getBestPositionToShoot(Unit me, Unit enemy) {
+        if (enemy.isPhantom()) {
+            return enemy.getPosition();
+        }
+
         var dist = me.getDistanceTo(enemy) - me.getCircle().getRadius();
         var bulletSpeed = me.getWeaponOptional().map(Weapon::getSpeedPerTick).orElse(0.);
 
