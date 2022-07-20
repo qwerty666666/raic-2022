@@ -21,6 +21,10 @@ public class MoveToPriorityEnemyStrategy implements Strategy {
 
     @Override
     public double getOrder() {
+        if (fightStrategy.getPriorityEnemy() == null) {
+            return MIN_ORDER;
+        }
+
         return Constants.STRATEGY_MOVE_TO_PRIORITY_ENEMY_ORDER;
     }
 
