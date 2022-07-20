@@ -1,5 +1,6 @@
 package ai_cup_22.strategy.potentialfield;
 
+import ai_cup_22.strategy.debug.DebugData;
 import ai_cup_22.strategy.geometry.Position;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,6 @@ public class Score {
      */
     private double threatScore;
     private double initialScore;
-    private List<Score> adjacent = new ArrayList<>();
     private List<Contribution> contributions = new ArrayList<>();
 
     public Score(Position position) {
@@ -20,10 +20,14 @@ public class Score {
     }
 
     public void increaseScore(Contribution contribution) {
+        increaseScore(contribution.getValue());
         contributions.add(contribution);
-        score += contribution.getValue();
-        if (contribution.getValue() < 0) {
-            threatScore += contribution.getValue();
+    }
+
+    public void increaseScore(double value) {
+        score += value;
+        if (value < 0) {
+            threatScore += value;
         }
     }
 
@@ -61,16 +65,10 @@ public class Score {
 
     public void reset() {
         this.score = initialScore;
-        this.contributions.removeIf(c -> !c.isStatic);
+        if (DebugData.isEnabled) {
+            this.contributions.removeIf(c -> !c.isStatic);
+        }
         this.threatScore = 0;
-    }
-
-    public List<Score> getAdjacent() {
-        return adjacent;
-    }
-
-    public void addAdjacent(Score score) {
-        adjacent.add(score);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package ai_cup_22.strategy.potentialfield;
 
+import ai_cup_22.strategy.debug.DebugData;
 import ai_cup_22.strategy.potentialfield.Score.Contribution;
 
 public interface ScoreContributor {
@@ -12,7 +13,11 @@ public interface ScoreContributor {
     default void contribute(Score score) {
         if (shouldContribute(score)) {
             var value = getScoreValue(score);
-            score.increaseScore(new Contribution(getContributionReason(score), value, isStatic()));
+            if (DebugData.isEnabled) {
+                score.increaseScore(new Contribution(getContributionReason(score), value, isStatic()));
+            } else {
+                score.increaseScore(value);
+            }
         }
     }
 
