@@ -19,6 +19,7 @@ public class MyStrategy {
     private World world;
     private Constants constants;
     private int totalTime;
+    private int maxTime;
 
     public MyStrategy(Constants constants) {
         this.constants = constants;
@@ -44,8 +45,9 @@ public class MyStrategy {
 
         if (game.getCurrentTick() == 0) {
             initWorld(game);
-            world.getStaticPotentialField().fillStaticData(world);
 //            updateObstaclesDebugLayer();
+        } else if (game.getCurrentTick() == 1) {
+            world.getStaticPotentialField().fillStaticData(world);
         }
 
         world.updateTick(game);
@@ -113,8 +115,9 @@ public class MyStrategy {
 
         var tickTime = (System.currentTimeMillis() - start);
         totalTime += tickTime;
-        System.out.println(World.getInstance().getCurrentTick() + " " + tickTime + " " + totalTime);
-
+        maxTime = (int) Math.max(maxTime, tickTime);
+        System.out.println(World.getInstance().getCurrentTick() + " " + tickTime + " " + totalTime + " | " +
+                maxTime + " " + (totalTime / (world.getCurrentTick() + 1)));
 
 
         return new Order(orders);

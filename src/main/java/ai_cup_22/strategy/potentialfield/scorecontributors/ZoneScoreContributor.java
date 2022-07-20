@@ -2,7 +2,6 @@ package ai_cup_22.strategy.potentialfield.scorecontributors;
 
 import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
-import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Line;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.models.Zone;
@@ -16,13 +15,34 @@ import java.util.Comparator;
 
 public class ZoneScoreContributor implements ScoreContributor {
     private final Zone zone;
-    private final PotentialField potentialField;
     private final double zoneSpeedPerTick;
+    private final PotentialField potentialField;
+    private final ScoreContributor scoreContributor;
 
     public ZoneScoreContributor(PotentialField potentialField) {
         this.zone = World.getInstance().getZone();
-        this.potentialField = potentialField;
         this.zoneSpeedPerTick = getZoneSpeedAtPosition(zone, potentialField.getCenter());
+        this.potentialField = potentialField;
+
+        this.scoreContributor = new FirstMatchCompositeScoreContributor("Zone")
+                .add(new ConstantOutCircleScoreContributor(
+                        zone.getCircle().enlarge(Constants.PF_OUT_OF_ZONE_DIST),
+                        Constants.PF_OUT_OF_ZONE_MIN_SCORE
+                ))
+                .add(new LinearScoreContributor(
+                        zone.getCenter(),
+                        Constants.PF_OUT_OF_ZONE_MAX_SCORE,
+                        Constants.PF_OUT_OF_ZONE_MIN_SCORE,
+                        zone.getRadius(),
+                        zone.getRadius() + Constants.PF_OUT_OF_ZONE_DIST
+                ))
+                .add(new LinearScoreContributor(
+                        zone.getCenter(),
+                        Constants.PF_ZONE_MAX_SCORE,
+                        Constants.PF_ZONE_MIN_SCORE,
+                        zone.getRadius() - Math.max(Constants.PF_ZONE_DIST_TICKS * zoneSpeedPerTick, Constants.PF_ZONE_MIN_THREAT_DIST),
+                        zone.getRadius()
+                ));
     }
 
     private double getZoneSpeedAtPosition(Zone zone, Position position) {
@@ -44,34 +64,11 @@ public class ZoneScoreContributor implements ScoreContributor {
 
     @Override
     public double getScoreValue(Score score) {
-        return new FirstMatchCompositeScoreContributor("Zone")
-                .add(new ConstantOutCircleScoreContributor(
-                        zone.getCircle().enlarge(Constants.PF_OUT_OF_ZONE_DIST),
-                        Constants.PF_OUT_OF_ZONE_MIN_SCORE
-                ))
-                .add(new LinearScoreContributor(
-                        zone.getCenter(),
-                        Constants.PF_OUT_OF_ZONE_MAX_SCORE,
-                        Constants.PF_OUT_OF_ZONE_MIN_SCORE,
-                        zone.getRadius(),
-                        zone.getRadius() + Constants.PF_OUT_OF_ZONE_DIST
-                ))
-                .add(new LinearScoreContributor(
-                        zone.getCenter(),
-                        Constants.PF_ZONE_MAX_SCORE,
-                        Constants.PF_ZONE_MIN_SCORE,
-                        zone.getRadius() - Math.max(Constants.PF_ZONE_DIST_TICKS * zoneSpeedPerTick, Constants.PF_ZONE_MIN_THREAT_DIST),
-                        zone.getRadius()
-                ))
-                .getScoreValue(score);
+        return scoreContributor.getScoreValue(score);
     }
 
     @Override
     public String getContributionReason(Score score) {
         return "Zone";
-    }
-
-    private boolean isScoreOutOfZone(Score score, Zone zone) {
-        return score.getPosition().getSquareDistanceTo(zone.getCenter()) >= zone.getRadius() * zone.getRadius();
     }
 }

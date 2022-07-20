@@ -41,7 +41,8 @@ public class DijkstraPathFinder implements PathFinder {
         while (!queue.isEmpty()) {
             var cur = queue.poll();
 
-            cur.getAdjacent().forEach(adj -> {
+            // do not use lambda for perf !!!
+            for (var adj: cur.getAdjacent()) {
                 boolean shouldUpdate;
 
                 var newPriority = Math.max(0, cur.getPriority() + (-adj.getScoreValue() - minScoreValue));
@@ -75,7 +76,7 @@ public class DijkstraPathFinder implements PathFinder {
 
                     queue.add(adj);
                 }
-            });
+            }
         }
 
         // remove nodes from graph

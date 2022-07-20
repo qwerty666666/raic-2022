@@ -40,7 +40,8 @@ public class AStarPathFinder implements PathFinder {
                 break;
             }
 
-            cur.getAdjacent().forEach(adj -> {
+            // do not use lambda for perf !!!
+            for (var adj: cur.getAdjacent()) {
                 if (!visited.contains(adj)) {
                     adj.setParent(cur);
                     adj.setPriority(cur.getPosition().getDistanceTo(adj.getPosition()) + to.getPosition().getDistanceTo(adj.getPosition()));
@@ -48,7 +49,7 @@ public class AStarPathFinder implements PathFinder {
                     queue.add(adj);
                     visited.add(adj);
                 }
-            });
+            }
         }
 
         // remove nodes from graph

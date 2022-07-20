@@ -14,9 +14,14 @@ public class StaticGraph {
     }
 
     public Node getOrCreateNode(Position position) {
-        return nodes.computeIfAbsent(position, pos -> {
-            var score = staticPotentialField.getScores().get(pos);
-            return new Node(score);
-        });
+        // do not use lambda for perf !!!
+        if (nodes.containsKey(position)) {
+            return nodes.get(position);
+        }
+
+        var node = new Node(staticPotentialField.getScores().get(position));
+        nodes.put(position, node);
+
+        return node;
     }
 }
