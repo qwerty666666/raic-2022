@@ -14,9 +14,19 @@ public class Score {
     private double threatScore;
     private double initialScore;
     private List<Contribution> contributions = new ArrayList<>();
+    private int x;
+    private int y;
+
+    public Score(Position position, int x, int y) {
+        this.position = position;
+        this.x = x;
+        this.y = y;
+    }
 
     public Score(Position position) {
         this.position = position;
+        this.x = Integer.MIN_VALUE;
+        this.y = Integer.MIN_VALUE;
     }
 
     public void increaseScore(Contribution contribution) {
@@ -69,6 +79,14 @@ public class Score {
             this.contributions.removeIf(c -> !c.isStatic);
         }
         this.threatScore = 0;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
     }
 
     @Override

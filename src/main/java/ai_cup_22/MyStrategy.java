@@ -46,41 +46,37 @@ public class MyStrategy {
             initWorld(game);
             world.getStaticPotentialField().fillStaticData(world);
 //            updateObstaclesDebugLayer();
-        } else if (game.getCurrentTick() <= 7) {
-            world.getStaticPotentialField().buildGraph(game.getCurrentTick() - 1, 7);
         }
-
 
         world.updateTick(game);
 
 
-        if (world.getCurrentTick() > 4 || world.getMyUnits().size() > 1) {
-            world.getMyUnits().values().stream()
-                    .sorted(Comparator.comparing(Unit::isSpawned).reversed()
-                            .thenComparingDouble(Unit::getId)
-                    )
-                    .forEach(unit -> {
-                        var action = unit.getBehaviourTree().getStrategy().getAction();
+        world.getMyUnits().values().stream()
+                .sorted(Comparator.comparing(Unit::isSpawned).reversed()
+                        .thenComparingDouble(Unit::getId)
+                )
+                .forEach(unit -> {
+                    var action = unit.getBehaviourTree().getStrategy().getAction();
 
-                        orders.computeIfAbsent(unit.getId(), id -> {
-                            // default action - do nothing
-                            var unitOrder = new UnitOrder(new Vec2(0, 0), new Vec2(0, 0), null);
+                    orders.computeIfAbsent(unit.getId(), id -> {
+                        // default action - do nothing
+                        var unitOrder = new UnitOrder(new Vec2(0, 0), new Vec2(0, 0), null);
 
-                            action.apply(unit, unitOrder);
+                        action.apply(unit, unitOrder);
 
-                            return unitOrder;
-                        });
+                        return unitOrder;
                     });
+                });
 
 
-            if (DebugData.isEnabled) {
-                updateUnitsDebugLayer();
-                updateLootsDebugLayer();
-                //            updatePositionsDebugLayer();
-                updateDefaultDebugLayer();
+        if (DebugData.isEnabled) {
+            updateUnitsDebugLayer();
+            updateLootsDebugLayer();
+            //            updatePositionsDebugLayer();
+            updateDefaultDebugLayer();
 
-                for (var unit : world.getMyUnits().values()) {
-                    DebugData.getInstance().getCursorPosition().ifPresent(target -> {
+            for (var unit : world.getMyUnits().values()) {
+                DebugData.getInstance().getCursorPosition().ifPresent(target -> {
 //                        unit.getPotentialField().getScoresNear(target).forEach(point -> {
 //                            if (point == null) {
 //                                DebugData.getInstance().getDefaultLayer().add(new Text("null", unit.getPosition()));
@@ -99,21 +95,21 @@ public class MyStrategy {
 //                                            var line = new ai_cup_22.strategy.geometry.Line(unit.getPosition(), target);
 //                                            DebugData.getInstance().getDefaultLayer().add(new ai_cup_22.strategy.debug.primitives.Line(line, Colors.BLUE_TRANSPARENT));
 
-                        //                    World.getInstance().getObstacles().values().stream()
-                        //                            .forEach(obstacle -> {
-                        //                                obstacle.getCircle().getTangentPoints(unit.getPosition()).forEach(p -> {
-                        //                                    DebugData.getInstance().getDefaultLayer().add(new CircleDrawable(new Circle(p, 0.5), Colors.BLUE_TRANSPARENT));
-                        //                                });
-                        //                                line.getIntersectionPoints(obstacle.getCircle()).forEach(p -> {
-                        //                                    DebugData.getInstance().getDefaultLayer().add(new CircleDrawable(new Circle(p, 0.5), Colors.BLUE_TRANSPARENT));
-                        //                                });
-                        //                            });
-                    });
-                }
-
-                DebugData.getInstance().getDefaultLayer().show(debugInterface);
+                    //                    World.getInstance().getObstacles().values().stream()
+                    //                            .forEach(obstacle -> {
+                    //                                obstacle.getCircle().getTangentPoints(unit.getPosition()).forEach(p -> {
+                    //                                    DebugData.getInstance().getDefaultLayer().add(new CircleDrawable(new Circle(p, 0.5), Colors.BLUE_TRANSPARENT));
+                    //                                });
+                    //                                line.getIntersectionPoints(obstacle.getCircle()).forEach(p -> {
+                    //                                    DebugData.getInstance().getDefaultLayer().add(new CircleDrawable(new Circle(p, 0.5), Colors.BLUE_TRANSPARENT));
+                    //                                });
+                    //                            });
+                });
             }
+
+            DebugData.getInstance().getDefaultLayer().show(debugInterface);
         }
+
 
         var tickTime = (System.currentTimeMillis() - start);
         totalTime += tickTime;

@@ -16,24 +16,19 @@ public class Graph {
     private final PotentialField potentialField;
     private final Map<Position, Node> nodes;
 
-    public Graph(PotentialField potentialField, Map<Position, Node> nodes) {
-        this.potentialField = potentialField;
-        this.nodes = nodes;
-    }
-
     public Graph(PotentialField potentialField) {
         this.potentialField = potentialField;
         nodes = buildGraph(potentialField.getScores());
     }
 
     private Map<Position, Node> buildGraph(Map<Position, Score> scores) {
-        var globalGraph = World.getInstance().getStaticPotentialField().getGraph().getNodes();
+        var globalGraph = World.getInstance().getStaticPotentialField().getStaticGraph();
 
         return scores.entrySet().stream()
                 // remove nodes where we can't run
                 .filter(e -> !e.getValue().isUnreachable())
                 .map(e -> {
-                    var node = globalGraph.get(e.getKey());
+                    var node = globalGraph.getOrCreateNode(e.getKey());
 
                     node.refresh();
 
@@ -76,13 +71,13 @@ public class Graph {
         // from it by BFS
         var scoresAround = potentialField.getScoresAround(position);
         if (scoresAround.stream().allMatch(Score::isUnreachable)) {
-            var globalGraph = World.getInstance().getStaticPotentialField().getGraph().getNodes();
+            var globalGraph = World.getInstance().getStaticPotentialField().getStaticGraph();
 
             var queue = new LinkedList<Node>();
-            queue.add(globalGraph.get(scoresAround.get(0).getPosition()));
+            queue.add(globalGraph.getOrCreateNode(scoresAround.get(0).getPosition()));
 
             var used = new HashSet<Node>();
-            used.add(globalGraph.get(scoresAround.get(0).getPosition()));
+            used.add(globalGraph.getOrCreateNode(scoresAround.get(0).getPosition()));
 
             while (!queue.isEmpty()) {
                 var cur = queue.poll();
@@ -117,7 +112,7 @@ public class Graph {
         private double threatSumOnPath;
         private Node parent;
         private List<Node> adjacent = new ArrayList<>();
-        private List<Node> staticAdjacent = new ArrayList<>();
+        private List<Node> staticAdjacent;
         private double dist;
         private int stepsUnderThreat;
         private int steps;
@@ -191,11 +186,23 @@ public class Graph {
             this.adjacent.add(adjacent);
         }
 
-        public void addStaticAdjacent(Node adjacent) {
-            this.staticAdjacent.add(adjacent);
-        }
-
         public List<Node> getStaticAdjacent() {
+            if (staticAdjacent == null) {
+                staticAdjacent = new ArrayList<>(8);
+
+                var field = World.getInstance().getStaticPotentialField();
+                var graph = field.getStaticGraph();
+
+                for (int x = score.getX() - 1; x <= score.getX() + 1; x++) {
+                    for (int y = score.getY() - 1; y <= score.getY() + 1; y++) {
+                        var adjScore = field.getScoreByIndex(x, y);
+                        if (adjScore != null) {
+                            staticAdjacent.add(graph.getOrCreateNode(adjScore.getPosition()));
+                        }
+                    }
+                }
+            }
+
             return staticAdjacent;
         }
 
