@@ -58,12 +58,7 @@ public class Unit {
         this.isPhantom = false;
         this.weapon = unit.getWeapon();
 
-        if (isMe()) {
-            if (this.potentialField == null) {
-                this.potentialField = new UnitPotentialField(this);
-            }
-            this.potentialField.refresh();
-        }
+        this.potentialField = null;
     }
 
     public void updateBySound(Sound sound) {
@@ -164,6 +159,9 @@ public class Unit {
     }
 
     public PotentialField getPotentialField() {
+        if (potentialField == null) {
+            potentialField = new UnitPotentialField(this);
+        }
         return potentialField;
     }
 

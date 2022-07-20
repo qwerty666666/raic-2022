@@ -41,6 +41,9 @@ public class SpawnStrategy implements Strategy {
 
     @Override
     public Action getAction() {
+        if (World.getInstance().getCurrentTick() < 15) {
+            return new RotateAction();
+        }
 
         // try to not spawn on another unit
 

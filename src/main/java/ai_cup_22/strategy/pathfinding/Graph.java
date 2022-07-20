@@ -1,13 +1,12 @@
 package ai_cup_22.strategy.pathfinding;
 
+import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.potentialfield.PotentialField;
 import ai_cup_22.strategy.potentialfield.Score;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -17,28 +16,37 @@ public class Graph {
     private final PotentialField potentialField;
     private final Map<Position, Node> nodes;
 
-    public Graph(PotentialField potentialField) {
+    public Graph(PotentialField potentialField, Map<Position, Node> nodes) {
         this.potentialField = potentialField;
-        nodes = buildGraph(potentialField.getScores().values());
+        this.nodes = nodes;
     }
 
-    private Map<Position, Node> buildGraph(Collection<Score> scores) {
-        var graph = scores.stream()
+    public Graph(PotentialField potentialField) {
+        this.potentialField = potentialField;
+        nodes = buildGraph(potentialField.getScores());
+    }
+
+    private Map<Position, Node> buildGraph(Map<Position, Score> scores) {
+        var globalGraph = World.getInstance().getStaticPotentialField().getGraph().getNodes();
+
+        return scores.entrySet().stream()
                 // remove nodes where we can't run
-                .filter(score -> !score.isUnreachable())
-                .collect(Collectors.toMap(Score::getPosition, Node::new, (x, y) -> y, LinkedHashMap::new));
+                .filter(e -> !e.getValue().isUnreachable())
+                .map(e -> {
+                    var node = globalGraph.get(e.getKey());
 
-        graph.forEach((pos, node) -> {
-            for (var adj: node.getScore().getAdjacent()) {
-                var adjNode = graph.get(adj.getPosition());
-                // filter that score node is existed in given scores List
-                if (adjNode != null) {
-                    node.addAdjacent(adjNode);
-                }
-            }
-        });
+                    node.refresh();
 
-        return graph;
+                    for (var adj: node.getStaticAdjacent()) {
+                        // filter that score node is existed in given scores List
+                        if (scores.containsKey(adj.getPosition())) {
+                            node.addAdjacent(adj);
+                        }
+                    }
+
+                    return node;
+                })
+                .collect(Collectors.toMap(Node::getPosition, node -> node));
     }
 
     public Map<Position, Node> getNodes() {
@@ -68,21 +76,23 @@ public class Graph {
         // from it by BFS
         var scoresAround = potentialField.getScoresAround(position);
         if (scoresAround.stream().allMatch(Score::isUnreachable)) {
-            var queue = new LinkedList<Score>();
-            queue.add(scoresAround.get(0));
+            var globalGraph = World.getInstance().getStaticPotentialField().getGraph().getNodes();
 
-            var used = new HashSet<Score>();
-            used.add(scoresAround.get(0));
+            var queue = new LinkedList<Node>();
+            queue.add(globalGraph.get(scoresAround.get(0).getPosition()));
+
+            var used = new HashSet<Node>();
+            used.add(globalGraph.get(scoresAround.get(0).getPosition()));
 
             while (!queue.isEmpty()) {
                 var cur = queue.poll();
 
-                if (!cur.isUnreachable() && nodes.containsKey(cur.getPosition())) {
-                    scoresAround = List.of(cur);
+                if (!cur.getScore().isUnreachable() && nodes.containsKey(cur.getPosition())) {
+                    scoresAround = List.of(cur.getScore());
                     break;
                 }
 
-                cur.getAdjacent().forEach(adj -> {
+                cur.getStaticAdjacent().forEach(adj -> {
                     if (!used.contains(adj)) {
                         used.add(adj);
                         queue.add(adj);
@@ -107,12 +117,23 @@ public class Graph {
         private double threatSumOnPath;
         private Node parent;
         private List<Node> adjacent = new ArrayList<>();
+        private List<Node> staticAdjacent = new ArrayList<>();
         private double dist;
         private int stepsUnderThreat;
         private int steps;
 
         public Node(Score score) {
             this.score = score;
+        }
+
+        public void refresh() {
+            priority = 0;
+            threatSumOnPath = 0;
+            parent = null;
+            adjacent.clear();
+            dist = 0;
+            stepsUnderThreat = 0;
+            steps = 0;
         }
 
         public Node setThreatSumOnPath(double threatSumOnPath) {
@@ -168,6 +189,14 @@ public class Graph {
 
         public void addAdjacent(Node adjacent) {
             this.adjacent.add(adjacent);
+        }
+
+        public void addStaticAdjacent(Node adjacent) {
+            this.staticAdjacent.add(adjacent);
+        }
+
+        public List<Node> getStaticAdjacent() {
+            return staticAdjacent;
         }
 
         public double getDist() {

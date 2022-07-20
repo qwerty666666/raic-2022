@@ -3,10 +3,13 @@ package ai_cup_22.strategy.potentialfield;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Position;
+import ai_cup_22.strategy.pathfinding.Graph;
+import ai_cup_22.strategy.pathfinding.Graph.Node;
 import ai_cup_22.strategy.potentialfield.scorecontributors.basic.ConstantInCircleScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.basic.LinearScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.composite.FirstMatchCompositeScoreContributor;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,12 +22,13 @@ public class StaticPotentialField implements PotentialField {
     private double stepSize = PotentialField.STEP_SIZE;
     private int gridSize;
     private Score[][] scores;
+    private Graph graph;
 
     private Map<Position, Score> allScores;
 
     public StaticPotentialField(World world) {
         initValues();
-        fillStaticData(world);
+//        fillStaticData(world);
 //        buildGraph();
     }
 
@@ -38,12 +42,12 @@ public class StaticPotentialField implements PotentialField {
         scores = new Score[gridSize][gridSize];
         for (int x = 0; x < gridSize; x++) {
             for (int y = 0; y < gridSize; y++) {
-                scores[x][y] = new Score(new Position(stepSize * x + startCoord, stepSize * y + startCoord));
+                scores[x][y] = new Score(coordToPosition(x, y));
             }
         }
     }
 
-    private void fillStaticData(World world) {
+    public void fillStaticData(World world) {
         var unitRadius = World.getInstance().getConstants().getUnitRadius();
 
         // add trees penalty
@@ -67,43 +71,68 @@ public class StaticPotentialField implements PotentialField {
         }
     }
 
-    public void buildGraph() {
-        // add scores adjacent graph
-        for (int x = 0; x < gridSize; x++) {
-            for (int y = 0; y < gridSize; y++) {
-                var score = scores[x][y];
-                if (x > 0) {
-                    score.addAdjacent(scores[x - 1][y]);
+    public void buildGraph(int step, int maxSteps) {
+        if (step == 0) {
+            var nodes = new HashMap<Position, Node>();
+
+            for (int x = 0; x < gridSize; x++) {
+                for (int y = step; y < gridSize; y++) {
+                    nodes.put(coordToPosition(x, y), new Node(scores[x][y]));
                 }
-                if (x < gridSize - 1) {
-                    score.addAdjacent(scores[x + 1][y]);
-                }
-                if (y > 0) {
-                    score.addAdjacent(scores[x][y - 1]);
-                }
-                if (y < gridSize - 1) {
-                    score.addAdjacent(scores[x][y + 1]);
-                }
-                if (x > 0 && y > 0) {
-                    score.addAdjacent(scores[x - 1][y - 1]);
-                }
-                if (x > 0 && y < gridSize - 1) {
-                    score.addAdjacent(scores[x - 1][y + 1]);
-                }
-                if (x < gridSize - 1 && y > 0) {
-                    score.addAdjacent(scores[x + 1][y - 1]);
-                }
-                if (x < gridSize - 1 && y < gridSize - 1) {
-                    score.addAdjacent(scores[x + 1][y + 1]);
+            }
+
+            this.graph = new Graph(this, nodes);
+        } else {
+            var nodes = this.graph.getNodes();
+            int stepSize = gridSize / (maxSteps - 1);
+            int start = (step - 1) * stepSize;
+            int end = step == maxSteps - 1 ? gridSize : start + stepSize;
+
+            // add scores adjacent graph
+            for (int x = 0; x < gridSize; x++) {
+                for (int y = start; y < end; y++) {
+                    var node = nodes.get(coordToPosition(x, y));
+
+                    if (x > 0) {
+                        node.addStaticAdjacent(nodes.get(coordToPosition(x - 1, y)));
+                    }
+                    if (x < gridSize - 1) {
+                        node.addStaticAdjacent(nodes.get(coordToPosition(x + 1, y)));
+                    }
+                    if (y > 0) {
+                        node.addStaticAdjacent(nodes.get(coordToPosition(x, y - 1)));
+                    }
+                    if (y < gridSize - 1) {
+                        node.addStaticAdjacent(nodes.get(coordToPosition(x, y + 1)));
+                    }
+                    if (x > 0 && y > 0) {
+                        node.addStaticAdjacent(nodes.get(coordToPosition(x - 1, y - 1)));
+                    }
+                    if (x > 0 && y < gridSize - 1) {
+                        node.addStaticAdjacent(nodes.get(coordToPosition(x - 1, y + 1)));
+                    }
+                    if (x < gridSize - 1 && y > 0) {
+                        node.addStaticAdjacent(nodes.get(coordToPosition(x + 1, y - 1)));
+                    }
+                    if (x < gridSize - 1 && y < gridSize - 1) {
+                        node.addStaticAdjacent(nodes.get(coordToPosition(x + 1, y + 1)));
+                    }
                 }
             }
         }
+    }
+
+    private Position coordToPosition(int x, int y) {
+        return new Position(stepSize * x + startCoord, stepSize * y + startCoord);
     }
 
     private int getIndex(double coord) {
         return (int) Math.max(0, Math.min(gridSize, (coord - startCoord) / stepSize));
     }
 
+    /**
+     * Scores must be sorted for binary search
+     */
     public Map<Position, Score> getScoresInCircle(Circle circle) {
         var scores = new LinkedHashMap<Position, Score>();
 
@@ -133,5 +162,10 @@ public class StaticPotentialField implements PotentialField {
                     .collect(Collectors.toMap(Score::getPosition, s -> s, (x, y) -> y, LinkedHashMap::new));
         }
         return allScores;
+    }
+
+    @Override
+    public Graph getGraph() {
+        return graph;
     }
 }

@@ -5,7 +5,6 @@ import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.pathfinding.Graph;
-import java.util.List;
 import java.util.Map;
 
 public class UnitPotentialField implements PotentialField {
@@ -17,13 +16,10 @@ public class UnitPotentialField implements PotentialField {
 
     public UnitPotentialField(Unit unit) {
         this.unit = unit;
-    }
 
-    public void refresh() {
         circle = new Circle(unit.getPosition(), FIELD_RADIUS);
         scores = World.getInstance().getStaticPotentialField().getScoresInCircle(circle);
         scores.values().forEach(Score::reset);
-        graph = null;
     }
 
     @Override

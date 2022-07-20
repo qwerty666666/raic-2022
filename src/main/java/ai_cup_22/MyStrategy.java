@@ -25,6 +25,16 @@ public class MyStrategy {
     }
 
     public Order getOrder(Game game, DebugInterface debugInterface) {
+//        // Get current size of heap in bytes
+//        long heapSize = Runtime.getRuntime().totalMemory();
+//        // Get maximum size of heap in bytes. The heap cannot grow beyond this size.// Any attempt will result in an OutOfMemoryException.
+//        long heapMaxSize = Runtime.getRuntime().maxMemory();
+//        // Get amount of free memory within the heap in bytes. This size will increase // after garbage collection and decrease as new objects are created.
+//        long heapFreeSize = Runtime.getRuntime().freeMemory();
+//
+//        System.out.println(heapSize + " " + heapMaxSize + " " + heapFreeSize);
+
+
         Map<Integer, UnitOrder> orders = new HashMap<>();
         long start = System.currentTimeMillis();
 
@@ -34,14 +44,17 @@ public class MyStrategy {
 
         if (game.getCurrentTick() == 0) {
             initWorld(game);
+            world.getStaticPotentialField().fillStaticData(world);
 //            updateObstaclesDebugLayer();
-        } else {
-            if (game.getCurrentTick() == 1) {
-                world.getStaticPotentialField().buildGraph();
-            }
+        } else if (game.getCurrentTick() <= 7) {
+            world.getStaticPotentialField().buildGraph(game.getCurrentTick() - 1, 7);
+        }
 
-            world.updateTick(game);
 
+        world.updateTick(game);
+
+
+        if (world.getCurrentTick() > 4 || world.getMyUnits().size() > 1) {
             world.getMyUnits().values().stream()
                     .sorted(Comparator.comparing(Unit::isSpawned).reversed()
                             .thenComparingDouble(Unit::getId)
@@ -49,8 +62,8 @@ public class MyStrategy {
                     .forEach(unit -> {
                         var action = unit.getBehaviourTree().getStrategy().getAction();
 
-                        // default action - do nothing
                         orders.computeIfAbsent(unit.getId(), id -> {
+                            // default action - do nothing
                             var unitOrder = new UnitOrder(new Vec2(0, 0), new Vec2(0, 0), null);
 
                             action.apply(unit, unitOrder);
@@ -78,15 +91,10 @@ public class MyStrategy {
 //                            }
 //                        });
 
-//                        DebugData.getInstance().getDefaultLayer().add(
-//                                new Text(Double.toString(unit.getPotentialField().getScoreValue(target)), target, 0.2)
-//                        );
 
 //                        var pathFinder = new DijkstraPathFinder(unit.getPotentialField(), unit.getPosition());
 //                        new PathDrawable(pathFinder.findPath(unit.getPosition(), target).getPathPositions()).draw(debugInterface);
 
-                        //                    var path = new AStarPathFinder(unit.getPotentialField()).findPath(unit.getPosition(), target);
-                        //                    new PathDrawable(path.getPathPositions()).draw(debugInterface);
 
 //                                            var line = new ai_cup_22.strategy.geometry.Line(unit.getPosition(), target);
 //                                            DebugData.getInstance().getDefaultLayer().add(new ai_cup_22.strategy.debug.primitives.Line(line, Colors.BLUE_TRANSPARENT));
@@ -110,6 +118,8 @@ public class MyStrategy {
         var tickTime = (System.currentTimeMillis() - start);
         totalTime += tickTime;
         System.out.println(World.getInstance().getCurrentTick() + " " + tickTime + " " + totalTime);
+
+
 
         return new Order(orders);
     }
