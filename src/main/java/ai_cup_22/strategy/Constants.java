@@ -26,6 +26,13 @@ public class Constants {
 
     public static final double PF_RETREAT_ENEMY_DIST = 44;
 
+    public static final double PF_OUT_OF_ZONE_MIN_SCORE = -300;
+    public static final double PF_OUT_OF_ZONE_MAX_SCORE = -50;
+    public static final double PF_OUT_OF_ZONE_DIST = 10;
+    public static final double PF_ZONE_MIN_SCORE = PF_OUT_OF_ZONE_MAX_SCORE;
+    public static final double PF_ZONE_MAX_SCORE = 0;
+    public static final double PF_ZONE_DIST_TICKS = 30;
+    public static final double PF_ZONE_MIN_THREAT_DIST = 10;
 
     public static final double STRATEGY_EXPLORE_ORDER = 0.1;
     public static final double STRATEGY_MOVE_TO_PRIORITY_ENEMY_ORDER = STRATEGY_EXPLORE_ORDER + 0.01;

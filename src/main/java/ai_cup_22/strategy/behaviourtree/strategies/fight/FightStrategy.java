@@ -166,7 +166,7 @@ public class FightStrategy implements Strategy {
 
     private void contributeToPotentialField() {
         var contributor = new SumCompositeScoreContributor("Enemies")
-                .add(new ZoneScoreContributor());
+                .add(new ZoneScoreContributor(me.getPotentialField()));
 
         // target enemy
 

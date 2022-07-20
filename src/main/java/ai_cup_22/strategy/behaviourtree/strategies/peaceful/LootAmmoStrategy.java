@@ -182,7 +182,7 @@ public class LootAmmoStrategy implements Strategy {
                     .collect(Collectors.toList());
 
             return new SumCompositeScoreContributor("loot ammo force")
-                    .add(new ZoneScoreContributor())
+                    .add(new ZoneScoreContributor(unit.getPotentialField()))
                     .add(enemyScoreContributors);
         }
 

@@ -65,7 +65,7 @@ public class RetreatStrategy implements Strategy {
                 .collect(Collectors.toList());
 
         return new SumCompositeScoreContributor("retreat")
-                .add(new ZoneScoreContributor())
+                .add(new ZoneScoreContributor(unit.getPotentialField()))
                 .add(enemyScoreContributors)
                 .add(phantomEnemiesScoreContributors);
     }
