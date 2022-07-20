@@ -13,6 +13,7 @@ import ai_cup_22.strategy.behaviourtree.strategies.fight.RetreatStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.peaceful.ExploreStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.peaceful.LootAmmoStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.peaceful.LootShieldStrategy;
+import ai_cup_22.strategy.behaviourtree.strategies.peaceful.MoveToPriorityEnemyStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.peaceful.SpawnStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.peaceful.TakeShieldPotionStrategy;
 import ai_cup_22.strategy.models.Unit;
@@ -28,6 +29,7 @@ public class BehaviourTree {
     private DodgeBulletsStrategy dodgeBulletsStrategy;
     private GoToPhantomEnemyStrategy goToPhantomEnemyStrategy;
     private SpawnStrategy spawnStrategy;
+    private MoveToPriorityEnemyStrategy moveToPriorityEnemyStrategy;
     private Unit unit;
 
     public BehaviourTree(Unit unit) {
@@ -42,6 +44,7 @@ public class BehaviourTree {
         dodgeBulletsStrategy = new DodgeBulletsStrategy(unit);
         goToPhantomEnemyStrategy = new GoToPhantomEnemyStrategy(unit);
         spawnStrategy = new SpawnStrategy(unit, fightStrategy, exploreStrategy);
+        moveToPriorityEnemyStrategy = new MoveToPriorityEnemyStrategy(unit, fightStrategy);
     }
 
     public Strategy getStrategy() {
@@ -59,8 +62,8 @@ public class BehaviourTree {
                                         .add(new FirstMatchCompositeStrategy()
                                                 // I am on safe dist from enemies
                                                 .add(() -> fightStrategy.isOnSafeDistance(), new MaxOrderCompositeStrategy()
-                                                        .add(new LootAmmoStrategy(unit, exploreStrategy, fightStrategy, Constants.SAFE_DIST))
-                                                        .add(new LootShieldStrategy(unit, exploreStrategy, fightStrategy, Constants.SAFE_DIST))
+                                                        .add(new LootAmmoStrategy(unit, exploreStrategy, fightStrategy))
+                                                        .add(new LootShieldStrategy(unit, exploreStrategy, fightStrategy))
                                                         .add(fightStrategy)
                                                 )
                                                 // I can fight with enemies
@@ -71,17 +74,11 @@ public class BehaviourTree {
                                         )
                                         .add(regenerateHealthStrategy)
                                 )
-                                // go to phantom enemy
-                                .add(() -> isThereArePhantomEnemies(unit), new MaxOrderCompositeStrategy()
-                                        .add(goToPhantomEnemyStrategy)
-                                        .add(regenerateHealthStrategy)
-                                        .add(lootShieldStrategy)
-                                        .add(lootAmmoStrategy)
-                                )
-                                // just explore
+                                // I am safe
                                 .add(() -> true, new MaxOrderCompositeStrategy()
-                                        .add(lootAmmoStrategy)
                                         .add(lootShieldStrategy)
+                                        .add(lootAmmoStrategy)
+                                        .add(moveToPriorityEnemyStrategy)
                                         .add(exploreStrategy)
                                 )
                         )
@@ -100,5 +97,9 @@ public class BehaviourTree {
 
     private boolean isThereArePhantomEnemies(Unit unit) {
         return !World.getInstance().getPhantomEnemies().isEmpty();
+    }
+
+    public FightStrategy getFightStrategy() {
+        return fightStrategy;
     }
 }

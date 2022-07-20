@@ -10,7 +10,6 @@ import ai_cup_22.strategy.behaviourtree.strategies.fight.FightStrategy;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.models.Loot;
 import ai_cup_22.strategy.models.Unit;
-import org.graalvm.word.WordBase;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +29,7 @@ public abstract class BaseLootStrategy implements Strategy {
     public Action getAction() {
         return getBestLoot()
                 .map(loot -> {
-                    World.getInstance().getGlobalStrategy().markLootAsTaken(loot);
+                    World.getInstance().getGlobalStrategy().markLootAsTaken(loot, unit);
 
                     return (Action) new CompositeAction()
                                     .add(new TakeLootAction(loot))
@@ -40,7 +39,7 @@ public abstract class BaseLootStrategy implements Strategy {
     }
 
     protected Position getLookToPosition(Loot loot) {
-        var targetEnemy = fightStrategy.getTargetEnemy();
+        var targetEnemy = fightStrategy.getEnemyToShoot();
 
         return targetEnemy != null ? targetEnemy.getPosition() : loot.getPosition();
     }
@@ -49,7 +48,7 @@ public abstract class BaseLootStrategy implements Strategy {
 
     protected Optional<Loot> getBestLoot() {
         return getSuitableLoots().stream()
-                .filter(loot -> !World.getInstance().getGlobalStrategy().isLootTaken(loot))
+                .filter(loot -> !World.getInstance().getGlobalStrategy().isLootTakenByOtherUnit(loot, unit))
                 .min(Comparator.comparingDouble(loot -> unit.getPosition().getDistanceTo(loot.getPosition())));
     }
 

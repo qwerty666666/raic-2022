@@ -10,6 +10,7 @@ import ai_cup_22.strategy.debug.primitives.PathDrawable;
 import ai_cup_22.strategy.debug.primitives.Text;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Vector;
+import ai_cup_22.strategy.models.Unit;
 
 public class DefaultLayer extends DrawLayer {
     public void update(World world) {
@@ -84,12 +85,20 @@ public class DefaultLayer extends DrawLayer {
 
     private void addShootLines(World world) {
         for (var unit: world.getMyUnits().values()) {
-            for (var enemy : world.getEnemyUnits().values()) {
-                if (unit.canShoot(enemy)) {
-                    add(new Line(unit.getPosition(), enemy.getPosition(), Colors.GREEN_TRANSPARENT));
-                } else {
-                    add(new Line(unit.getPosition(), enemy.getPosition(), Colors.RED_TRANSPARENT));
-                }
+            world.getEnemyUnits().values().stream()
+                    .filter(Unit::isSpawned)
+                    .filter(enemy -> enemy.getDistanceTo(unit) < 40)
+                    .forEach(enemy -> {
+                        if (unit.canShoot(enemy)) {
+                            add(new Line(unit.getPosition(), enemy.getPosition(), Colors.GREEN_TRANSPARENT));
+                        } else {
+                            add(new Line(unit.getPosition(), enemy.getPosition(), Colors.RED_TRANSPARENT));
+                        }
+                    });
+
+            var priorityEnemy = unit.getBehaviourTree().getFightStrategy().getPriorityEnemy();
+            if (priorityEnemy != null) {
+                addLine(unit.getPosition(), priorityEnemy.getPosition(), Colors.YELLOW_TRANSPARENT);
             }
         }
     }

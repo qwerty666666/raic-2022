@@ -198,9 +198,11 @@ public class World {
             unit.updateTick(u);
         }
 
-        for (var phantom: new ArrayList<>(phantomEnemies.values())) {
-            if (myUnits.values().stream().anyMatch(me -> me.getViewSegment().contains(phantom.getPosition()))) {
-                phantomEnemies.remove(phantom.getId());
+        // remove phantoms in view field
+
+        for (var phantom: new ArrayList<>(phantomEnemies.entrySet())) {
+            if (myUnits.values().stream().anyMatch(me -> me.getViewSegment().contains(phantom.getValue().getPosition()))) {
+                phantomEnemies.remove(phantom.getKey());
             }
         }
 
@@ -316,6 +318,8 @@ public class World {
 
         for (var unit: new ArrayList<>(phantomEnemies.values())) {
             if (unit.getTicksSinceLastUpdate() >= ai_cup_22.strategy.Constants.PHANTOM_UNIT_LIFE_MAX_TICKS) {
+                phantomEnemies.remove(unit.getId());
+            } else if (!zone.contains(unit.getPosition()) && unit.getTicksSinceLastUpdate() > 50) {
                 phantomEnemies.remove(unit.getId());
             }
         }

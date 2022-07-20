@@ -102,7 +102,11 @@ public class Unit {
     }
 
     public boolean isSpawned() {
-        return getRemainingSpawnTicks() <= 0;
+        if (lastUpdateTick == World.getInstance().getCurrentTick()) {
+            return getRemainingSpawnTicks() <= 0;
+        }
+
+        return unit == null || unit.getRemainingSpawnTime() == null;
     }
 
     public int getRemainingSpawnTicks() {
@@ -233,14 +237,20 @@ public class Unit {
                 World.getInstance().getMyUnits().values().stream()
                         .filter(u -> u.getId() != this.getId() && u.isSpawned())
                         .noneMatch(u -> u.getCircle().isIntersect(line))
-                &&
+                /*&&
                 World.getInstance().getEnemyUnits().values().stream()
                         .filter(u -> u.getId() != targetUnit.getId() && u.isSpawned())
-                        .noneMatch(u -> u.getCircle().isIntersect(line));
+                        .noneMatch(u -> u.getCircle().isIntersect(line))*/
+                &&
+                getWeaponDist() > position.getDistanceTo(this.getPosition());
     }
 
     public boolean canShoot(Unit enemy) {
         return canShoot(enemy.getPosition(), enemy);
+    }
+
+    public double getWeaponDist() {
+        return getWeaponOptional().map(Weapon::getMaxDistance).orElse(0.);
     }
 
     public boolean hasWeapon() {

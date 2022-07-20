@@ -61,13 +61,16 @@ public class Path {
     }
 
     public Path smooth() {
-        smooth(path.size() - 1);
-        return this;
+        return smooth(path.size() - 1);
     }
 
     public Path smooth(int maxStep) {
-        if (path.size() < 2) {
+        if (path.size() <= 2) {
             return this;
+        }
+
+        if (path.size() == 3) {
+            return new Path(List.of(path.get(0), path.get(2)));
         }
 
         var pathRect = new Rectangle(path.get(0).getPosition(), path.get(path.size() - 1).getPosition())
@@ -89,9 +92,7 @@ public class Path {
             from = to;
         }
 
-        this.path = newPath;
-
-        return this;
+        return new Path(newPath);
     }
 
     private int findFurtherDirectlyAccessiblePosition(List<Score> path, List<Circle> obstacles, int from, int maxRight) {

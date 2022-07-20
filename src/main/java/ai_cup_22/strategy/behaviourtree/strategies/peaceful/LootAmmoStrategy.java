@@ -107,7 +107,7 @@ public class LootAmmoStrategy implements Strategy {
 
         @Override
         public String toString() {
-            return getClass().getSimpleName() + " (" + getOrder() + ") \n";
+            return Strategy.toString(this);
         }
     }
 
@@ -151,7 +151,7 @@ public class LootAmmoStrategy implements Strategy {
             var pathFinder = new AStarPathFinder(unit.getPotentialField());
 
             var paths = getSuitableLoots().stream()
-                    .filter(loot -> !World.getInstance().getGlobalStrategy().isLootTaken(loot))
+                    .filter(loot -> !World.getInstance().getGlobalStrategy().isLootTakenByOtherUnit(loot, unit))
                     .collect(Collectors.toMap(
                             loot -> loot,
                             loot -> pathFinder.findPath(unit.getPosition(), loot.getPosition())

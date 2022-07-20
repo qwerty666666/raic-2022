@@ -1,6 +1,5 @@
 package ai_cup_22.strategy.behaviourtree.strategies.fight;
 
-import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.CompositeAction;

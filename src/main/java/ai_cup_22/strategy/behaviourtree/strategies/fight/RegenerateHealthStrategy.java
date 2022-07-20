@@ -1,5 +1,6 @@
 package ai_cup_22.strategy.behaviourtree.strategies.fight;
 
+import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.models.Unit;
@@ -15,9 +16,14 @@ public class RegenerateHealthStrategy implements Strategy {
 
     @Override
     public double getOrder() {
+        if (World.getInstance().getAllEnemyUnits().stream().noneMatch(enemy -> enemy.getDistanceTo(unit) < 50)) {
+            return MIN_ORDER;
+        }
+
         if (unit.isRegeneratingHealth() || unit.getHealth() < unit.getMaxHealth() / 2) {
             return MAX_ORDER;
         }
+
         return MIN_ORDER;
     }
 

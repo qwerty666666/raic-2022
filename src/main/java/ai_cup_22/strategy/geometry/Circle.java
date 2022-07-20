@@ -1,5 +1,6 @@
 package ai_cup_22.strategy.geometry;
 
+import java.util.Collections;
 import java.util.List;
 
 public class Circle {
@@ -26,6 +27,10 @@ public class Circle {
     }
 
     public List<Position> getTangentPoints(Position position) {
+        if (position.getDistanceTo(center) <= radius) {
+            return Collections.emptyList();
+        }
+
         // cas a = r / dist
         var angle = Math.acos(radius / center.getDistanceTo(position));
         var vec = new Vector(center, position).normalizeToLength(radius);

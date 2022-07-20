@@ -23,4 +23,14 @@ public class Loot {
     public String toString() {
         return position.toString();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Loot && ((Loot)obj).getId() == getId();
+    }
+
+    @Override
+    public int hashCode() {
+        return getId();
+    }
 }

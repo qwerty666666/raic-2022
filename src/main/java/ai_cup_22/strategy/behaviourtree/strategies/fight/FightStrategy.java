@@ -41,22 +41,23 @@ public class FightStrategy implements Strategy {
 
     @Override
     public Action getAction() {
-        var targetEnemy = getTargetEnemy();
+        var enemyToShoot = getEnemyToShoot();
+        var priorityEnemy = getPriorityEnemy();
 
-        if (targetEnemy == null) {
+        if (enemyToShoot == null) {
             return new NullAction();
         }
 
         if (isOnSafeDistance()) {
             return new CompositeAction()
-                    .add(new MoveToWithPathfindingAction(targetEnemy.getPosition()))
-                    .add(new LookToAction(targetEnemy));
+                    .add(new MoveToWithPathfindingAction(priorityEnemy.getPosition()))
+                    .add(new LookToAction(enemyToShoot));
         } else {
             contributeToPotentialField();
 
             return new CompositeAction()
                     .add(new MoveByPotentialFieldAction())
-                    .add(new ShootAction(targetEnemy));
+                    .add(new ShootAction(enemyToShoot));
         }
     }
 
@@ -100,10 +101,8 @@ public class FightStrategy implements Strategy {
     }
 
     private List<Unit> getEnemiesUnderAttack(List<Unit> enemies) {
-        var weaponMaxDistance = me.getWeaponOptional().map(Weapon::getMaxDistance).orElse(0.);
-
         return enemies.stream()
-                .filter(enemy -> me.canShoot(enemy) && me.getDistanceTo(enemy) < weaponMaxDistance)
+                .filter(me::canShoot)
                 .collect(Collectors.toList());
     }
 
@@ -119,7 +118,25 @@ public class FightStrategy implements Strategy {
                 .orElse(null);
     }
 
-    public Unit getTargetEnemy() {
+    public Unit getPriorityEnemy() {
+        var priorityEnemy = World.getInstance().getGlobalStrategy().getPriorityTargetEnemy();
+
+        if (priorityEnemy != null) {
+            var enemyMinDist = getEnemiesInFightRange().stream()
+                    .filter(Unit::isSpawned)
+                    .mapToDouble(u -> u.getDistanceTo(me))
+                    .min()
+                    .orElse(Double.MAX_VALUE);
+
+            if (enemyMinDist > Constants.SAFE_DIST || priorityEnemy.getDistanceTo(me) < Constants.SAFE_DIST) {
+                return priorityEnemy;
+            }
+        }
+
+        return getTargetEnemy();
+    }
+
+    private Unit getTargetEnemy() {
         var enemiesAround = getEnemiesInFightRange();
 
         var spawnedEnemies = enemiesAround.stream()
@@ -131,11 +148,20 @@ public class FightStrategy implements Strategy {
         } else {
             var enemiesUnderAttack = getEnemiesUnderAttack(spawnedEnemies);
             if (!enemiesUnderAttack.isEmpty()) {
-                return getNearestEnemy(spawnedEnemies);
+                return getNearestEnemy(enemiesUnderAttack);
             }
 
             return getNearestEnemy(spawnedEnemies);
         }
+    }
+
+    public Unit getEnemyToShoot() {
+        var priorityEnemy = getPriorityEnemy();
+        if (priorityEnemy != null && me.canShoot(priorityEnemy)) {
+            return priorityEnemy;
+        }
+
+        return getTargetEnemy();
     }
 
     private void contributeToPotentialField() {
@@ -144,21 +170,21 @@ public class FightStrategy implements Strategy {
 
         // target enemy
 
-        var targetEnemy = getTargetEnemy();
-        var safeDistant = getBestDistanceToEnemy(targetEnemy);
+        var priorityEnemy = getEnemyToShoot();
+        var safeDistant = getBestDistanceToEnemy(priorityEnemy);
 
-        if (!targetEnemy.isPhantom()) {
+        if (!priorityEnemy.isPhantom()) {
             contributor.add(new FirstMatchCompositeScoreContributor("Target Enemy")
                     .add(new LinearScoreContributor(
                             "Target Enemy Hold Distance",
-                            targetEnemy.getPosition(),
+                            priorityEnemy.getPosition(),
                             Constants.PF_ENEMY_HOLD_DISTANCE_MAX_SCORE,
                             Constants.PF_ENEMY_HOLD_DISTANCE_MIN_SCORE,
                             safeDistant,
                             safeDistant + Constants.PF_ENEMY_HOLD_DISTANCE_DIST
                     ))
                     .add(new LinearScoreContributor(
-                            targetEnemy.getPosition(),
+                            priorityEnemy.getPosition(),
                             Constants.PF_ENEMY_THREATEN_DIST_MIN_SCORE,
                             Constants.PF_ENEMY_THREATEN_DIST_MAX_SCORE,
                             safeDistant
@@ -168,7 +194,7 @@ public class FightStrategy implements Strategy {
 
         // other enemies
         World.getInstance().getEnemyUnits().values().stream()
-                .filter(enemy -> enemy != targetEnemy)
+                .filter(enemy -> enemy != priorityEnemy)
                 .filter(Unit::isSpawned)
                 .forEach(enemy -> {
                     contributor.add(new LinearScoreContributor(
@@ -176,7 +202,7 @@ public class FightStrategy implements Strategy {
                             enemy.getPosition(),
                             Constants.PF_NON_TARGET_ENEMY_MIN_SCORE,
                             Constants.PF_NON_TARGET_ENEMY_MAX_SCORE,
-                            getThreatenDistanceForNonTargetEnemy(targetEnemy, enemy, me)
+                            getThreatenDistanceForNonTargetEnemy(priorityEnemy, enemy, me)
                     ));
                 });
 
@@ -190,7 +216,7 @@ public class FightStrategy implements Strategy {
                             enemy.getPosition(),
                             Constants.PF_PHANTOM_ENEMY_MIN_SCORE,
                             Constants.PF_PHANTOM_ENEMY_MAX_SCORE,
-                            getThreatenDistanceForNonTargetEnemy(targetEnemy, enemy, me)
+                            getThreatenDistanceForNonTargetEnemy(priorityEnemy, enemy, me)
                     ));
                 });
 

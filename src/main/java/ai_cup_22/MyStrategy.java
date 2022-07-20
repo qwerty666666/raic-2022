@@ -18,6 +18,7 @@ import java.util.Objects;
 public class MyStrategy {
     private World world;
     private Constants constants;
+    private int totalTime;
 
     public MyStrategy(Constants constants) {
         this.constants = constants;
@@ -106,7 +107,9 @@ public class MyStrategy {
             }
         }
 
-        System.out.println(World.getInstance().getCurrentTick() + " " + (System.currentTimeMillis() - start));
+        var tickTime = (System.currentTimeMillis() - start);
+        totalTime += tickTime;
+        System.out.println(World.getInstance().getCurrentTick() + " " + tickTime + " " + totalTime);
 
         return new Order(orders);
     }

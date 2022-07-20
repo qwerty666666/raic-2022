@@ -49,11 +49,12 @@ public class SpawnStrategy implements Strategy {
 
         if (unit.getRemainingSpawnTicks() < 30 && !canBeAtPosition(unit.getPosition(), obstacles)) {
             action.add(new MoveToAction(getSafePlaceToSpawn(obstacles)));
+        } else {
+
+            // take loot
+
+            action.add(this.delegate.getAction());
         }
-
-        // take loot
-
-        action.add(this.delegate.getAction());
 
         // always rotate
 
@@ -62,9 +63,11 @@ public class SpawnStrategy implements Strategy {
         // stop rotating
 
         if (unit.getRemainingSpawnTicks() < 15) {
-            var targetEnemy = fightStrategy.getTargetEnemy();
+            var targetEnemy = fightStrategy.getEnemyToShoot();
             if (targetEnemy != null) {
                 action.add(new LookToAction(targetEnemy));
+            } else {
+                action.add(new RotateAction());
             }
         }
 

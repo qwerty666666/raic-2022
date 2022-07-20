@@ -93,7 +93,7 @@ public class LootShieldStrategy implements Strategy {
 
         @Override
         public String toString() {
-            return getClass().getSimpleName() + " (" + getOrder() + ") \n";
+            return Strategy.toString(this);
         }
     }
 }

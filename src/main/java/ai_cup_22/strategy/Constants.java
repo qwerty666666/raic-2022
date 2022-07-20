@@ -25,4 +25,8 @@ public class Constants {
     public static final double PF_ALLY_DIST = 3;
 
     public static final double PF_RETREAT_ENEMY_DIST = 44;
+
+
+    public static final double STRATEGY_EXPLORE_ORDER = 0.1;
+    public static final double STRATEGY_MOVE_TO_PRIORITY_ENEMY_ORDER = STRATEGY_EXPLORE_ORDER + 0.01;
 }
