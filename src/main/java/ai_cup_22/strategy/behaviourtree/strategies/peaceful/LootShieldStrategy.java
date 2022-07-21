@@ -86,11 +86,6 @@ public class LootShieldStrategy implements Strategy {
             return LootShieldStrategy.this.getSuitableLoots();
         }
 
-        private boolean canTakeLootOnlyAfterDisabledTime(Loot loot) {
-            return loot.getPosition().getDistanceTo(unit.getPosition()) >=
-                    unit.getTicksToNewActionBeAvailable() * unit.getMaxForwardSpeedPerTick();
-        }
-
         @Override
         public String toString() {
             return Strategy.toString(this);

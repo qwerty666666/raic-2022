@@ -38,6 +38,11 @@ public abstract class BaseLootStrategy implements Strategy {
                 .orElse(exploreStrategy.getAction());
     }
 
+    protected boolean canTakeLootOnlyAfterDisabledTime(Loot loot) {
+        return loot.getPosition().getDistanceTo(unit.getPosition()) >=
+                unit.getTicksToNewActionBeAvailable() * unit.getMaxForwardSpeedPerTick();
+    }
+
     protected Position getLookToPosition(Loot loot) {
         var targetEnemy = fightStrategy.getEnemyToShoot();
 

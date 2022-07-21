@@ -12,6 +12,7 @@ import ai_cup_22.strategy.models.Bullet;
 import ai_cup_22.strategy.models.Loot;
 import ai_cup_22.strategy.models.Obstacle;
 import ai_cup_22.strategy.models.Unit;
+import ai_cup_22.strategy.models.WeaponLoot;
 import ai_cup_22.strategy.models.Zone;
 import ai_cup_22.strategy.potentialfield.StaticPotentialField;
 import java.util.ArrayList;
@@ -44,7 +45,7 @@ public class World {
     private Map<Integer, Bullet> bullets = new HashMap<>();
     private Set<Bullet> consideredForPhantomsBullets = new HashSet<>();
 
-    private Map<Integer, Loot> weaponLoots = new HashMap<>();
+    private Map<Integer, WeaponLoot> weaponLoots = new HashMap<>();
     private Map<Integer, Loot> shieldLoots = new HashMap<>();
     private Map<Integer, AmmoLoot> ammoLoots = new HashMap<>();
 
@@ -94,7 +95,7 @@ public class World {
 
         for (var l: game.getLoot()) {
             if (l.getItem() instanceof Weapon) {
-                weaponLoots.computeIfAbsent(l.getId(), id -> new Loot(l));
+                weaponLoots.computeIfAbsent(l.getId(), id -> new WeaponLoot(l));
             } else if (l.getItem() instanceof ShieldPotions) {
                 shieldLoots.computeIfAbsent(l.getId(), id -> new Loot(l));
             } else {
@@ -383,8 +384,14 @@ public class World {
         return currentTick;
     }
 
-    public Map<Integer, Loot> getWeaponLoots() {
+    public Map<Integer, WeaponLoot> getWeaponLoots() {
         return weaponLoots;
+    }
+
+    public List<WeaponLoot> getWeaponLoots(int weaponId) {
+        return weaponLoots.values().stream()
+                .filter(loot -> loot.getWeaponId() == weaponId)
+                .collect(Collectors.toList());
     }
 
     public Map<Integer, Loot> getShieldLoots() {
