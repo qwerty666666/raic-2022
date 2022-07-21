@@ -1,5 +1,6 @@
 package ai_cup_22.strategy.behaviourtree.strategies.peaceful;
 
+import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.CompositeAction;
@@ -9,6 +10,7 @@ import ai_cup_22.strategy.actions.basic.MoveToAction;
 import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.behaviourtree.strategies.composite.MaxOrderCompositeStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.fight.FightStrategy;
+import ai_cup_22.strategy.behaviourtree.strategies.fight.RetreatStrategy;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
@@ -28,6 +30,7 @@ public class SpawnStrategy implements Strategy {
         this.unit = unit;
         this.fightStrategy = fightStrategy;
         this.delegate = new MaxOrderCompositeStrategy()
+                .add(new RetreatToSafeSpawn(unit))
                 .add(new LootAmmoStrategy(unit, exploreStrategy, fightStrategy, 100))
                 .add(new LootShieldStrategy(unit, exploreStrategy, fightStrategy, 100))
                 .add(fightStrategy)
@@ -54,7 +57,7 @@ public class SpawnStrategy implements Strategy {
             action.add(new MoveToAction(getSafePlaceToSpawn(obstacles)));
         } else {
 
-            // take loot
+            // take loot or smth...
 
             action.add(this.delegate.getAction());
         }
@@ -125,5 +128,38 @@ public class SpawnStrategy implements Strategy {
     @Override
     public String toString() {
         return Strategy.toString(this);
+    }
+
+
+    public static class RetreatToSafeSpawn implements Strategy {
+        private final RetreatStrategy retreatStrategy;
+        private final Unit unit;
+
+        public RetreatToSafeSpawn(Unit unit) {
+            retreatStrategy = new RetreatStrategy(unit);
+            this.unit = unit;
+        }
+
+        @Override
+        public double getOrder() {
+            var nearestEnemy = getNearestEnemy();
+
+            if (nearestEnemy == null) {
+                return MIN_ORDER;
+            }
+
+            return nearestEnemy.getDistanceTo(unit) < Constants.SAFE_DIST ? MAX_ORDER : MIN_ORDER;
+        }
+
+        @Override
+        public Action getAction() {
+            return retreatStrategy.getAction();
+        }
+
+        private Unit getNearestEnemy() {
+            return World.getInstance().getAllEnemyUnits().stream()
+                    .min(Comparator.comparingDouble(e -> e.getDistanceTo(unit)))
+                    .orElse(null);
+        }
     }
 }
