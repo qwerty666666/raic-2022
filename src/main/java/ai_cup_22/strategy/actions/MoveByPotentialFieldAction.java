@@ -19,7 +19,8 @@ public class MoveByPotentialFieldAction implements Action {
     }
 
     private Path getBestPathToGo(Unit unit) {
-        new DijkstraPathFinder(unit.getPotentialField(), unit.getPosition());
+        new DijkstraPathFinder(unit.getPotentialField(), unit.getPosition())
+                .calculateAllDistances();
 
         var graph = unit.getPotentialField().getGraph();
 
@@ -33,8 +34,12 @@ public class MoveByPotentialFieldAction implements Action {
                 .orElseThrow()
                 .getKey();
 
-        return Path.from(bestNode,graph)
-                .smooth(3);
+        var path = Path.from(bestNode,graph);
+        if (path != null) {
+            path = path.smooth(3);
+        }
+
+        return path;
     }
 
     public static Map<Node, Double> getNodeScores(Graph graph) {

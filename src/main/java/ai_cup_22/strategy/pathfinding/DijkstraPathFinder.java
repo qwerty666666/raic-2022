@@ -14,11 +14,9 @@ public class DijkstraPathFinder implements PathFinder {
     public DijkstraPathFinder(PotentialField potentialField, Position startPosition) {
         this.graph = potentialField.getGraph();
         this.startPosition = startPosition;
-
-        calculateAllDistances();
     }
 
-    private void calculateAllDistances() {
+    public void calculateAllDistances() {
 
         // add nodes to graph
 
@@ -43,6 +41,13 @@ public class DijkstraPathFinder implements PathFinder {
 
             // do not use lambda for perf !!!
             for (var adj: cur.getAdjacent()) {
+                if (cur.getParent() == adj) {
+                    // OK, in theory in this case cur.parent priority will be lower
+                    // than adj.priority + dist, but in practise it is wrong sometimes
+                    // for big double.
+                    continue;
+                }
+
                 boolean shouldUpdate;
 
                 var newPriority = Math.max(0, cur.getPriority() + (-adj.getScoreValue() - minScoreValue));

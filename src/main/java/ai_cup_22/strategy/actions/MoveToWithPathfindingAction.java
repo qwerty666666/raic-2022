@@ -15,8 +15,11 @@ public class MoveToWithPathfindingAction implements Action {
     @Override
     public void apply(Unit unit, UnitOrder order) {
         var pathFinder = new AStarPathFinder(unit.getPotentialField());
-        var path = pathFinder.findPath(unit.getPosition(), target)
-                    .smooth();
+        var path = pathFinder.findPath(unit.getPosition(), target);
+
+        if (path != null) {
+            path = path.smooth();
+        }
 
         new MoveByPathAction(path).apply(unit, order);
     }

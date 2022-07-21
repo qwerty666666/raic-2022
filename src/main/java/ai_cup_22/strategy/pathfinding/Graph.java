@@ -106,6 +106,10 @@ public class Graph {
         nodes.remove(node.getPosition());
     }
 
+    public PotentialField getPotentialField() {
+        return potentialField;
+    }
+
     public static class Node {
         private Score score;
         private double priority;
@@ -195,6 +199,10 @@ public class Graph {
 
                 for (int x = score.getX() - 1; x <= score.getX() + 1; x++) {
                     for (int y = score.getY() - 1; y <= score.getY() + 1; y++) {
+                        if (x == score.getX() && y == score.getY()) {
+                            continue;
+                        }
+
                         var adjScore = field.getScoreByIndex(x, y);
                         if (adjScore != null) {
                             staticAdjacent.add(graph.getOrCreateNode(adjScore.getPosition()));
