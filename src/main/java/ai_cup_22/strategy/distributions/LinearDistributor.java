@@ -1,23 +1,23 @@
 package ai_cup_22.strategy.distributions;
 
 public class LinearDistributor implements Distributor {
-    double minDist, maxDist, minVal, maxVal;
+    double minDist, maxDist, scoreOnMinDist, scoreOnMaxDist;
 
-    public LinearDistributor(double minDist, double maxDist, double minVal, double maxVal) {
+    public LinearDistributor(double minDist, double maxDist, double scoreOnMinDist, double scoreOnMaxDist) {
         this.minDist = minDist;
         this.maxDist = maxDist;
-        this.minVal = minVal;
-        this.maxVal = maxVal;
+        this.scoreOnMinDist = scoreOnMinDist;
+        this.scoreOnMaxDist = scoreOnMaxDist;
     }
 
     @Override
     public double get(double val) {
         if (val > maxDist) {
-            return maxVal;
+            return scoreOnMaxDist;
         }
         if (val < minDist) {
-            return minVal;
+            return scoreOnMinDist;
         }
-        return minVal + (val - minDist) / (maxDist - minDist) * (maxVal - minVal);
+        return scoreOnMinDist + (val - minDist) / (maxDist - minDist) * (scoreOnMaxDist - scoreOnMinDist);
     }
 }

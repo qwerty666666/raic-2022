@@ -2,29 +2,13 @@ package ai_cup_22.strategy.behaviourtree.strategies.peaceful;
 
 import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
-import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.behaviourtree.Strategy;
-import ai_cup_22.strategy.behaviourtree.strategies.NullStrategy;
-import ai_cup_22.strategy.behaviourtree.strategies.composite.FirstMatchCompositeStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.fight.FightStrategy;
-import ai_cup_22.strategy.distributions.FirstMatchDistributor;
-import ai_cup_22.strategy.distributions.LinearDistributor;
-import ai_cup_22.strategy.geometry.Position;
+import ai_cup_22.strategy.distributions.CumulativeExponentialDistributor;
 import ai_cup_22.strategy.models.Loot;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.models.Weapon;
-import ai_cup_22.strategy.pathfinding.AStarPathFinder;
-import ai_cup_22.strategy.pathfinding.Path;
-import ai_cup_22.strategy.potentialfield.PotentialField;
-import ai_cup_22.strategy.potentialfield.Score;
-import ai_cup_22.strategy.potentialfield.ScoreContributor;
-import ai_cup_22.strategy.potentialfield.scorecontributors.ZoneScoreContributor;
-import ai_cup_22.strategy.potentialfield.scorecontributors.basic.LinearScoreContributor;
-import ai_cup_22.strategy.potentialfield.scorecontributors.composite.SumCompositeScoreContributor;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class LootWeaponStrategy extends BaseLootStrategy {
@@ -52,7 +36,7 @@ public class LootWeaponStrategy extends BaseLootStrategy {
                 .map(loot -> {
                     var dist = unit.getPosition().getDistanceTo(loot.getPosition());
 
-                    return new LinearDistributor(0, maxLootDist, 1, 0)
+                    return new CumulativeExponentialDistributor(0, maxLootDist, 0, 1)
                             .get(dist);
                 })
                 .orElse(0.);
