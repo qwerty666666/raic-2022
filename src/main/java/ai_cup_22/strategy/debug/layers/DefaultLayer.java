@@ -75,7 +75,7 @@ public class DefaultLayer extends DrawLayer {
             }
 
             if (bullet.isEnemy()) {
-                add(new Line(bullet.getTrajectory(), Colors.RED_TRANSPARENT));
+                add(new Line(bullet.getRealTrajectory(), Colors.RED_TRANSPARENT));
             }
         });
     }

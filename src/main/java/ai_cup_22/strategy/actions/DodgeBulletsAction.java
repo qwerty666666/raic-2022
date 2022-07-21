@@ -78,8 +78,8 @@ public class DodgeBulletsAction implements Action {
                     } else {
                         return Comparator.comparing(DodgeDirection::canDodgeBullet).reversed()
                                 .thenComparing((dd1, dd2) -> {
-                                    var dist1 = bulletFinal.getTrajectory().getDistanceTo(dd1.getDodgeResult().getDodgePosition());
-                                    var dist2 = bulletFinal.getTrajectory().getDistanceTo(dd2.getDodgeResult().getDodgePosition());
+                                    var dist1 = bulletFinal.getRealTrajectory().getDistanceTo(dd1.getDodgeResult().getDodgePosition());
+                                    var dist2 = bulletFinal.getRealTrajectory().getDistanceTo(dd2.getDodgeResult().getDodgePosition());
                                     var dist = 0.2;
                                     if (dist1 < dist && dist2 >= dist) {
                                         return -1;
@@ -205,7 +205,7 @@ public class DodgeBulletsAction implements Action {
     }
 
     private boolean isBulletTreatsUnit(Unit unit, Bullet bullet) {
-        return unit.getCircle().enlarge(2).isIntersect(bullet.getTrajectory());
+        return unit.getCircle().enlarge(2).isIntersect(bullet.getRealTrajectory());
     }
 
     private static class DodgeDirection {

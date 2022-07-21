@@ -219,7 +219,7 @@ public class Unit {
     }
 
     public boolean isCoolDown() {
-        return getRemainingCoolDownTicks() <= 0;
+        return getRemainingCoolDownTicks() > 0;
     }
 
     public boolean canSee(Position p) {
@@ -252,10 +252,13 @@ public class Unit {
     }
 
     public boolean hasWeapon() {
-        return getWeapon() != null;
+        return unit == null || getWeapon() != null;
     }
 
     public int getBulletCount() {
+        if (unit == null) {
+            return 100;
+        }
         return hasWeapon() ? unit.getAmmo()[unit.getWeapon()] : 0;
     }
 

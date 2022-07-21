@@ -1,6 +1,7 @@
 package ai_cup_22.strategy.models;
 
 import ai_cup_22.model.WeaponProperties;
+import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,6 +55,10 @@ public class Weapon {
 
     public double getSpread() {
         return properties.getSpread();
+    }
+
+    public int getCoolDownTicks() {
+        return (int) (Constants.TICKS_PER_SECOND / properties.getRoundsPerSecond());
     }
 
     public double getAimFieldOfView() {

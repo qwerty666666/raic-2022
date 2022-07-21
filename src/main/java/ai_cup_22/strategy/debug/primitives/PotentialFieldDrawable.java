@@ -21,7 +21,7 @@ public class PotentialFieldDrawable implements Drawable {
     @Override
     public void draw(DebugInterface debugInterface) {
 
-        var restrictRadius = 30;
+        var restrictRadius = 10;
 
         // score circles
 

@@ -175,7 +175,7 @@ public class LootAmmoStrategy implements Strategy {
         }
 
         private ScoreContributor getPotentialFieldScoreContributor() {
-            var enemyScoreContributors = World.getInstance().getEnemyUnits().values().stream()
+            var enemyScoreContributors = World.getInstance().getAllEnemyUnits().stream()
                     .map(enemy -> new LinearScoreContributor(enemy.getPosition(), PotentialField.MIN_VALUE, 0, 15))
                     .collect(Collectors.toList());
 

@@ -89,7 +89,7 @@ public class Bullet {
         return new Line(position, position.move(velocity.increase(getRemainingLifetimeTicks())));
     }
 
-    public Line getTrajectory() {
+    public Line getRealTrajectory() {
         return new Line(position, endTrajectoryPosition);
     }
 

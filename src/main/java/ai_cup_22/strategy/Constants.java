@@ -1,6 +1,8 @@
 package ai_cup_22.strategy;
 
 public class Constants {
+    public static final int TICKS_PER_SECOND = 30;
+
     public static final double UNIT_MAX_SPEED_PER_TICK = 1./3;
     public static final double SAFE_DIST = 30;
     public static final double MAX_LOOT_STRATEGY_DIST = 100;

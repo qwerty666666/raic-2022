@@ -126,19 +126,26 @@ public class FightStrategy implements Strategy {
     }
 
     private boolean canAttackByEnemyHasNoEnoughBullets(Unit enemy) {
-        var dmg = enemy.getWeaponOptional().map(Weapon::getDamage).orElse(0.);
+        if (enemy.isPhantom()) {
+            return false;
+        }
 
+        var dmg = enemy.getWeaponOptional().map(Weapon::getDamage).orElse(0.);
         return dmg * enemy.getBulletCount() <= me.getFullHealth() - me.getMaxHealth();
     }
 
     private boolean canAttackByDps(Unit enemy) {
-        var enemyDps = enemy.getWeaponOptional().map(Weapon::getDps).orElse(0.);
-        var myDps = me.getWeaponOptional().map(Weapon::getDps).orElse(0.);
+        var ticksToKillMe = getTickToKill(enemy, me);
+        var ticksToKillEnemy = getTickToKill(me, enemy);
 
-        var timeToKillMe = Math.ceil(me.getFullHealth() / enemyDps);
-        var timeToKillEnemy = Math.ceil(enemy.getFullHealth() / myDps);
+        return ticksToKillMe > 0 && ticksToKillEnemy * 1.5 < ticksToKillMe;
+    }
 
-        return timeToKillEnemy * 1.5 < timeToKillMe;
+    private int getTickToKill(Unit attacker, Unit attacked) {
+        var dmg = attacker.getWeaponOptional().map(Weapon::getDamage).orElse(0.);
+        var cd = attacker.getWeaponOptional().map(Weapon::getCoolDownTicks).orElse(0);
+
+        return (int) (Math.ceil(attacked.getFullHealth() / dmg) - 1) * cd;
     }
 
     private List<Unit> getEnemiesUnderAttack(List<Unit> enemies) {
@@ -211,21 +218,21 @@ public class FightStrategy implements Strategy {
 
         // target enemy
 
-        var priorityEnemy = getEnemyToShoot();
-        var safeDistant = getBestDistanceToEnemy(priorityEnemy);
+        var targetEnemy = getEnemyToShoot();
+        var safeDistant = getBestDistanceToEnemy(targetEnemy);
 
-        if (!priorityEnemy.isPhantom()) {
+        if (!targetEnemy.isPhantom()) {
             contributor.add(new FirstMatchCompositeScoreContributor("Target Enemy")
                     .add(new LinearScoreContributor(
                             "Target Enemy Hold Distance",
-                            priorityEnemy.getPosition(),
+                            targetEnemy.getPosition(),
                             Constants.PF_ENEMY_HOLD_DISTANCE_MAX_SCORE,
                             Constants.PF_ENEMY_HOLD_DISTANCE_MIN_SCORE,
                             safeDistant,
                             safeDistant + Constants.PF_ENEMY_HOLD_DISTANCE_DIST
                     ))
                     .add(new LinearScoreContributor(
-                            priorityEnemy.getPosition(),
+                            targetEnemy.getPosition(),
                             Constants.PF_ENEMY_THREATEN_DIST_MIN_SCORE,
                             Constants.PF_ENEMY_THREATEN_DIST_MAX_SCORE,
                             safeDistant
@@ -235,7 +242,7 @@ public class FightStrategy implements Strategy {
 
         // other enemies
         World.getInstance().getEnemyUnits().values().stream()
-                .filter(enemy -> enemy != priorityEnemy)
+                .filter(enemy -> enemy != targetEnemy)
                 .filter(Unit::isSpawned)
                 .forEach(enemy -> {
                     contributor.add(new LinearScoreContributor(
@@ -243,7 +250,7 @@ public class FightStrategy implements Strategy {
                             enemy.getPosition(),
                             Constants.PF_NON_TARGET_ENEMY_MIN_SCORE,
                             Constants.PF_NON_TARGET_ENEMY_MAX_SCORE,
-                            getThreatenDistanceForNonTargetEnemy(priorityEnemy, enemy, me)
+                            getThreatenDistanceForNonTargetEnemy(targetEnemy, enemy, me)
                     ));
                 });
 
@@ -257,7 +264,7 @@ public class FightStrategy implements Strategy {
                             enemy.getPosition(),
                             Constants.PF_PHANTOM_ENEMY_MIN_SCORE,
                             Constants.PF_PHANTOM_ENEMY_MAX_SCORE,
-                            getThreatenDistanceForNonTargetEnemy(priorityEnemy, enemy, me)
+                            getThreatenDistanceForNonTargetEnemy(targetEnemy, enemy, me)
                     ));
                 });
 
@@ -306,7 +313,7 @@ public class FightStrategy implements Strategy {
 
 
 
-    public class LootAmmoSafestWayStrategy extends BaseLootStrategy {
+    public static class LootAmmoSafestWayStrategy extends BaseLootStrategy {
         private final double maxLootDist;
 
         protected LootAmmoSafestWayStrategy(Unit unit, ExploreStrategy exploreStrategy, FightStrategy fightStrategy, double maxLootDist) {

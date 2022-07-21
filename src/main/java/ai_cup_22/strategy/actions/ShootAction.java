@@ -29,11 +29,11 @@ public class ShootAction implements Action {
     }
 
     private boolean shouldShoot(Unit me, Position targetPosition, Unit enemy) {
-        if (enemy.isPhantom()) {
+        if (enemy.isPhantom() || !enemy.isSpawned()) {
             return false;
         }
 
-        if (!me.canDoNewAction() && me.isCoolDown()) {
+        if (!me.canDoNewAction() || me.isCoolDown()) {
             return false;
         }
 

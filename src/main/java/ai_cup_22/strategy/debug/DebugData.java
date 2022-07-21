@@ -43,6 +43,7 @@ public class DebugData {
     private Set<String> turnedOnLayers = new HashSet<>() {{
         add("D");
         add("M");
+        add("U");
     }};
 
     public void setCursorPosition(Position cursorPosition) {
@@ -118,6 +119,18 @@ public class DebugData {
             Set<String> layersToTurnOn = CollectionUtils.diff(pressedLayerKeys, turnedOnLayers);
             turnedOnLayers = CollectionUtils.union(turnedOnLayers, layersToTurnOn);
         }
+
+
+        if (pressedKeys.contains("Num1")) {
+            unitsLayer.updateUnit(0);
+        } else if (pressedKeys.contains("Num2")) {
+            unitsLayer.updateUnit(1);
+        } else if (pressedKeys.contains("Num3")) {
+            unitsLayer.updateUnit(2);
+        } else if (pressedKeys.contains("Num4")) {
+            unitsLayer.updateUnit(null);
+        }
+
 
         debugInterface.clear();
         turnedOnLayers.stream()

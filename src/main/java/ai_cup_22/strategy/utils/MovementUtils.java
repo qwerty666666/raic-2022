@@ -125,7 +125,8 @@ public class MovementUtils {
 
         var ticks = bullet.getRemainingLifetimeTicks();
         var nonWalkThroughObstacles = getNonWalkThroughObstaclesInRange(unit , ticks * unit.getMaxForwardSpeedPerTick() + 5);
-        var bulletTrajectory = bullet.getTrajectory();
+        var bulletTrajectory = bullet.getRealTrajectory();
+        var bulletFullTrajectory = bullet.getRealTrajectory();
 //DebugData.getInstance().getDefaultLayer().addText(Double.toString(unit.getAim()), unit.getPosition());
         var unitCircle = unit.getCircle();
         var aim = unit.getAim();
@@ -188,13 +189,6 @@ public class MovementUtils {
                 }
             }
 
-            // check that unit run away from hit trajectory
-
-            if (!unitCircle.enlarge(0.35).isIntersect(bulletTrajectory)) {
-                result.isHit = false;
-                break;
-            }
-
             // go to next iteration cycle
 
             unitCircle = newUnitCircle;
@@ -203,6 +197,14 @@ public class MovementUtils {
             result.ticks += 1;
             result.dodgePosition = unitCircle.getCenter();
             result.steps.add(unitCircle.getCenter());
+
+            // check that unit run away from hit trajectory
+
+            var projection = bulletTrajectory.getProjection(unitCircle.getCenter());
+            if (projection.getDistanceTo(bulletFullTrajectory.getStart()) < bulletPos.getDistanceTo(bulletFullTrajectory.getStart())) {
+                result.isHit = false;
+                break;
+            }
         }
 
         return result;
