@@ -50,7 +50,13 @@ public class MyStrategy {
             world.getStaticPotentialField().fillStaticData(world);
         }
 
+
         world.updateTick(game);
+
+
+        if (game.getCurrentTick() <= 1 && world.getMyUnits().size() == 1) {
+            return new Order(orders);
+        }
 
 
         world.getMyUnits().values().stream()

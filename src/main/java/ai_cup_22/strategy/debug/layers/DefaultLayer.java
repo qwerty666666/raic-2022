@@ -4,7 +4,7 @@ import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.debug.Colors;
 import ai_cup_22.strategy.debug.DebugData;
 import ai_cup_22.strategy.debug.primitives.CircleDrawable;
-import ai_cup_22.strategy.debug.primitives.CircleSegment;
+import ai_cup_22.strategy.debug.primitives.CircleSegmentDrawable;
 import ai_cup_22.strategy.debug.primitives.Line;
 import ai_cup_22.strategy.debug.primitives.PathDrawable;
 import ai_cup_22.strategy.debug.primitives.Text;
@@ -116,12 +116,12 @@ public class DefaultLayer extends DrawLayer {
     private void addShootAreas(World world) {
         for (var unit: world.getMyUnits().values()) {
             if (unit.hasWeapon()) {
-                add(new CircleSegment(unit.getShootingSegment(), Colors.LIGHT_BLUE_TRANSPARENT));
+                add(new CircleSegmentDrawable(unit.getShootingSegment(), Colors.LIGHT_BLUE_TRANSPARENT));
             }
         }
         for (var unit: world.getEnemyUnits().values()) {
             if (unit.hasWeapon()) {
-                add(new CircleSegment(unit.getShootingSegment(), Colors.LIGHT_BLUE_TRANSPARENT));
+                add(new CircleSegmentDrawable(unit.getShootingSegment(), Colors.LIGHT_BLUE_TRANSPARENT));
             }
         }
     }

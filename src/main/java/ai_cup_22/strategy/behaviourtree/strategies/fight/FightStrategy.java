@@ -21,6 +21,7 @@ import ai_cup_22.strategy.pathfinding.AStarPathFinder;
 import ai_cup_22.strategy.pathfinding.Path;
 import ai_cup_22.strategy.potentialfield.Score;
 import ai_cup_22.strategy.potentialfield.scorecontributors.ZoneScoreContributor;
+import ai_cup_22.strategy.potentialfield.scorecontributors.basic.CircularWithAvoidObstaclesContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.basic.LinearScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.composite.FirstMatchCompositeScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.composite.SumCompositeScoreContributor;
@@ -223,13 +224,18 @@ public class FightStrategy implements Strategy {
 
         if (!targetEnemy.isPhantom()) {
             contributor.add(new FirstMatchCompositeScoreContributor("Target Enemy")
-                    .add(new LinearScoreContributor(
+                    .add(new CircularWithAvoidObstaclesContributor(
                             "Target Enemy Hold Distance",
                             targetEnemy.getPosition(),
-                            Constants.PF_ENEMY_HOLD_DISTANCE_MAX_SCORE,
-                            Constants.PF_ENEMY_HOLD_DISTANCE_MIN_SCORE,
-                            safeDistant,
-                            safeDistant + Constants.PF_ENEMY_HOLD_DISTANCE_DIST
+                            new LinearScoreContributor(
+                                    targetEnemy.getPosition(),
+                                    Constants.PF_ENEMY_HOLD_DISTANCE_MAX_SCORE,
+                                    Constants.PF_ENEMY_HOLD_DISTANCE_MIN_SCORE,
+                                    safeDistant,
+                                    safeDistant + Constants.PF_ENEMY_HOLD_DISTANCE_DIST
+                            ),
+                            safeDistant + Constants.PF_ENEMY_HOLD_DISTANCE_DIST,
+                            0
                     ))
                     .add(new LinearScoreContributor(
                             targetEnemy.getPosition(),

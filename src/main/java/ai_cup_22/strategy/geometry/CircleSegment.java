@@ -3,6 +3,7 @@ package ai_cup_22.strategy.geometry;
 public class CircleSegment {
     private final Circle circle;
     private final double centerAngle;
+    // whole angle
     private final double angle;
 
     public CircleSegment(Circle circle, double centerAngle, double angle) {

@@ -4,10 +4,12 @@ import ai_cup_22.DebugInterface;
 import ai_cup_22.debugging.Color;
 import ai_cup_22.strategy.debug.Colors;
 import ai_cup_22.strategy.debug.primitives.CircleDrawable;
+import ai_cup_22.strategy.debug.primitives.CircleSegmentDrawable;
 import ai_cup_22.strategy.debug.primitives.Drawable;
 import ai_cup_22.strategy.debug.primitives.Line;
 import ai_cup_22.strategy.debug.primitives.Text;
 import ai_cup_22.strategy.geometry.Circle;
+import ai_cup_22.strategy.geometry.CircleSegment;
 import ai_cup_22.strategy.geometry.Position;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +39,10 @@ public class DrawLayer {
 
     public void addCircle(Position position, double radius) {
         addCircle(position, radius, Colors.BLUE_TRANSPARENT);
+    }
+
+    public void addSegment(CircleSegment segment) {
+        add(new CircleSegmentDrawable(segment, Colors.BLUE_TRANSPARENT));
     }
 
     public void addCircle(Position position, double radius, Color color) {

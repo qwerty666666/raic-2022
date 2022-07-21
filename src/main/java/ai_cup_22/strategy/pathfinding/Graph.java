@@ -71,28 +71,32 @@ public class Graph {
         // from it by BFS
         var scoresAround = potentialField.getScoresAround(position);
         if (scoresAround.stream().allMatch(Score::isUnreachable)) {
-            var globalGraph = World.getInstance().getStaticPotentialField().getStaticGraph();
+            var scores = World.getInstance().getStaticPotentialField();
 
-            var queue = new LinkedList<Node>();
-            queue.add(globalGraph.getOrCreateNode(scoresAround.get(0).getPosition()));
+            var queue = new LinkedList<Score>();
+            queue.add(scoresAround.get(0));
 
-            var used = new HashSet<Node>();
-            used.add(globalGraph.getOrCreateNode(scoresAround.get(0).getPosition()));
+            var used = new HashSet<Score>();
+            used.add(scoresAround.get(0));
 
             while (!queue.isEmpty()) {
                 var cur = queue.poll();
 
-                if (!cur.getScore().isUnreachable() && nodes.containsKey(cur.getPosition())) {
-                    scoresAround = List.of(cur.getScore());
+                if (!cur.isUnreachable() && nodes.containsKey(cur.getPosition())) {
+                    scoresAround = List.of(cur);
                     break;
                 }
 
-                cur.getStaticAdjacent().forEach(adj -> {
-                    if (!used.contains(adj)) {
-                        used.add(adj);
-                        queue.add(adj);
+                for (int x = -1; x <= 1; x++) {
+                    for (int y = -1; y <= 1; y++) {
+                        var adj = scores.getScoreByIndex(cur.getX() + x, cur.getY() + y);
+                        if (adj != null && !used.contains(adj)) {
+                            used.add(adj);
+                            queue.add(adj);
+                        }
                     }
-                });
+
+                }
             }
         }
         return scoresAround.stream()
@@ -204,7 +208,7 @@ public class Graph {
                         }
 
                         var adjScore = field.getScoreByIndex(x, y);
-                        if (adjScore != null) {
+                        if (adjScore != null && !adjScore.isUnreachable()) {
                             staticAdjacent.add(graph.getOrCreateNode(adjScore.getPosition()));
                         }
                     }
