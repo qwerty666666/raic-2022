@@ -33,7 +33,7 @@ public class BehaviourTree {
     public BehaviourTree(Unit unit) {
         this.unit = unit;
         exploreStrategy = new ExploreStrategy(unit);
-        fightStrategy = new FightStrategy(unit);
+        fightStrategy = new FightStrategy(unit, exploreStrategy);
         lootStrategy = new LootStrategy(unit, exploreStrategy,fightStrategy);
         takeShieldPotionStrategy = new TakeShieldPotionStrategy(unit);
         retreatStrategy = new RetreatStrategy(unit);

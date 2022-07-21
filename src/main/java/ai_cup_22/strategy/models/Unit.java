@@ -215,7 +215,7 @@ public class Unit {
     }
 
     public int getRemainingCoolDownTicks() {
-        return Math.max(0, unit.getNextShotTick() - World.getInstance().getCurrentTick());
+        return unit == null ? 0 : Math.max(0, unit.getNextShotTick() - World.getInstance().getCurrentTick());
     }
 
     public boolean isCoolDown() {
@@ -305,6 +305,10 @@ public class Unit {
         return getWeaponOptional().map(w -> World.getInstance().getTimePerTick() / w.getAimTime()).orElse(0.);
     }
 
+    public int getRemainedTicksToAim() {
+        return unit == null ? 0 : (int) Math.ceil((1 - getAim()) / getAimChangePerTick());
+    }
+
     public double getDistanceTo(Unit u) {
         return u.getPosition().getDistanceTo(this.getPosition());
     }
@@ -322,7 +326,7 @@ public class Unit {
     }
 
     public double getShield() {
-        return unit.getShield();
+        return unit == null ? 0 : unit.getShield();
     }
 
     public double getMaxShield() {
@@ -338,7 +342,7 @@ public class Unit {
     }
 
     public double getHealth() {
-        return unit.getHealth();
+        return unit == null ? 100 : unit.getHealth();
     }
 
     public int ticksToStartHealthRegeneration() {

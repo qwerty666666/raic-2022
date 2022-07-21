@@ -10,10 +10,16 @@ import ai_cup_22.strategy.actions.ShootAction;
 import ai_cup_22.strategy.actions.basic.LookToAction;
 import ai_cup_22.strategy.actions.basic.NullAction;
 import ai_cup_22.strategy.behaviourtree.Strategy;
+import ai_cup_22.strategy.behaviourtree.strategies.peaceful.BaseLootStrategy;
+import ai_cup_22.strategy.behaviourtree.strategies.peaceful.ExploreStrategy;
 import ai_cup_22.strategy.distributions.LinearDistributor;
 import ai_cup_22.strategy.geometry.Vector;
+import ai_cup_22.strategy.models.Loot;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.models.Weapon;
+import ai_cup_22.strategy.pathfinding.AStarPathFinder;
+import ai_cup_22.strategy.pathfinding.Path;
+import ai_cup_22.strategy.potentialfield.Score;
 import ai_cup_22.strategy.potentialfield.scorecontributors.ZoneScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.basic.LinearScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.composite.FirstMatchCompositeScoreContributor;
@@ -21,13 +27,17 @@ import ai_cup_22.strategy.potentialfield.scorecontributors.composite.SumComposit
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class FightStrategy implements Strategy {
     private final Unit me;
+    private final Strategy lootAmmoStrategy;
 
-    public FightStrategy(Unit me) {
+    public FightStrategy(Unit me, ExploreStrategy exploreStrategy) {
         this.me = me;
+        this.lootAmmoStrategy = new LootAmmoSafestWayStrategy(me, exploreStrategy, this, 100);
     }
 
     @Override
@@ -55,9 +65,20 @@ public class FightStrategy implements Strategy {
         } else {
             contributeToPotentialField();
 
-            return new CompositeAction()
-                    .add(new MoveByPotentialFieldAction())
-                    .add(new ShootAction(enemyToShoot));
+            var action = new CompositeAction();
+
+            // take ammo if needed
+            if (shouldTakeAmmo()) {
+                action.add(lootAmmoStrategy.getAction());
+            } else {
+                // otherwise go to best point
+                action.add(new MoveByPotentialFieldAction());
+            }
+
+            // always try to shoot to enemy
+            action.add(new ShootAction(enemyToShoot));
+
+            return action;
         }
     }
 
@@ -71,17 +92,37 @@ public class FightStrategy implements Strategy {
             return Constants.SAFE_DIST;
         }
 
-        if (getEnemiesInFightRange().size() <= 1) {
-            if (canAttackByDps(enemy)) {
-                return 0;
-            }
-
-            if (canAttackByEnemyHasNoEnoughBullets(enemy)) {
-                return 0;
-            }
+        if (canPushEnemy(enemy)) {
+            return 0;
         }
 
         return enemy.getThreatenDistanceFor(me);
+    }
+
+    private boolean canPushEnemy(Unit enemy) {
+        if (getEnemiesInFightRange().size() > 1) {
+            return false;
+        }
+
+        if (!hasEnoughAmmoToKill(enemy)) {
+            return false;
+        }
+
+        if (canAttackByDps(enemy)) {
+            return true;
+        }
+
+        if (canAttackByEnemyHasNoEnoughBullets(enemy)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean hasEnoughAmmoToKill(Unit enemy) {
+        var dmg = me.getBulletCount() * me.getWeaponOptional().map(Weapon::getDamage).orElse(0.);
+
+        return enemy.getFullHealth() <= dmg;
     }
 
     private boolean canAttackByEnemyHasNoEnoughBullets(Unit enemy) {
@@ -248,8 +289,77 @@ public class FightStrategy implements Strategy {
                 .get(angle);
     }
 
+    private boolean shouldTakeAmmo() {
+        var enemy = getEnemyToShoot();
+
+        if (canPushEnemy(enemy)) {
+            return false;
+        }
+
+        return !hasEnoughAmmoToKill(enemy) || me.getBulletCount() < me.getMaxBulletCount() * 0.16;
+    }
+
     @Override
     public String toString() {
         return Strategy.toString(this);
+    }
+
+
+
+    public class LootAmmoSafestWayStrategy extends BaseLootStrategy {
+        private final double maxLootDist;
+
+        protected LootAmmoSafestWayStrategy(Unit unit, ExploreStrategy exploreStrategy, FightStrategy fightStrategy, double maxLootDist) {
+            super(unit, exploreStrategy, fightStrategy);
+            this.maxLootDist = maxLootDist;
+        }
+
+        @Override
+        protected List<Loot> getSuitableLoots() {
+            return World.getInstance().getAmmoLoots(unit.getWeapon().getId()).stream()
+                    .filter(loot -> loot.getPosition().getDistanceTo(unit.getPosition()) < maxLootDist)
+                    .collect(Collectors.toList());
+        }
+
+        @Override
+        protected Optional<Loot> getBestLoot() {
+            var loots = getSuitableLoots().stream()
+                    .filter(loot -> !World.getInstance().getGlobalStrategy().isLootTakenByOtherUnit(loot, unit))
+                    .collect(Collectors.toList());
+
+            if (loots.isEmpty()) {
+                return Optional.empty();
+            }
+
+            var pathFinder = new AStarPathFinder(unit.getPotentialField());
+            var paths = loots.stream()
+                    .collect(Collectors.toMap(
+                            loot -> loot,
+                            loot -> pathFinder.findPath(unit.getPosition(), loot.getPosition())
+                    ));
+
+            // search by min sum of treats on the path
+            // and min by distance if there is no treat on the path
+            var loot = paths.entrySet().stream()
+                    .min(
+                            Comparator.comparingDouble(
+                                            (Entry<Loot, Path> e) -> e.getValue().getScores().stream()
+                                                    .filter(score -> score.getNonStaticScore() < 0)
+                                                    .mapToDouble(Score::getNonStaticScore)
+                                                    .sum()
+                                    )
+                                    .reversed()
+                                    .thenComparingDouble((Entry<Loot, Path> e) -> e.getValue().getDistance())
+                    )
+                    .orElseThrow()
+                    .getKey();
+
+            return Optional.ofNullable(loot);
+        }
+
+        @Override
+        public String toString() {
+            return Strategy.toString(this);
+        }
     }
 }

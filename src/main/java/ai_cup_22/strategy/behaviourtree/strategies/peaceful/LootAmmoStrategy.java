@@ -15,6 +15,7 @@ import ai_cup_22.strategy.models.Loot;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.models.Weapon;
 import ai_cup_22.strategy.pathfinding.AStarPathFinder;
+import ai_cup_22.strategy.pathfinding.DijkstraPathFinder;
 import ai_cup_22.strategy.pathfinding.Path;
 import ai_cup_22.strategy.potentialfield.PotentialField;
 import ai_cup_22.strategy.potentialfield.Score;
@@ -136,12 +137,19 @@ public class LootAmmoStrategy implements Strategy {
 
         @Override
         protected Optional<Loot> getBestLoot() {
+            var loots = getSuitableLoots().stream()
+                    .filter(loot -> !World.getInstance().getGlobalStrategy().isLootTakenByOtherUnit(loot, unit))
+                    .collect(Collectors.toList());
+
+            if (loots.isEmpty()) {
+                return Optional.empty();
+            }
+
             getPotentialFieldScoreContributor().contribute(unit.getPotentialField());
 
             var pathFinder = new AStarPathFinder(unit.getPotentialField());
 
-            var paths = getSuitableLoots().stream()
-                    .filter(loot -> !World.getInstance().getGlobalStrategy().isLootTakenByOtherUnit(loot, unit))
+            var paths = loots.stream()
                     .collect(Collectors.toMap(
                             loot -> loot,
                             loot -> pathFinder.findPath(unit.getPosition(), loot.getPosition())
@@ -160,7 +168,7 @@ public class LootAmmoStrategy implements Strategy {
                                     .reversed()
                                     .thenComparingDouble((Entry<Loot, Path> e) -> e.getValue().getDistance())
                     )
-                    .get()
+                    .orElseThrow()
                     .getKey();
 
             return Optional.ofNullable(loot);

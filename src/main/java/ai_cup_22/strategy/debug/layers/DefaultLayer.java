@@ -19,7 +19,7 @@ public class DefaultLayer extends DrawLayer {
 
         addUnitPaths(world);
         addUnitStrategies(world);
-        addUnitShields(world);
+        addUnitInfo(world);
         addPhantomUnits(world);
 
         addBullets(world);
@@ -49,12 +49,22 @@ public class DefaultLayer extends DrawLayer {
         });
     }
 
-    private void addUnitShields(World world) {
+    private void addUnitInfo(World world) {
         world.getMyUnits().values().forEach(unit -> {
-            add(new Text("Shields: " + unit.getShieldPotions(), unit.getPosition(), 0.3, new Vector(0, -2)));
+            add(new Text(
+                    String.format("Shields: %d\n CD: %d \n %d", unit.getShieldPotions(), unit.getRemainingCoolDownTicks(), unit.getRemainedTicksToAim()),
+                    unit.getPosition(),
+                    0.3,
+                    new Vector(0, -2)
+            ));
         });
         world.getEnemyUnits().values().forEach(unit -> {
-            add(new Text("Shields: " + unit.getShieldPotions(), unit.getPosition(), 0.3, new Vector(0, -1)));
+            add(new Text(
+                    String.format("Shields: %d\n CD: %d", unit.getShieldPotions(), unit.getRemainingCoolDownTicks()),
+                    unit.getPosition(),
+                    0.3,
+                    new Vector(0, -2)
+            ));
         });
     }
 
