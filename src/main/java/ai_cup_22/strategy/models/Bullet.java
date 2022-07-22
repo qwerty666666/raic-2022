@@ -73,12 +73,20 @@ public class Bullet {
         return velocity.getLength();
     }
 
+    public double getDmg() {
+        return Weapon.get(getWeaponId()).getDamage();
+    }
+
     public boolean isEnemy() {
         return isEnemy;
     }
 
     public int getRemainingLifetimeTicks() {
         return (int) Math.ceil(lifetime / World.getInstance().getTimePerTick());
+    }
+
+    public int getRealRemainingLifetimeTicks() {
+        return (int) Math.ceil((endTrajectoryPosition.getDistanceTo(position)) / getSpeed());
     }
 
     public Line getLastTickTrajectory() {

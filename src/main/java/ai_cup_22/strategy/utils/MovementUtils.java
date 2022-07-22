@@ -210,7 +210,7 @@ public class MovementUtils {
         return result;
     }
 
-    private static Vector simulateRotateTickToDirection(Vector curLookDirection, Vector targetLookDirection, double aim,
+    public static Vector simulateRotateTickToDirection(Vector curLookDirection, Vector targetLookDirection, double aim,
             double aimRotationSpeedPerSec) {
         var nonAimRotationSpeed = World.getInstance().getConstants().getRotationSpeed();
 
@@ -232,7 +232,7 @@ public class MovementUtils {
         return curLookDirection.rotate(-Math.signum(diff) * Math.min(rotationSpeedPerTick, Math.abs(diff)));
     }
 
-    private static boolean isBulletHitInTick(Line bulletTickTrajectory, Circle oldPosition, Circle newPosition) {
+    public static boolean isBulletHitInTick(Line bulletTickTrajectory, Circle oldPosition, Circle newPosition) {
         var x0 = oldPosition.getCenter().getX();
         var y0 = oldPosition.getCenter().getY();
 
@@ -252,7 +252,7 @@ public class MovementUtils {
         return b * b - 4 * a * c >= 0;
     }
 
-    private static boolean isBulletHitCircle(Line bulletTickTrajectory, Circle unitCircle) {
+    public static boolean isBulletHitCircle(Line bulletTickTrajectory, Circle unitCircle) {
         if (unitCircle.isIntersect(bulletTickTrajectory)) {
             var hitUnitPosition = bulletTickTrajectory.getIntersectionPoints(unitCircle).stream()
                     .min(Comparator.comparingDouble(point -> point.getDistanceTo(bulletTickTrajectory.getStart())))
@@ -287,7 +287,7 @@ public class MovementUtils {
         return obstacles;
     }
 
-    private static Vector getVelocityOnNextTickAfterCollision(
+    public static Vector getVelocityOnNextTickAfterCollision(
             Position position, Vector lookDirection, Vector currentVelocity,
             double maxForwardSpeed, double maxBackwardSpeed,
             double aim, double aimSpeedModifier,
@@ -310,7 +310,21 @@ public class MovementUtils {
         private Position dodgePosition;
         private boolean isHit;
         private int ticks;
+        private double takenDmg;
         private List<Position> steps = new ArrayList<>();
+
+        public boolean isHit() {
+            return isHit;
+        }
+
+        public double getTakenDmg() {
+            return takenDmg;
+        }
+
+        public DodgeResult increaseTakenDmg(double takenDmg) {
+            this.takenDmg += takenDmg;
+            return this;
+        }
 
         public boolean isSuccess() {
             return !isHit;
@@ -326,6 +340,26 @@ public class MovementUtils {
 
         public List<Position> getSteps() {
             return steps;
+        }
+
+        public DodgeResult setDodgePosition(Position dodgePosition) {
+            this.dodgePosition = dodgePosition;
+            return this;
+        }
+
+        public DodgeResult setHit(boolean hit) {
+            isHit = hit;
+            return this;
+        }
+
+        public DodgeResult setTicks(int ticks) {
+            this.ticks = ticks;
+            return this;
+        }
+
+        public DodgeResult setSteps(List<Position> steps) {
+            this.steps = steps;
+            return this;
         }
     }
 

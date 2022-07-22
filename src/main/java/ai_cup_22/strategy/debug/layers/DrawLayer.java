@@ -62,6 +62,10 @@ public class DrawLayer {
     }
 
     public void addText(String text, Position pos) {
-        add(new Text(text, pos, 0.1));
+        addText(text, pos, 0.1);
+    }
+
+    public void addText(String text, Position pos, double size) {
+        add(new Text(text, pos, size));
     }
 }

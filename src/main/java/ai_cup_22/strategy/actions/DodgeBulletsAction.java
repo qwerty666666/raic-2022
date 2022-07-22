@@ -14,6 +14,7 @@ import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Bullet;
 import ai_cup_22.strategy.models.Unit;
+import ai_cup_22.strategy.simulation.dodgebullets.DodgeSimulation;
 import ai_cup_22.strategy.utils.MovementUtils;
 import ai_cup_22.strategy.utils.MovementUtils.DodgeResult;
 import java.util.ArrayList;
@@ -26,9 +27,9 @@ import java.util.stream.IntStream;
 public class DodgeBulletsAction implements Action {
     @Override
     public void apply(Unit unit, UnitOrder order) {
-        var dodgeDirection = getBestDodgeDirection(unit);
+        var dodgeDirection = new DodgeSimulation().simulate(unit);
 
-        if (dodgeDirection != null && dodgeDirection.canDodgeBullet()) {
+        if (dodgeDirection != null) {
             unit.setCurrentPath(Collections.emptyList());
 
             new MoveToAction(unit.getPosition().move(dodgeDirection.getDirection())).apply(unit, order);
@@ -208,10 +209,11 @@ public class DodgeBulletsAction implements Action {
         return unit.getCircle().enlarge(2).isIntersect(bullet.getRealTrajectory());
     }
 
-    private static class DodgeDirection {
+    public static class DodgeDirection {
         private Vector direction;
         private int priority;
         private DodgeResult result;
+        private DodgeSimulation.DodgeResult dodgeResult;
         private Double score;
         private boolean withAim = true;
         private boolean withRotateToDirection = false;
@@ -255,13 +257,21 @@ public class DodgeBulletsAction implements Action {
             result = MovementUtils.tryDodgeByWalkDirect(unit, direction, bullet, withAim, withRotateToDirection);
         }
 
+        public DodgeSimulation.DodgeResult getResult() {
+            return this.dodgeResult;
+        }
+
+        public void setDodgeResult(DodgeSimulation.DodgeResult dodgeResult) {
+            this.dodgeResult = dodgeResult;
+        }
+
         public boolean canDodgeBullet() {
-            return result.isSuccess();
+            return dodgeResult.isSuccess();
         }
 
         public double getScore(Unit unit) {
             if (score == null) {
-                score = unit.getPotentialField().getScoreValue(getDodgeResult().getDodgePosition());
+                score = unit.getPotentialField().getScoreValue(getResult().getDodgePosition());
             }
             return score;
         }
