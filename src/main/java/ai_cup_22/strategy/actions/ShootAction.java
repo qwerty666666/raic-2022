@@ -8,7 +8,7 @@ import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.models.Weapon;
-import ai_cup_22.strategy.utils.MovementUtils;
+import ai_cup_22.strategy.simulation.walk.WalkSimulation;
 
 public class ShootAction implements Action {
     private final Unit target;
@@ -63,8 +63,8 @@ public class ShootAction implements Action {
         var dodgeDirection1 = trajectory.rotate(Math.PI / 2);
         var dodgeDirection2 = trajectory.rotate(-Math.PI / 2);
 
-        var pos1 = MovementUtils.getMaxPositionIfWalkDirect(enemy, dodgeDirection1, ticksToHit);
-        var pos2 = MovementUtils.getMaxPositionIfWalkDirect(enemy, dodgeDirection2, ticksToHit);
+        var pos1 = WalkSimulation.getMaxPositionIfWalkDirect(enemy, dodgeDirection1, ticksToHit);
+        var pos2 = WalkSimulation.getMaxPositionIfWalkDirect(enemy, dodgeDirection2, ticksToHit);
 
         return new Line(pos1, pos2).getMiddlePoint();
     }

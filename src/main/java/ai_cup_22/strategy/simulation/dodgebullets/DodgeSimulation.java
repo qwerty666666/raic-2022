@@ -2,43 +2,51 @@ package ai_cup_22.strategy.simulation.dodgebullets;
 
 import ai_cup_22.debugging.Color;
 import ai_cup_22.strategy.World;
-import ai_cup_22.strategy.actions.DodgeBulletsAction.DodgeDirection;
 import ai_cup_22.strategy.debug.Colors;
 import ai_cup_22.strategy.debug.DebugData;
 import ai_cup_22.strategy.debug.primitives.CircleDrawable;
-import ai_cup_22.strategy.debug.primitives.Text;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Line;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Bullet;
-import ai_cup_22.strategy.models.Obstacle;
 import ai_cup_22.strategy.models.Unit;
+import ai_cup_22.strategy.simulation.walk.WalkSimulation;
 import ai_cup_22.strategy.utils.MathUtils;
-import ai_cup_22.strategy.utils.MovementUtils;
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class DodgeSimulation {
     public DodgeDirection simulate(Unit unit) {
-        var bullets = getBullets(unit);
-
+        var bullets = getThreatenBullets(unit);
         if (bullets.isEmpty()) {
             return null;
         }
 
-        var dodgeResults = simulateDodge(unit, bullets);
+        // find all directions
+        var dodgeDirections = simulateDodge(unit, bullets);
 
-        // take best direction
-        var bestDirection = dodgeResults.stream()
-                .min(Comparator.comparingDouble(DodgeResult::getTakenDmg)
+        // take best one
+        var bestDirection = chooseBestDirection(unit, dodgeDirections, bullets);
+
+        drawDebugDodgeResult(unit, dodgeDirections, bestDirection);
+
+        return bestDirection;
+    }
+
+    private DodgeDirection chooseBestDirection(Unit unit, List<DodgeDirection> directions, List<Bullet> bullets) {
+        return directions.stream()
+                .min(Comparator.comparingDouble(DodgeDirection::getTakenDmg)
+                        // take firstly:
+                        // 1. with aim
+                        // 2. without rotating
+                        .thenComparing(Comparator.comparing(DodgeDirection::isWithAim).reversed()
+                                .thenComparing(DodgeDirection::isWithRotateToDirection)
+                        )
                         // take position that is on safe dist from bullet trajectory
                         .thenComparing((d1, d2) -> {
                             var dist1 = bullets.stream()
@@ -56,94 +64,90 @@ public class DodgeSimulation {
 
                             return 0;
                         })
-                        .thenComparing(Comparator.comparingDouble((DodgeResult r) -> r.getDodgeDirection().getScore(unit)).reversed())
-                        .thenComparingDouble(DodgeResult::getTicks)
+                        .thenComparing(Comparator.comparingDouble((DodgeDirection r) -> r.getScore(unit)).reversed())
+                        .thenComparingDouble(DodgeDirection::getTicks)
                 )
-                .map(DodgeResult::getDodgeDirection)
                 .orElse(null);
-
-        drawDebugDodgeResult(unit, dodgeResults, bestDirection);
-
-        return bestDirection;
     }
 
-    private void drawDebugDodgeResult(Unit unit, List<DodgeResult> dodgeResults, DodgeDirection bestDirection) {
+    private void drawDebugDodgeResult(Unit unit, List<DodgeDirection> dodgeDirections, DodgeDirection bestDirection) {
         if (DebugData.isEnabled) {
-            dodgeResults.stream()
-                    .forEach(res -> {
-                        var dodgeDirection = res.getDodgeDirection();
+            dodgeDirections.stream()
+                    .forEach(direction -> {
                         DebugData.getInstance().getDefaultLayer().addLine(
-                                unit.getPosition(), unit.getPosition().move(dodgeDirection.getDirection()), Colors.BLUE_TRANSPARENT
+                                unit.getPosition(), unit.getPosition().move(direction.getDirection()), getColor(direction)
                         );
                         DebugData.getInstance().getDefaultLayer().addText(
-                                Double.toString(res.takenDmg), unit.getPosition().move(dodgeDirection.getDirection()), 0.3
+                                Double.toString(direction.takenDmg), unit.getPosition().move(direction.getDirection()), 0.3
                         );
                     });
 
             if (bestDirection != null) {
-                for (var step: bestDirection.getResult().getSteps()) {
-                    Color color;
-                    if (!bestDirection.canDodgeBullet()) {
-                        color = Colors.RED_TRANSPARENT;
-                    } else if (bestDirection.isWithRotateToDirection()) {
-                        color = Colors.ORANGE_TRANSPARENT;
-                    } else if (!bestDirection.isWithAim()) {
-                        color = Colors.YELLOW_TRANSPARENT;
-                    } else {
-                        color = Colors.GREEN_TRANSPARENT;
-                    }
-
+                for (var step: bestDirection.getSteps()) {
                     DebugData.getInstance().getDefaultLayer().add(
-                            new CircleDrawable(new Circle(step, unit.getCircle().getRadius()), color, false)
+                            new CircleDrawable(new Circle(step, unit.getCircle().getRadius()), getColor(bestDirection), false)
                     );
                 }
             }
         }
     }
 
-
-    private List<DodgeResult> simulateDodge(Unit unit, Set<Bullet> bullets) {
-        var nonWalkThroughObstacles = getNonWalkThroughObstaclesInRange(unit , 15);
-        var directions = getPossibleDirectionsToDodge(unit, bullets);
-
-        List<DodgeResult> results = new ArrayList<>();
-
-        // try with aim
-        results.addAll(simulateDodgeBulletsInDirections(directions, unit, bullets, nonWalkThroughObstacles));
-        if (results.stream().anyMatch(res -> res.getTakenDmg() == 0)) {
-            return results;
+    private Color getColor(DodgeDirection direction) {
+        if (direction.isWithAim()) {
+            return Colors.GREEN_TRANSPARENT;
         }
+        if (direction.isWithRotateToDirection()) {
+            return Colors.ORANGE_TRANSPARENT;
+        }
+        return Colors.YELLOW_TRANSPARENT;
+    }
 
-        if (bullets.stream().anyMatch(b -> b.isWand() || b.isBow())) {
-            // try without aim
-            directions.forEach(d -> d.setWithAim(false));
-            results.addAll(simulateDodgeBulletsInDirections(directions, unit, bullets, nonWalkThroughObstacles));
-            if (results.stream().anyMatch(res -> res.getTakenDmg() == 0)) {
-                return results;
+    private List<DodgeDirection> simulateDodge(Unit unit, List<Bullet> bullets) {
+        var nonWalkThroughObstacles = WalkSimulation.getNonWalkThroughObstaclesInRange(unit , 15);
+        var possibleDirections = getPossibleDirectionsToDodge(unit, bullets);
+
+        List<DodgeDirection> results = new ArrayList<>();
+
+        var shouldTryWithoutAim = bullets.stream().anyMatch(b -> b.isWand() || b.isBow());
+
+        for (var direction: possibleDirections) {
+            // try with aim
+            var directionWithAim = new DodgeDirection(direction, true, false);
+            simulateForDirection(unit, bullets, directionWithAim, nonWalkThroughObstacles);
+            if (directionWithAim.takenDmg == 0) {
+                results.add(directionWithAim);
+                continue;
             }
 
-            // try with rotate
-            directions.forEach(d -> d.setWithRotateToDirection(true));
-            results.addAll(simulateDodgeBulletsInDirections(directions, unit, bullets, nonWalkThroughObstacles));
+            if (shouldTryWithoutAim) {
+                // try without aim
+                var directionWithoutAim = new DodgeDirection(direction, false, false);
+                simulateForDirection(unit, bullets, directionWithoutAim, nonWalkThroughObstacles);
+                if (directionWithoutAim.takenDmg == 0) {
+                    results.add(directionWithoutAim);
+                    continue;
+                }
+
+                // try with rotate
+                var directionWithRotate = new DodgeDirection(direction, false, true);
+                simulateForDirection(unit, bullets, directionWithRotate, nonWalkThroughObstacles);
+                if (directionWithRotate.takenDmg == 0) {
+                    results.add(directionWithRotate);
+                    continue;
+                }
+            }
+
+            results.add(directionWithAim);
         }
 
         return results;
     }
 
-    private List<DodgeResult> simulateDodgeBulletsInDirections(List<DodgeDirection> directions, Unit unit, Set<Bullet> bullets,
-            List<Circle> nonWalkThroughObstacles) {
-        return directions.stream()
-                .map(direction -> simulate(unit, bullets, direction, nonWalkThroughObstacles))
-                .collect(Collectors.toList());
-    }
-
-    private DodgeResult simulate(Unit unit, Set<Bullet> bullets, DodgeDirection dodgeDirection, List<Circle> nonWalkThroughObstacles) {
+    private void simulateForDirection(Unit unit, List<Bullet> bullets, DodgeDirection dodgeDirection, List<Circle> nonWalkThroughObstacles) {
         var shouldSimulateAim = dodgeDirection.isWithAim();
         var shouldRotateToDirection = dodgeDirection.isWithRotateToDirection();
 
-        var result = new DodgeResult(dodgeDirection);
-        result.setDodgePosition(unit.getPosition());
-        result.getDodgeDirection().setDodgeResult(result);
+        dodgeDirection.setDodgePosition(unit.getPosition());
 
         var bulletSet = bullets.stream()
                 .map(ai_cup_22.strategy.simulation.dodgebullets.Bullet::new)
@@ -168,13 +172,13 @@ public class DodgeSimulation {
             aim = MathUtils.restrict(0, 1, aim + (shouldAim ? unit.getAimChangePerTick() : -unit.getAimChangePerTick()));
 
             if (shouldRotateToDirection) {
-                lookDirection = MovementUtils.simulateRotateTickToDirection(lookDirection, directionVelocity, aim, unit.getAimRotationSpeed());
+                lookDirection = WalkSimulation.simulateRotateTickToDirection(lookDirection, directionVelocity, aim, unit.getAimRotationSpeed());
             } else if (unit.getLookPosition() != null) {
-                lookDirection = MovementUtils.simulateRotateTickToDirection(lookDirection, new Vector(unitCircle.getCenter(), unit.getLookPosition()),
+                lookDirection = WalkSimulation.simulateRotateTickToDirection(lookDirection, new Vector(unitCircle.getCenter(), unit.getLookPosition()),
                         aim, unit.getAimRotationSpeed());
             }
 
-            velocity = MovementUtils.getVelocityOnNextTickAfterCollision(
+            velocity = WalkSimulation.getVelocityOnNextTickAfterCollision(
                     unitCircle.getCenter(), lookDirection, velocity,
                     unit.getMaxForwardSpeedPerTick(), unit.getMaxBackwardSpeedPerTick(),
                     aim, unit.getAimSpeedModifier(),
@@ -196,10 +200,9 @@ public class DodgeSimulation {
 
                 // check that bullet hits unit
 
-                if (MovementUtils.isBulletHitCircle(tickTrajectory, unitCircle) || MovementUtils.isBulletHitCircle(tickTrajectory, newUnitCircle)) {
-                    if (MovementUtils.isBulletHitInTick(tickTrajectory, unitCircle, newUnitCircle)) {
-                        result.setHit(true);
-                        result.increaseTakenDmg(bullet.getDmg());
+                if (isBulletHitCircle(tickTrajectory, unitCircle) || isBulletHitCircle(tickTrajectory, newUnitCircle)) {
+                    if (isBulletHitInTick(tickTrajectory, unitCircle, newUnitCircle)) {
+                        dodgeDirection.increaseTakenDmg(bullet.getDmg());
                         bulletSet.remove(bullet);
                         unitHealth -= bullet.getDmg();
                     }
@@ -211,9 +214,11 @@ public class DodgeSimulation {
             unitCircle = newUnitCircle;
             remainingCoolDownTicks--;
 
-            result.setTicks(result.getTicks() + 1);
-            result.setDodgePosition(unitCircle.getCenter());
-            result.getSteps().add(unitCircle.getCenter());
+            dodgeDirection.increaseTick();
+            dodgeDirection.setDodgePosition(unitCircle.getCenter());
+            if (DebugData.isEnabled) {
+                dodgeDirection.getSteps().add(unitCircle.getCenter());
+            }
 
             // check that unit run away from hit trajectory
 
@@ -232,11 +237,9 @@ public class DodgeSimulation {
                 break;
             }
         }
-
-        return result;
     }
 
-    private Set<ai_cup_22.strategy.models.Bullet> getBullets(Unit unit) {
+    private List<ai_cup_22.strategy.models.Bullet> getThreatenBullets(Unit unit) {
         return World.getInstance().getBullets().values().stream()
                 .filter(ai_cup_22.strategy.models.Bullet::isEnemy)  // TODO
                 .filter(bullet -> {
@@ -244,10 +247,10 @@ public class DodgeSimulation {
                     return unit.getCircle().enlarge(unit.getMaxForwardSpeedPerTick() * (bullet.getRealRemainingLifetimeTicks() + 1))
                             .isIntersect(bullet.getRealTrajectory());
                 })
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
     }
 
-    private List<DodgeDirection> getPossibleDirectionsToDodge(Unit unit, Collection<ai_cup_22.strategy.models.Bullet> bullets) {
+    private List<Vector> getPossibleDirectionsToDodge(Unit unit, Collection<ai_cup_22.strategy.models.Bullet> bullets) {
         var directionsToDodge = new ArrayList<Vector>();
 
         // predefined
@@ -274,74 +277,112 @@ public class DodgeSimulation {
         // tangents to obstacles
         directionsToDodge.addAll(getTrajectoriesToAvoidNonMoveThroughObstacles(unit));
 
-        return IntStream.range(0, directionsToDodge.size())
-                .mapToObj(ind -> new DodgeDirection(directionsToDodge.get(ind).normalizeToLength(10), ind))
+        return directionsToDodge.stream()
+                .map(d -> d.normalizeToLength(10))
                 .collect(Collectors.toList());
     }
 
     private List<Vector> getTrajectoriesToAvoidNonMoveThroughObstacles(Unit unit) {
-        return getNonWalkThroughObstaclesInRange(unit, 15).stream()
+        return WalkSimulation.getNonWalkThroughObstaclesInRange(unit, 15).stream()
                 .map(circle -> circle.enlarge(unit.getCircle().getRadius()))
                 .flatMap(circle -> circle.getTangentPoints(unit.getPosition()).stream())
                 .map(tangentPoint -> new Vector(unit.getPosition(), tangentPoint))
                 .collect(Collectors.toList());
     }
 
-    private List<Circle> getNonWalkThroughObstaclesInRange(Unit unit, double maxDist) {
-        var obstacles = World.getInstance().getObstacles().values().stream()
-                .filter(obstacle -> obstacle.getCenter().getDistanceTo(unit.getPosition()) < maxDist)
-                .map(Obstacle::getCircle)
-                .collect(Collectors.toList());
+    private boolean isBulletHitInTick(Line bulletTickTrajectory, Circle oldPosition, Circle newPosition) {
+        var x0 = oldPosition.getCenter().getX();
+        var y0 = oldPosition.getCenter().getY();
 
-        var units = Stream.concat(
-                        World.getInstance().getMyUnits().values().stream(),
-                        World.getInstance().getEnemyUnits().values().stream()
-                )
-                .filter(u -> u.getId() != unit.getId())
-                .filter(u -> !u.isPhantom() && u.isSpawned())
-                .filter(u -> u.getDistanceTo(unit) < maxDist)
-                .map(Unit::getCircle)
-                .collect(Collectors.toList());
+        var x1 = bulletTickTrajectory.getStart().getX();
+        var y1 = bulletTickTrajectory.getStart().getY();
 
-        obstacles.addAll(units);
+        var v0x = (newPosition.getCenter().getX() - x0);
+        var v0y = (newPosition.getCenter().getY() - y0);
 
-        return obstacles;
+        var v1x = (bulletTickTrajectory.getEnd().getX() - x1);
+        var v1y = (bulletTickTrajectory.getEnd().getY() - y1);
+
+        var a = Math.pow(v1x - v0x, 2) + Math.pow(v1y - v0y, 2);
+        var b = 2 * (v1x - v0x) * (x1 - x0) + 2 * (v1y - v0y) * (y1 - y0);
+        var c = (x1 * x1 - 2 * x1 * x0 + x0 * x0) + (y1 * y1 - 2 * y1 * y0 + y0 * y0) - 1;
+
+        return b * b - 4 * a * c >= 0;
+    }
+
+    private boolean isBulletHitCircle(Line bulletTickTrajectory, Circle unitCircle) {
+        if (unitCircle.isIntersect(bulletTickTrajectory)) {
+            var hitUnitPosition = bulletTickTrajectory.getIntersectionPoints(unitCircle).stream()
+                    .min(Comparator.comparingDouble(point -> point.getDistanceTo(bulletTickTrajectory.getStart())))
+                    .orElse(null);
+
+            return hitUnitPosition == null ||
+                    bulletTickTrajectory.getEnd().getDistanceTo(bulletTickTrajectory.getStart()) >
+                            hitUnitPosition.getDistanceTo(bulletTickTrajectory.getStart());
+        }
+
+        return false;
     }
 
 
+    public static class DodgeDirection {
+        private boolean withAim = true;
+        private boolean withRotateToDirection = false;
 
+        private final Vector direction;
 
-    public static class DodgeResult {
-        private DodgeDirection dodgeDirection;
         private Position dodgePosition;
-        private boolean isHit;
         private int ticks;
         private double takenDmg;
         private List<Position> steps = new ArrayList<>();
 
-        public DodgeResult(DodgeDirection dodgeDirection) {
-            this.dodgeDirection = dodgeDirection;
+        private Double score;
+
+        public DodgeDirection(Vector direction) {
+            this.direction = direction;
         }
 
-        public DodgeDirection getDodgeDirection() {
-            return dodgeDirection;
+        public DodgeDirection(Vector direction, boolean isWithAim, boolean isWithRotateToDirection) {
+            this(direction);
+            setWithAim(isWithAim);
+            setWithRotateToDirection(isWithRotateToDirection);
         }
 
-        public boolean isHit() {
-            return isHit;
+        public boolean isWithAim() {
+            return withAim;
+        }
+
+        public DodgeDirection setWithAim(boolean withAim) {
+            this.withAim = withAim;
+            return this;
+        }
+
+        public boolean isWithRotateToDirection() {
+            return withRotateToDirection;
+        }
+
+        public DodgeDirection setWithRotateToDirection(boolean withRotateToDirection) {
+            this.withRotateToDirection = withRotateToDirection;
+            return this;
+        }
+
+        public Vector getDirection() {
+            return direction;
+        }
+
+        public double getScore(Unit unit) {
+            if (score == null) {
+                score = unit.getPotentialField().getScoreValue(dodgePosition);
+            }
+            return score;
         }
 
         public double getTakenDmg() {
             return takenDmg;
         }
 
-        public DodgeResult increaseTakenDmg(double takenDmg) {
+        public void increaseTakenDmg(double takenDmg) {
             this.takenDmg += takenDmg;
-            return this;
-        }
-
-        public boolean isSuccess() {
-            return !isHit;
         }
 
         public Position getDodgePosition() {
@@ -356,24 +397,21 @@ public class DodgeSimulation {
             return steps;
         }
 
-        public DodgeResult setDodgePosition(Position dodgePosition) {
+        public void setDodgePosition(Position dodgePosition) {
             this.dodgePosition = dodgePosition;
-            return this;
         }
 
-        public DodgeResult setHit(boolean hit) {
-            isHit = hit;
-            return this;
+        public void increaseTick() {
+            this.ticks += 1;
         }
 
-        public DodgeResult setTicks(int ticks) {
-            this.ticks = ticks;
-            return this;
-        }
-
-        public DodgeResult setSteps(List<Position> steps) {
+        public void setSteps(List<Position> steps) {
             this.steps = steps;
-            return this;
+        }
+
+        @Override
+        public String toString() {
+            return direction + " dmg: " + takenDmg + " score: " + score;
         }
     }
 }
