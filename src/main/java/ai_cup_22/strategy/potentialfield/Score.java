@@ -99,7 +99,7 @@ public class Score implements Cloneable {
 
     @Override
     public boolean equals(Object o) {
-        return (o instanceof Score) && position.equals(((Score)o).getPosition());
+        return position.equals(((Score)o).getPosition());
     }
 
     @Override

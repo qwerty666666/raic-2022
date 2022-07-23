@@ -9,20 +9,27 @@ public class SumCompositeScoreContributor extends BaseCompositeScoreContributor 
 
     @Override
     public boolean shouldContribute(Score score) {
-        return contributors.stream().anyMatch(c -> c.shouldContribute(score));
+        for (var contributor: contributors) {
+            if (contributor.shouldContribute(score)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
     public double getScoreValue(Score score) {
-        return contributors.stream()
-                .mapToDouble(contributor -> contributor.getScoreValue(score))
-                .sum();
+        var sum = 0.;
+        for (var contributor: contributors) {
+            sum += contributor.getScoreValue(score);
+        }
+        return sum;
     }
 
     @Override
     public void contribute(Score score) {
-        for (var c: contributors) {
-            c.contribute(score);
+        for (var contributor: contributors) {
+            contributor.contribute(score);
         }
     }
 }

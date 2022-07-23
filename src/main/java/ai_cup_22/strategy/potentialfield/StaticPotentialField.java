@@ -73,7 +73,7 @@ public class StaticPotentialField implements PotentialField {
      * Scores must be sorted for binary search
      */
     public Map<Position, Score> getScoresInCircle(Circle circle) {
-        var scores = new LinkedHashMap<Position, Score>();
+        var scores = new LinkedHashMap<Position, Score>((int) (circle.getRadius() * circle.getRadius() * Math.PI));
 
         int minX = getIndexByCoord(circle.getCenter().getX() - circle.getRadius());
         int maxX = getIndexByCoord(circle.getCenter().getX() + circle.getRadius());

@@ -146,7 +146,7 @@ public class Graph implements Cloneable {
         private double priority;
         private double threatSumOnPath;
         private Node parent;
-        private List<Node> adjacent = new ArrayList<>();
+        private List<Node> adjacent = new ArrayList<>(8);
         private List<Node> staticAdjacent;
         private double dist;
         private int stepsUnderThreat;
@@ -268,12 +268,17 @@ public class Graph implements Cloneable {
 
         @Override
         public boolean equals(Object obj) {
-            return (obj instanceof Node) && score.equals(((Node)obj).score);
+            return score.equals(((Node)obj).score);
         }
 
         @Override
         public Node clone() throws CloneNotSupportedException {
             return (Node) super.clone();
+        }
+
+        @Override
+        public String toString() {
+            return score.toString();
         }
     }
 }

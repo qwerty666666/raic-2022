@@ -86,6 +86,9 @@ public class Weapon {
     }
 
     public static Weapon get(int id) {
-        return weapons.computeIfAbsent(id, i -> new Weapon(World.getInstance().getConstants().getWeapons()[id], id));
+        if (!weapons.containsKey(id)) {
+            weapons.put(id, new Weapon(World.getInstance().getConstants().getWeapons()[id], id));
+        }
+        return weapons.get(id);
     }
 }

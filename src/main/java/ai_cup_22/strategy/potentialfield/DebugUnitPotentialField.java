@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 public class DebugUnitPotentialField extends UnitPotentialField {
     public DebugUnitPotentialField(Unit unit) {
-        super(unit);
+        super(unit.getPosition());
 
         this.scores = this.scores.values().stream()
                 .map(score -> {

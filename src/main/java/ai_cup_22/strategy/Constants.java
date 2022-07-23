@@ -1,14 +1,14 @@
 package ai_cup_22.strategy;
 
 public class Constants {
+
+    // Game Constants
+
     public static final int TICKS_PER_SECOND = 30;
     public static final double USER_RADIUS = 1;
-
     public static final double UNIT_MAX_SPEED_PER_TICK = 1./3;
-    public static final double SAFE_DIST = 30;
-    public static final double MAX_LOOT_STRATEGY_DIST = 100;
 
-    public static final int PHANTOM_UNIT_LIFE_MAX_TICKS = 400;
+    // Potential field
 
     public static final double PF_ENEMY_THREATEN_DIST_MIN_SCORE = ai_cup_22.strategy.potentialfield.PotentialField.MIN_VALUE;
     public static final double PF_ENEMY_THREATEN_DIST_MAX_SCORE = -20;
@@ -37,10 +37,22 @@ public class Constants {
     public static final double PF_ZONE_DIST_TICKS = 30;
     public static final double PF_ZONE_MIN_THREAT_DIST = 10;
 
-
     public static final double PF_TREE_MIN_SCORE = -10;
     public static final double PF_TREE_DIST = 1.5;
 
+    // Strategy Orders
+
     public static final double STRATEGY_EXPLORE_ORDER = 0.1;
     public static final double STRATEGY_MOVE_TO_PRIORITY_ENEMY_ORDER = STRATEGY_EXPLORE_ORDER + 0.01;
+
+    // Strategy Constants
+
+    public static final double SAFE_DIST = 30;
+    public static final double MAX_LOOT_STRATEGY_DIST = 100;
+    public static final int PHANTOM_UNIT_LIFE_MAX_TICKS = 400;
+    public static final double PF_RADIUS = 30;
+
+    // Cache Settings
+
+    public static final int PF_CACHE_MAX_LIFETIME_TICKS = 1;
 }

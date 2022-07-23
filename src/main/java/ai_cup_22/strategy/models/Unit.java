@@ -165,7 +165,7 @@ public class Unit {
             if (DebugData.isEnabled) {
                 potentialField = new DebugUnitPotentialField(this);
             } else {
-                potentialField = new UnitPotentialField(this);
+                potentialField = UnitPotentialField.getCachedOrCreate(this);
             }
         }
         return potentialField;

@@ -34,12 +34,8 @@ public class MoveByPotentialFieldAction implements Action {
                 .orElseThrow()
                 .getKey();
 
-        var path = Path.from(bestNode,graph);
-        if (path != null) {
-            path = path.smooth(3);
-        }
-
-        return path;
+        return Path.from(bestNode, graph)
+                .smooth(3);
     }
 
     public static Map<Node, Double> getNodeScores(Graph graph) {

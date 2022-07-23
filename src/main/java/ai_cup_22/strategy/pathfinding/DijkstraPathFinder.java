@@ -28,12 +28,18 @@ public class DijkstraPathFinder implements PathFinder {
         var minScoreValue = getMinScoreValue(graph);
 
         var queue = new PriorityQueue<>(
-                Comparator.comparingDouble(Node::getPriority)
-                        .thenComparing(Node::getSteps)
+//                Comparator.comparingDouble(Node::getPriority)
+//                        .thenComparing(Node::getSteps)
+                (Node n1, Node n2) -> {
+                    if (n1.getPriority() != n2.getPriority()) {
+                        return n1.getPriority() < n2.getPriority() ? -1 : 1;
+                    }
+                    return n1.getSteps() - n2.getSteps();
+                }
         );
         queue.add(from);
 
-        var visited = new HashSet<Node>();
+        var visited = new HashSet<Node>(graph.getNodes().size());
         visited.add(from);
 
         while (!queue.isEmpty()) {
@@ -103,9 +109,13 @@ public class DijkstraPathFinder implements PathFinder {
     }
 
     private double getMinScoreValue(Graph graph) {
-        return -graph.getNodes().values().stream()
-                .mapToDouble(Node::getScoreValue)
-                .filter(score -> score > 0)
-                .sum();
+        double min = 0;
+        for (var node: graph.getNodes().values()) {
+            var score = node.getScoreValue();
+            if (score > 0) {
+                min -= score;
+            }
+        }
+        return min;
     }
 }

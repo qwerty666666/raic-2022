@@ -45,7 +45,6 @@ public class MyStrategy {
 
         if (game.getCurrentTick() == 0) {
             initWorld(game);
-//            updateObstaclesDebugLayer();
         } else if (game.getCurrentTick() == 1) {
             world.getStaticPotentialField().fillStaticData(world);
         }
@@ -80,7 +79,8 @@ public class MyStrategy {
         if (DebugData.isEnabled) {
             updateUnitsDebugLayer();
             updateLootsDebugLayer();
-            //            updatePositionsDebugLayer();
+//            updatePositionsDebugLayer();
+//            updateObstaclesDebugLayer();
             updateDefaultDebugLayer();
 
             for (var unit : world.getMyUnits().values()) {

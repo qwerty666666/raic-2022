@@ -55,7 +55,7 @@ public class Position {
 
     @Override
     public boolean equals(Object o) {
-        return (o instanceof Position) && (Double.compare(((Position) o).x, x) == 0 && Double.compare(((Position) o).y, y) == 0);
+        return Double.compare(((Position) o).x, x) == 0 && Double.compare(((Position) o).y, y) == 0;
     }
 
     @Override

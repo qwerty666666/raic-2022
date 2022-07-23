@@ -241,7 +241,7 @@ public class DodgeSimulation {
 
     private List<ai_cup_22.strategy.models.Bullet> getThreatenBullets(Unit unit) {
         return World.getInstance().getBullets().values().stream()
-                .filter(ai_cup_22.strategy.models.Bullet::isEnemy)  // TODO
+                .filter(bullet -> bullet.getUnitId() != unit.getId())
                 .filter(bullet -> {
                     // can run into trajectory
                     return unit.getCircle().enlarge(unit.getMaxForwardSpeedPerTick() * (bullet.getRealRemainingLifetimeTicks() + 1))

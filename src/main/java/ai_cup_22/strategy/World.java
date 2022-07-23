@@ -15,6 +15,7 @@ import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.models.WeaponLoot;
 import ai_cup_22.strategy.models.Zone;
 import ai_cup_22.strategy.potentialfield.StaticPotentialField;
+import ai_cup_22.strategy.potentialfield.UnitPotentialField;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -87,7 +88,20 @@ public class World {
         updatePhantomUnits(game);
         updateLoot(game);
 
+        updateObstacles(game);
+
+        UnitPotentialField.updateCache();
+
         globalStrategy.updateTick();
+    }
+
+    private void updateObstacles(Game game) {
+        if (currentTick % 500 == 0) {
+            var zoneCenter = zone.getCenter();
+            var zoneRadius = zone.getRadius();
+
+            obstacles.entrySet().removeIf(e -> e.getValue().getCenter().getDistanceTo(zoneCenter) - zoneRadius > 30);
+        }
     }
 
     private void updateLoot(Game game) {

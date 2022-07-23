@@ -12,7 +12,7 @@ public class ObstaclesLayer extends DrawLayer {
             if (obstacle.isCanShootThrough()) {
                 add(new CircleDrawable(obstacle.getCircle(), Colors.YELLOW_TRANSPARENT));
             } else {
-//                add(new Circle(obstacle.getCircle(), Colors.GRAY_TRANSPARENT));
+                add(new CircleDrawable(obstacle.getCircle(), Colors.GRAY_TRANSPARENT));
             }
         }
     }
