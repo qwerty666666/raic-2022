@@ -1,20 +1,16 @@
 package ai_cup_22.strategy.potentialfield;
 
+import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Position;
-import ai_cup_22.strategy.potentialfield.scorecontributors.basic.ConstantInCircleScoreContributor;
-import ai_cup_22.strategy.potentialfield.scorecontributors.basic.LinearScoreContributor;
-import ai_cup_22.strategy.potentialfield.scorecontributors.composite.FirstMatchCompositeScoreContributor;
+import ai_cup_22.strategy.potentialfield.scorecontributors.TreeScoreContributor;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class StaticPotentialField implements PotentialField {
-    public static final double TREE_MAX_INFLUENCE_RADIUS = 1.5;
-    public static final double TREE_MIN_SCORE = -10;
-
     private double startCoord;
     private double stepSize = PotentialField.STEP_SIZE;
     private int gridSize;
@@ -45,19 +41,12 @@ public class StaticPotentialField implements PotentialField {
     }
 
     public void fillStaticData(World world) {
-        var unitRadius = World.getInstance().getConstants().getUnitRadius();
-
         // add trees penalty
         world.getObstacles().forEach((id, obstacle) -> {
-            var circle = obstacle.getCircle().enlarge(unitRadius);
-            var influenceRadius = circle.getRadius() + TREE_MAX_INFLUENCE_RADIUS;
-
-            var obstaclesContributor = new FirstMatchCompositeScoreContributor("Tree", true)
-                    .add(new ConstantInCircleScoreContributor(circle, PotentialField.UNREACHABLE_VALUE))
-                    .add(new LinearScoreContributor(circle.getCenter(), TREE_MIN_SCORE, 0, circle.getRadius(), influenceRadius));
-
-            getScoresInCircle(new Circle(circle.getCenter(), influenceRadius)).values()
-                    .forEach(obstaclesContributor::contribute);
+            var circle = obstacle.getCircle().enlarge(Constants.USER_RADIUS + Constants.PF_TREE_DIST);
+            var scoreContributor = new TreeScoreContributor(obstacle);
+            getScoresInCircle(circle).values()
+                    .forEach(scoreContributor::contribute);
         });
 
         // set initial scores

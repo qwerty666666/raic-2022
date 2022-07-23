@@ -2,6 +2,7 @@ package ai_cup_22.strategy;
 
 public class Constants {
     public static final int TICKS_PER_SECOND = 30;
+    public static final double USER_RADIUS = 1;
 
     public static final double UNIT_MAX_SPEED_PER_TICK = 1./3;
     public static final double SAFE_DIST = 30;
@@ -35,6 +36,10 @@ public class Constants {
     public static final double PF_ZONE_MAX_SCORE = 0;
     public static final double PF_ZONE_DIST_TICKS = 30;
     public static final double PF_ZONE_MIN_THREAT_DIST = 10;
+
+
+    public static final double PF_TREE_MIN_SCORE = -10;
+    public static final double PF_TREE_DIST = 1.5;
 
     public static final double STRATEGY_EXPLORE_ORDER = 0.1;
     public static final double STRATEGY_MOVE_TO_PRIORITY_ENEMY_ORDER = STRATEGY_EXPLORE_ORDER + 0.01;

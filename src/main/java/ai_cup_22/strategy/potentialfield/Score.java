@@ -16,6 +16,7 @@ public class Score {
     private List<Contribution> contributions = new ArrayList<>();
     private int x;
     private int y;
+    private boolean isUnreachable;
 
     public Score(Position position, int x, int y) {
         this.position = position;
@@ -50,7 +51,7 @@ public class Score {
     }
 
     public boolean isUnreachable() {
-        return getScore() == PotentialField.UNREACHABLE_VALUE;
+        return isUnreachable;
     }
 
     public Position getPosition() {
@@ -67,6 +68,10 @@ public class Score {
 
     public void setInitialScore(double initialScore) {
         this.initialScore = initialScore;
+    }
+
+    public void setIsUnreachable() {
+        this.isUnreachable = true;
     }
 
     public double getNonStaticScore() {

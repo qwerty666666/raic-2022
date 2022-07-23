@@ -5,7 +5,7 @@ import ai_cup_22.strategy.potentialfield.Score.Contribution;
 
 public interface ScoreContributor {
     default boolean shouldContribute(Score score) {
-        return score.getScore() != PotentialField.UNREACHABLE_VALUE;
+        return !score.isUnreachable();
     }
 
     double getScoreValue(Score score);

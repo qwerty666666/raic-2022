@@ -27,7 +27,7 @@ public class PotentialFieldDrawable implements Drawable {
 
         potentialField.getScores().values().stream()
                 .filter(score -> score.getScore() != PotentialField.UNREACHABLE_VALUE)
-                .filter(score -> score.getScore() != 0)
+                .filter(score -> !score.isUnreachable() && score.getScore() != 0)
                 .filter(score -> score.getPosition().getDistanceTo(potentialField.getCenter()) < restrictRadius)
                 .map(score -> new CircleDrawable(new Circle(score.getPosition(), 0.5), getColor(score.getScore())))
                 .forEach(circle -> circle.draw(debugInterface));
@@ -41,7 +41,7 @@ public class PotentialFieldDrawable implements Drawable {
                 .filter(score -> score.getPosition().getDistanceTo(potentialField.getCenter()) < restrictRadius)
                 .map(node -> new Text(String.format("sc: %.2f\nres: (%.2f)", node.getScoreValue(), nodeScores.get(node)), node.getPosition(), 0.15))
 //                .map(node -> new Text(String.format("%.2f", node.getScore().getScore()), node.getPosition(), 0.2))
-                .forEach(circle -> circle.draw(debugInterface));
+                .forEach(text -> text.draw(debugInterface));
 
         // detail info on mouse over
 
