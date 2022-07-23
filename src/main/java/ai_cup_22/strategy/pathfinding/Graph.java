@@ -12,13 +12,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class Graph {
+public class Graph implements Cloneable {
     private final PotentialField potentialField;
     private final Map<Position, Node> nodes;
 
     public Graph(PotentialField potentialField) {
         this.potentialField = potentialField;
         nodes = buildGraph(potentialField.getScores());
+    }
+
+    private Graph(PotentialField potentialField, Map<Position, Node> nodes) {
+        this.potentialField = potentialField;
+        this.nodes = nodes;
     }
 
     private Map<Position, Node> buildGraph(Map<Position, Score> scores) {
@@ -71,8 +76,6 @@ public class Graph {
         // from it by BFS
         var scoresAround = potentialField.getScoresAround(position);
         if (scoresAround.stream().allMatch(Score::isUnreachable)) {
-            var scores = World.getInstance().getStaticPotentialField();
-
             var queue = new LinkedList<Score>();
             queue.add(scoresAround.get(0));
 
@@ -89,16 +92,16 @@ public class Graph {
 
                 for (int x = -1; x <= 1; x++) {
                     for (int y = -1; y <= 1; y++) {
-                        var adj = scores.getScoreByIndex(cur.getX() + x, cur.getY() + y);
+                        var adj = potentialField.getScoreByIndex(cur.getX() + x, cur.getY() + y);
                         if (adj != null && !used.contains(adj)) {
                             used.add(adj);
                             queue.add(adj);
                         }
                     }
-
                 }
             }
         }
+
         return scoresAround.stream()
                 .filter(score -> !score.isUnreachable())
                 .map(score -> nodes.get(score.getPosition()))
@@ -114,7 +117,31 @@ public class Graph {
         return potentialField;
     }
 
-    public static class Node {
+    public Graph clone() {
+        var clones = nodes.values().stream()
+                .map(node -> {
+                    try {
+                        return node.clone();
+                    } catch (CloneNotSupportedException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .collect(Collectors.toMap(Node::getPosition, node -> node));
+
+        for (var node: clones.values()) {
+            if (node.getParent() != null) {
+                node.setParent(clones.get(node.getParent().getPosition()));
+            }
+            node.adjacent = node.adjacent.stream()
+                    .map(adj -> clones.get(adj.getPosition()))
+                    .collect(Collectors.toList());
+            node.score = potentialField.getScores().get(node.getPosition());
+        }
+
+        return new Graph(potentialField, clones);
+    }
+
+    public static class Node implements Cloneable {
         private Score score;
         private double priority;
         private double threatSumOnPath;
@@ -242,6 +269,11 @@ public class Graph {
         @Override
         public boolean equals(Object obj) {
             return (obj instanceof Node) && score.equals(((Node)obj).score);
+        }
+
+        @Override
+        public Node clone() throws CloneNotSupportedException {
+            return (Node) super.clone();
         }
     }
 }

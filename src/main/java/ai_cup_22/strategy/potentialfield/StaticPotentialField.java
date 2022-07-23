@@ -107,6 +107,7 @@ public class StaticPotentialField implements PotentialField {
         return graph;
     }
 
+    @Override
     public Score getScoreByIndex(int x, int y) {
         if (x < 0 || x >= gridSize) {
             return null;

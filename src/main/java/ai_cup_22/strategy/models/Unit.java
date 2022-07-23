@@ -4,11 +4,13 @@ import ai_cup_22.model.Sound;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.basic.ActionBlockingAction;
 import ai_cup_22.strategy.behaviourtree.BehaviourTree;
+import ai_cup_22.strategy.debug.DebugData;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.CircleSegment;
 import ai_cup_22.strategy.geometry.Line;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
+import ai_cup_22.strategy.potentialfield.DebugUnitPotentialField;
 import ai_cup_22.strategy.potentialfield.PotentialField;
 import ai_cup_22.strategy.potentialfield.UnitPotentialField;
 import java.util.Collections;
@@ -160,7 +162,11 @@ public class Unit {
 
     public PotentialField getPotentialField() {
         if (potentialField == null) {
-            potentialField = new UnitPotentialField(this);
+            if (DebugData.isEnabled) {
+                potentialField = new DebugUnitPotentialField(this);
+            } else {
+                potentialField = new UnitPotentialField(this);
+            }
         }
         return potentialField;
     }

@@ -116,4 +116,6 @@ public interface PotentialField {
     default void reset() {
         getScores().values().forEach(Score::reset);
     }
+
+    Score getScoreByIndex(int x, int y);
 }

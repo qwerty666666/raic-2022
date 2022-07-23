@@ -46,9 +46,22 @@ public class PotentialFieldDrawable implements Drawable {
         // detail info on mouse over
 
         DebugData.getInstance().getCursorPosition()
-                .filter(pos -> potentialField.getCircle().contains(pos))
+                .filter(pos -> potentialField.getCircle().enlarge(1).contains(pos))
                 .ifPresent(pos -> {
-                    var node = potentialField.getGraph().getNodes().get(new Position((int)pos.getX(), (int)pos.getY()));
+                    double x, y;
+                    if (pos.getX() > 0) {
+                        x = (pos.getX() - (int)pos.getX()) < 0.5 ? (int)pos.getX() : (int)pos.getX() + 1;
+                    } else {
+                        x = (pos.getX() - (int)pos.getX()) > -0.5 ? (int)pos.getX() : (int)pos.getX() - 1;
+                    }
+                    if (pos.getY() > 0) {
+                        y = (pos.getY() - (int)pos.getY()) < 0.5 ? (int)pos.getY() : (int)pos.getY() + 1;
+                    } else {
+                        y = (pos.getY() - (int)pos.getY()) > -0.5 ? (int)pos.getY() : (int)pos.getY() - 1;
+                    }
+
+                    var node = potentialField.getGraph().getNodes().get(new Position(x, y));
+
                     if (node != null) {
                         var text = "Score: " + node.getScoreValue() + "\n";
                         text += "Dist: " + node.getDist() + "\n\n";

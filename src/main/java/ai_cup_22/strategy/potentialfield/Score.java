@@ -5,7 +5,7 @@ import ai_cup_22.strategy.geometry.Position;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Score {
+public class Score implements Cloneable {
     private Position position;
     private double score;
     /**
@@ -17,6 +17,9 @@ public class Score {
     private int x;
     private int y;
     private boolean isUnreachable;
+
+    private Score() {
+    }
 
     public Score(Position position, int x, int y) {
         this.position = position;
@@ -109,6 +112,21 @@ public class Score {
         return position + " -> " + score;
     }
 
+    @Override
+    public Score clone() throws CloneNotSupportedException {
+        var clone = new Score();
+
+        clone.position = position;
+        clone.score = score;
+        clone.threatScore = threatScore;
+        clone.initialScore = initialScore;
+        clone.contributions = new ArrayList<>(contributions);
+        clone.x = x;
+        clone.y = y;
+        clone.isUnreachable = isUnreachable;
+
+        return clone;
+    }
 
     public static class Contribution {
         private final String reason;

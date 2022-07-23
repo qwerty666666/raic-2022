@@ -29,6 +29,11 @@ public class TreeScoreContributor implements ScoreContributor {
     }
 
     @Override
+    public boolean isStatic() {
+        return true;
+    }
+
+    @Override
     public void contribute(Score score) {
         if (circle.contains(score.getPosition())) {
             score.setIsUnreachable();

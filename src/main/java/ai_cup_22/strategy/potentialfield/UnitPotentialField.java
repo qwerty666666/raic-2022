@@ -9,10 +9,10 @@ import java.util.Map;
 
 public class UnitPotentialField implements PotentialField {
     public static final double FIELD_RADIUS = 30;
-    private Map<Position, Score> scores;
-    private Unit unit;
-    private Graph graph;
-    private Circle circle;
+    protected Map<Position, Score> scores;
+    protected Unit unit;
+    protected Graph graph;
+    protected Circle circle;
 
     public UnitPotentialField(Unit unit) {
         this.unit = unit;
@@ -43,5 +43,14 @@ public class UnitPotentialField implements PotentialField {
     @Override
     public Circle getCircle() {
         return circle;
+    }
+
+    @Override
+    public Score getScoreByIndex(int x, int y) {
+        var score = World.getInstance().getStaticPotentialField().getScoreByIndex(x, y);
+        if (score == null) {
+            return null;
+        }
+        return scores.get(score.getPosition());
     }
 }
