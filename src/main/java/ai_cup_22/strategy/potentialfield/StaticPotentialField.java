@@ -15,8 +15,6 @@ public class StaticPotentialField implements PotentialField {
     private double stepSize = PotentialField.STEP_SIZE;
     private int gridSize;
     private Score[][] scores;
-    private StaticGraph graph = new StaticGraph(this);
-
     private Map<Position, Score> allScores;
 
     public StaticPotentialField(World world) {
@@ -101,10 +99,6 @@ public class StaticPotentialField implements PotentialField {
                     .collect(Collectors.toMap(Score::getPosition, s -> s, (x, y) -> y, LinkedHashMap::new));
         }
         return allScores;
-    }
-
-    public StaticGraph getStaticGraph() {
-        return graph;
     }
 
     @Override

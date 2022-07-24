@@ -1,6 +1,5 @@
 package ai_cup_22.strategy.pathfinding;
 
-import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.potentialfield.PotentialField;
 import ai_cup_22.strategy.potentialfield.Score;
@@ -18,7 +17,7 @@ public class Graph implements Cloneable {
 
     public Graph(PotentialField potentialField) {
         this.potentialField = potentialField;
-        nodes = buildGraph(potentialField.getScores());
+        nodes = buildGraph(potentialField);
     }
 
     private Graph(PotentialField potentialField, Map<Position, Node> nodes) {
@@ -26,27 +25,40 @@ public class Graph implements Cloneable {
         this.nodes = nodes;
     }
 
-    private Map<Position, Node> buildGraph(Map<Position, Score> scores) {
-        var globalGraph = World.getInstance().getStaticPotentialField().getStaticGraph();
-
-        return scores.entrySet().stream()
+    private Map<Position, Node> buildGraph(PotentialField potentialField) {
+        // create nodes
+        var nodes = potentialField.getScores().entrySet().stream()
                 // remove nodes where we can't run
                 .filter(e -> !e.getValue().isUnreachable())
                 .map(e -> {
-                    var node = globalGraph.getOrCreateNode(e.getKey());
-
-                    node.refresh();
-
-                    for (var adj: node.getStaticAdjacent()) {
-                        // filter that score node is existed in given scores List
-                        if (scores.containsKey(adj.getPosition())) {
-                            node.addAdjacent(adj);
-                        }
-                    }
-
+                    var score = e.getValue();
+                    var node = new Node(score);
                     return node;
                 })
                 .collect(Collectors.toMap(Node::getPosition, node -> node));
+
+        // add adjacent
+        nodes.values().forEach(node -> {
+            var adjacents = new ArrayList<Node>(8);
+            var score = node.getScore();
+
+            for (int x = score.getX() - 1; x <= score.getX() + 1; x++) {
+                for (int y = score.getY() - 1; y <= score.getY() + 1; y++) {
+                    if (x == score.getX() && y == score.getY()) {
+                        continue;
+                    }
+
+                    var adjScore = potentialField.getScoreByIndex(x, y);
+                    if (adjScore != null && !adjScore.isUnreachable()) {
+                        adjacents.add(nodes.get(adjScore.getPosition()));
+                    }
+                }
+            }
+
+            node.adjacent = adjacents;
+        });
+
+        return nodes;
     }
 
     public Map<Position, Node> getNodes() {
@@ -54,7 +66,7 @@ public class Graph implements Cloneable {
     }
 
     public Node addNode(Position position) {
-        var node = new Node(new Score(position));
+        var node = new Node(position);
 
         getNearestReachableNodes(position)
                 .forEach(near -> {
@@ -146,21 +158,24 @@ public class Graph implements Cloneable {
         private double priority;
         private double threatSumOnPath;
         private Node parent;
-        private List<Node> adjacent = new ArrayList<>(8);
-        private List<Node> staticAdjacent;
+        private List<Node> adjacent;
         private double dist;
         private int stepsUnderThreat;
         private int steps;
+
+        public Node(Position position) {
+            this(new Score(position));
+            this.adjacent = new ArrayList<>(4);
+        }
 
         public Node(Score score) {
             this.score = score;
         }
 
-        public void refresh() {
+        public void resetCalculatedFields() {
             priority = 0;
             threatSumOnPath = 0;
             parent = null;
-            adjacent.clear();
             dist = 0;
             stepsUnderThreat = 0;
             steps = 0;
@@ -219,30 +234,6 @@ public class Graph implements Cloneable {
 
         public void addAdjacent(Node adjacent) {
             this.adjacent.add(adjacent);
-        }
-
-        public List<Node> getStaticAdjacent() {
-            if (staticAdjacent == null) {
-                staticAdjacent = new ArrayList<>(8);
-
-                var field = World.getInstance().getStaticPotentialField();
-                var graph = field.getStaticGraph();
-
-                for (int x = score.getX() - 1; x <= score.getX() + 1; x++) {
-                    for (int y = score.getY() - 1; y <= score.getY() + 1; y++) {
-                        if (x == score.getX() && y == score.getY()) {
-                            continue;
-                        }
-
-                        var adjScore = field.getScoreByIndex(x, y);
-                        if (adjScore != null && !adjScore.isUnreachable()) {
-                            staticAdjacent.add(graph.getOrCreateNode(adjScore.getPosition()));
-                        }
-                    }
-                }
-            }
-
-            return staticAdjacent;
         }
 
         public double getDist() {

@@ -2,10 +2,12 @@ package ai_cup_22.strategy.potentialfield;
 
 import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
+import ai_cup_22.strategy.debug.DebugData;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.pathfinding.Graph;
+import ai_cup_22.strategy.pathfinding.Graph.Node;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +33,7 @@ public class UnitPotentialField implements PotentialField {
             var pf = new UnitPotentialField(position);
 
             cache.put(position, new UnitPotentialField.CacheItem(pf));
+
             return pf;
         } else {
             var cacheItem = cache.get(position);
@@ -40,7 +43,7 @@ public class UnitPotentialField implements PotentialField {
 
             // reset PF
             pf.scores.values().forEach(Score::reset);
-            pf.graph = null;
+            pf.graph.getNodes().values().forEach(Node::resetCalculatedFields);
 
             return pf;
         }
