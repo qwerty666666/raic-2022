@@ -173,7 +173,7 @@ public class World {
             // remove bullets that are disparaged in view field
             // FIXME field view
             var isNewPositionVisible = getMyUnits().values().stream()
-                    .anyMatch(unit -> unit.getViewSegment().contains(bullet.getPosition()));
+                    .anyMatch(unit -> unit.getViewSegment().canSee(bullet.getPosition()));
             if (isNewPositionVisible) {
                 bullets.remove(id);
                 continue;
@@ -216,7 +216,7 @@ public class World {
         // remove phantoms in view field
 
         for (var phantom: new ArrayList<>(phantomEnemies.entrySet())) {
-            if (myUnits.values().stream().anyMatch(me -> me.getViewSegment().contains(phantom.getValue().getPosition()))) {
+            if (myUnits.values().stream().anyMatch(me -> me.getViewSegment().canSee(phantom.getValue().getPosition()))) {
                 phantomEnemies.remove(phantom.getKey());
             }
         }
@@ -231,7 +231,7 @@ public class World {
             var unit = enemyUnits.get(id);
             var enemyPossibleLocation = unit.getCircle().enlargeToRadius(ai_cup_22.strategy.Constants.UNIT_MAX_SPEED_PER_TICK);
 
-            if (myUnits.values().stream().noneMatch(me -> me.getViewSegment().contains(enemyPossibleLocation))) {
+            if (myUnits.values().stream().noneMatch(me -> me.getViewSegment().canSee(enemyPossibleLocation))) {
                 unit.setPhantom(true);
                 phantomEnemies.put(id, unit);
             }
@@ -396,6 +396,12 @@ public class World {
 
     public int getCurrentTick() {
         return currentTick;
+    }
+
+    public List<Obstacle> getObstaclesInRange(Position pos, double radius) {
+        return obstacles.values().stream()
+                .filter(obstacle -> obstacle.getCenter().getDistanceTo(pos) <= radius)
+                .collect(Collectors.toList());
     }
 
     public Map<Integer, WeaponLoot> getWeaponLoots() {

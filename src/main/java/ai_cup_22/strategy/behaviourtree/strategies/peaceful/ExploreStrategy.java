@@ -30,7 +30,7 @@ public class ExploreStrategy implements Strategy {
     @Override
     public Action getAction() {
         if (positionToExplore == null || !getZone().contains(positionToExplore) ||
-                unit.getViewSegment().contains(positionToExplore)) {
+                unit.getViewSegment().canSee(positionToExplore)) {
             positionToExplore = getNewPositionToExplore();
         }
 

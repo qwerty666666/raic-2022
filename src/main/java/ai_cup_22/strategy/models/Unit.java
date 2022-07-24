@@ -36,6 +36,7 @@ public class Unit {
     private boolean isPhantom;
     private int lastUpdateTick = -1;
     private Integer weapon;
+    private ViewSegment viewSegment;
 
     public Unit(int id) {
         this.id = id;
@@ -50,6 +51,7 @@ public class Unit {
         this.unit = unit;
         this.circle = new Circle(new Position(unit.getPosition()), World.getInstance().getConstants().getUnitRadius());
         this.direction = new Vector(unit.getDirection());
+        this.viewSegment = new ViewSegment(this);
         this.currentPath = Collections.emptyList();
         if (this.lastAction != null) {
             lastAction.updateTick(this, unit.getAction());
@@ -229,7 +231,7 @@ public class Unit {
     }
 
     public boolean canSee(Position p) {
-        return getViewSegment().contains(p);
+        return getViewSegment().canSee(p);
     }
 
     public boolean canShoot(Position position, Unit targetUnit) {
@@ -291,15 +293,8 @@ public class Unit {
         );
     }
 
-    public CircleSegment getViewSegment() {
-        var fieldOfView = Math.toRadians(World.getInstance().getConstants().getFieldOfView());
-        var aimFieldOfView = hasWeapon() ? Math.toRadians(getWeapon().getAimFieldOfView()) : fieldOfView;
-
-        return new CircleSegment(
-                new Circle(getPosition(), World.getInstance().getConstants().getViewDistance()),
-                direction.getAngle(),
-                fieldOfView - (fieldOfView - aimFieldOfView) * getAim()
-        );
+    public ViewSegment getViewSegment() {
+        return viewSegment;
     }
 
     public double getAim() {

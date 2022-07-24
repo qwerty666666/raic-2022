@@ -43,7 +43,9 @@ public class UnitPotentialField implements PotentialField {
 
             // reset PF
             pf.scores.values().forEach(Score::reset);
-            pf.graph.getNodes().values().forEach(Node::resetCalculatedFields);
+            if (pf.graph != null) {
+                pf.graph.getNodes().values().forEach(Node::resetCalculatedFields);
+            }
 
             return pf;
         }

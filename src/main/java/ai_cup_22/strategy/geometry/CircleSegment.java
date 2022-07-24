@@ -1,5 +1,7 @@
 package ai_cup_22.strategy.geometry;
 
+import java.util.List;
+
 public class CircleSegment {
     private final Circle circle;
     private final double centerAngle;
@@ -10,6 +12,13 @@ public class CircleSegment {
         this.circle = circle;
         this.centerAngle = centerAngle;
         this.angle = angle;
+    }
+
+    public List<Line> getBoundaries() {
+        return List.of(
+                new Line(circle.getCenter(), circle.getCenter().move(new Vector(circle.getRadius(), 0).rotate(getMinAngle()))),
+                new Line(circle.getCenter(), circle.getCenter().move(new Vector(circle.getRadius(), 0).rotate(getMaxAngle())))
+        );
     }
 
     public Position getCenter() {
