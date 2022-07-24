@@ -38,7 +38,7 @@ public class FightStrategy implements Strategy {
 
     public FightStrategy(Unit me, ExploreStrategy exploreStrategy) {
         this.me = me;
-        this.lootAmmoStrategy = new LootAmmoSafestWayStrategy(me, exploreStrategy, this, 100);
+        this.lootAmmoStrategy = new LootAmmoSafestWayStrategy(me, exploreStrategy, this, 50);
     }
 
     @Override
@@ -309,7 +309,7 @@ public class FightStrategy implements Strategy {
             return false;
         }
 
-        return !hasEnoughAmmoToKill(enemy) || me.getBulletCount() < me.getMaxBulletCount() * 0.16;
+        return !hasEnoughAmmoToKill(enemy) || me.getBulletCount() < me.getMaxBulletCount() * 0.3;
     }
 
     @Override
