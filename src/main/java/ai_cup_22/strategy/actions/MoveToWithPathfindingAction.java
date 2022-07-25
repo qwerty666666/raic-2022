@@ -21,6 +21,6 @@ public class MoveToWithPathfindingAction implements Action {
             path = path.smooth();
         }
 
-        new MoveByPathAction(path).apply(unit, order);
+        new MoveByPathAction(path, true).apply(unit, order);
     }
 }

@@ -28,6 +28,7 @@ public class LookToAction implements Action {
 
         if (vector != null) {
             targetVector = vector;
+            unit.setLookPosition(unit.getPosition().move(vector.normalizeToLength(10)));
         } else {
             targetVector = new Vector(unit.getPosition(), target);
             unit.setLookPosition(target);

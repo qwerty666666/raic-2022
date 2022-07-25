@@ -78,13 +78,20 @@ public class Vector {
 
     public Vector rotate(double angle) {
         return new Vector(
-                x * Math.cos(angle) + y * Math.sin(angle),
-                y * Math.cos(angle) - x * Math.sin(angle)
+                x * Math.cos(angle) - y * Math.sin(angle),
+                y * Math.cos(angle) + x * Math.sin(angle)
         );
     }
 
+    /**
+     * [0, 2 * Pi)
+     */
     public double getAngle() {
-        return Math.atan(y / x) + (x < 0 ? Math.PI : 0);
+        var angle = Math.atan(y / x) + (x < 0 ? Math.PI : 0);
+        if (angle < 0) {
+            angle = Math.PI * 2 + angle;
+        }
+        return angle;
     }
 
     /**
@@ -92,6 +99,21 @@ public class Vector {
      */
     public double getAngleTo(Vector v) {
         return Math.acos(Math.max(-1., Math.min(1., (x * v.x + y * v.y) / (getLength() * v.getLength()))));
+    }
+
+    /**
+     * How to rotate "this" vector to align with "v" vector
+     *
+     * @return [-PI, PI]
+     */
+    public double getDiffToVector(Vector v) {
+        var diff = v.getAngle() - getAngle();
+        if (diff > Math.PI) {
+            diff = diff - Math.PI * 2;
+        } else if (diff < -Math.PI) {
+            diff = Math.PI * 2 + diff;
+        }
+        return diff;
     }
 
     @Override

@@ -26,7 +26,7 @@ public class CircularWithAvoidObstaclesContributor extends BaseScoreContributor 
 
         var contributionCircle = new Circle(position, maxDist);
 
-        obstacleSegments = World.getInstance().getNonShootThroughObstacles().stream()
+        obstacleSegments = World.getInstance().getNonShootThroughObstacles().values().stream()
                 .filter(obstacle -> obstacle.getCenter().getDistanceTo(position) < maxDist)
                 .map(Obstacle::getCircle)
                 .map(circle -> {

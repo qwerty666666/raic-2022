@@ -5,7 +5,6 @@ import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.CompositeAction;
 import ai_cup_22.strategy.actions.MoveByPotentialFieldAction;
-import ai_cup_22.strategy.actions.basic.LookToAction;
 import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.potentialfield.PotentialField;
@@ -31,16 +30,11 @@ public class RetreatStrategy implements Strategy {
 
     @Override
     public Action getAction() {
-        var lookPoint = getNearestEnemy()
-                .map(Unit::getPosition)
-                .orElseGet(() -> unit.getPosition().move(unit.getDirection()));
-
         unit.getPotentialField().reset();
         getPotentialFieldScoreContributor().contribute(unit.getPotentialField());
 
         return new CompositeAction()
-                .add(new MoveByPotentialFieldAction())
-                .add(new LookToAction(lookPoint));
+                .add(new MoveByPotentialFieldAction());
     }
 
     private ScoreContributor getPotentialFieldScoreContributor() {

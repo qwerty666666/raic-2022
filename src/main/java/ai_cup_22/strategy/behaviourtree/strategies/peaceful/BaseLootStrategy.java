@@ -3,11 +3,10 @@ package ai_cup_22.strategy.behaviourtree.strategies.peaceful;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.CompositeAction;
+import ai_cup_22.strategy.actions.LookBackAction;
 import ai_cup_22.strategy.actions.TakeLootAction;
-import ai_cup_22.strategy.actions.basic.LookToAction;
 import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.behaviourtree.strategies.fight.FightStrategy;
-import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.models.Loot;
 import ai_cup_22.strategy.models.Unit;
 import java.util.Comparator;
@@ -33,7 +32,7 @@ public abstract class BaseLootStrategy implements Strategy {
 
                     return (Action) new CompositeAction()
                                     .add(new TakeLootAction(loot))
-                                    .add(new LookToAction(getLookToPosition(loot)));
+                                    .add(new LookBackAction());
                 })
                 .orElse(exploreStrategy.getAction());
     }
@@ -41,12 +40,6 @@ public abstract class BaseLootStrategy implements Strategy {
     protected boolean canTakeLootOnlyAfterDisabledTime(Loot loot) {
         return loot.getPosition().getDistanceTo(unit.getPosition()) >=
                 unit.getTicksToNewActionBeAvailable() * unit.getMaxForwardSpeedPerTick();
-    }
-
-    protected Position getLookToPosition(Loot loot) {
-        var targetEnemy = fightStrategy.getEnemyToShoot();
-
-        return targetEnemy != null ? targetEnemy.getPosition() : loot.getPosition();
     }
 
     protected abstract List<Loot> getSuitableLoots();

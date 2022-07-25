@@ -4,9 +4,10 @@ import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.CompositeAction;
+import ai_cup_22.strategy.actions.LookBackAction;
 import ai_cup_22.strategy.actions.MoveByPotentialFieldAction;
 import ai_cup_22.strategy.actions.MoveToWithPathfindingAction;
-import ai_cup_22.strategy.actions.ShootAction;
+import ai_cup_22.strategy.actions.ShootWithLookBackAction;
 import ai_cup_22.strategy.actions.basic.LookToAction;
 import ai_cup_22.strategy.actions.basic.NullAction;
 import ai_cup_22.strategy.behaviourtree.Strategy;
@@ -62,7 +63,8 @@ public class FightStrategy implements Strategy {
         if (isOnSafeDistance()) {
             return new CompositeAction()
                     .add(new MoveToWithPathfindingAction(priorityEnemy.getPosition()))
-                    .add(new LookToAction(enemyToShoot));
+                    .add(new LookToAction(enemyToShoot))
+                    .add(new LookBackAction());
         } else {
             contributeToPotentialField();
 
@@ -77,7 +79,7 @@ public class FightStrategy implements Strategy {
             }
 
             // always try to shoot to enemy
-            action.add(new ShootAction(enemyToShoot));
+            action.add(new ShootWithLookBackAction(me, enemyToShoot));
 
             return action;
         }

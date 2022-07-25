@@ -36,7 +36,7 @@ public class Bullet {
 
         if (endTrajectoryPosition == null) {
             var trajectory = getTrajectoryWithoutObstacles();
-            endTrajectoryPosition = World.getInstance().getNonShootThroughObstacles().stream()
+            endTrajectoryPosition = World.getInstance().getNonShootThroughObstacles().values().stream()
                     .filter(obstacle -> obstacle.getCircle().isIntersect(trajectory))
                     .flatMap(obstacle -> trajectory.getIntersectionPoints(obstacle.getCircle()).stream())
                     .min(Comparator.comparingDouble(intersectPoint -> intersectPoint.getDistanceTo(position)))

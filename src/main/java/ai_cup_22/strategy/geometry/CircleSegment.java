@@ -14,6 +14,10 @@ public class CircleSegment {
         this.angle = angle;
     }
 
+    public CircleSegment restrictToAngle(double newAngle) {
+        return new CircleSegment(circle, centerAngle, newAngle);
+    }
+
     public List<Line> getBoundaries() {
         return List.of(
                 new Line(circle.getCenter(), circle.getCenter().move(new Vector(circle.getRadius(), 0).rotate(getMinAngle()))),

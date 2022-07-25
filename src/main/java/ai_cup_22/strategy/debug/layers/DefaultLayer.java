@@ -14,8 +14,9 @@ import ai_cup_22.strategy.models.Unit;
 
 public class DefaultLayer extends DrawLayer {
     public void update(World world) {
-        addShootLines(world);
+//        addShootLines(world);
         addShootAreas(world);
+        addLookLines(world);
 
         addUnitPaths(world);
         addUnitStrategies(world);
@@ -25,6 +26,17 @@ public class DefaultLayer extends DrawLayer {
         addBullets(world);
 
         addCursorPosition();
+    }
+
+    private void addLookLines(World world) {
+        world.getMyUnits().values().forEach(unit -> {
+            if (unit.getLookBackPosition() != null) {
+                DebugData.getInstance().getDefaultLayer().addLine(unit.getPosition(), unit.getLookBackPosition(), Colors.VIOLET_TRANSPARENT);
+            }
+            if (unit.getLookPosition() != null) {
+                DebugData.getInstance().getDefaultLayer().addLine(unit.getPosition(), unit.getLookPosition(), Colors.YELLOW_TRANSPARENT);
+            }
+        });
     }
 
     private void addPhantomUnits(World world) {
@@ -52,7 +64,7 @@ public class DefaultLayer extends DrawLayer {
     private void addUnitInfo(World world) {
         world.getMyUnits().values().forEach(unit -> {
             add(new Text(
-                    String.format("Shields: %d\n CD: %d \n %d", unit.getShieldPotions(), unit.getRemainingCoolDownTicks(), unit.getRemainedTicksToAim()),
+                    String.format("Shields: %d\n CD: %d \n Aim: %d", unit.getShieldPotions(), unit.getRemainingCoolDownTicks(), unit.getRemainedTicksToAim()),
                     unit.getPosition(),
                     0.3,
                     new Vector(0, -2)

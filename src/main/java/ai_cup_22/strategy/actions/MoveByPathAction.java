@@ -8,9 +8,11 @@ import ai_cup_22.strategy.pathfinding.Path;
 
 public class MoveByPathAction implements Action {
     private final Path path;
+    private final boolean setLookPosition;
 
-    public MoveByPathAction(Path path) {
+    public MoveByPathAction(Path path, boolean setLookPosition) {
         this.path = path;
+        this.setLookPosition = setLookPosition;
     }
 
     @Override
@@ -24,9 +26,12 @@ public class MoveByPathAction implements Action {
 
         var nextPosition = path.get(1);
 
-        new CompositeAction()
-                .add(new MoveToAction(nextPosition))
-                .add(new LookToAction(nextPosition))
-                .apply(unit, order);
+        var action = new CompositeAction()
+                .add(new MoveToAction(nextPosition));
+        if (setLookPosition) {
+            action.add(new LookToAction(nextPosition));
+        }
+
+        action.apply(unit, order);
     }
 }

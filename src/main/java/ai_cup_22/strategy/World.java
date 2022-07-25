@@ -34,7 +34,8 @@ public class World {
     private int currentTick;
 
     private final Map<Integer, Obstacle> obstacles;
-    private final List<Obstacle> nonShootThroughObstacles;
+    private final Map<Integer, Obstacle> nonShootThroughObstacles;
+    private final Map<Integer, Obstacle> nonLookThroughObstacles;
 
     private final Map<Integer, Unit> enemyUnits;
     private final Map<Integer, Unit> phantomEnemies;
@@ -61,7 +62,10 @@ public class World {
                 .collect(Collectors.toMap(Obstacle::getId, o -> o));
         this.nonShootThroughObstacles = obstacles.values().stream()
                 .filter(o -> !o.isCanShootThrough())
-                .collect(Collectors.toList());
+                .collect(Collectors.toMap(Obstacle::getId, o -> o));
+        this.nonLookThroughObstacles = obstacles.values().stream()
+                .filter(o -> !o.isCanSeeThrough())
+                .collect(Collectors.toMap(Obstacle::getId, o -> o));
 
         this.enemyUnits = new HashMap<>(game.getPlayers().length * constants.getTeamSize());
         this.phantomEnemies = new HashMap<>(game.getPlayers().length * constants.getTeamSize());
@@ -100,7 +104,13 @@ public class World {
             var zoneCenter = zone.getCenter();
             var zoneRadius = zone.getRadius();
 
-            obstacles.entrySet().removeIf(e -> e.getValue().getCenter().getDistanceTo(zoneCenter) - zoneRadius > 30);
+            for (var obstacle: new ArrayList<>(obstacles.values())) {
+                if (obstacle.getCenter().getDistanceTo(zoneCenter) - zoneRadius > 30) {
+                    obstacles.remove(obstacle.getId());
+                    nonShootThroughObstacles.remove(obstacle.getId());
+                    nonLookThroughObstacles.remove(obstacle.getId());
+                }
+            }
         }
     }
 
@@ -205,6 +215,7 @@ public class World {
 
                 if (phantomEnemies.containsKey(u.getId())) {
                     unit = phantomEnemies.remove(u.getId());
+                    enemyUnits.put(unit.getId(), unit);
                 } else {
                     unit = enemyUnits.computeIfAbsent(u.getId(), id -> new Unit());
                 }
@@ -382,8 +393,12 @@ public class World {
         return res;
     }
 
-    public List<Obstacle> getNonShootThroughObstacles() {
+    public Map<Integer, Obstacle> getNonShootThroughObstacles() {
         return nonShootThroughObstacles;
+    }
+
+    public Map<Integer, Obstacle> getNonLookThroughObstacles() {
+        return nonLookThroughObstacles;
     }
 
     public StaticPotentialField getStaticPotentialField() {

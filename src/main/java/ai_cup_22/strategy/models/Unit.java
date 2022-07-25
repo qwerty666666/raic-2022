@@ -32,9 +32,13 @@ public class Unit {
     private BehaviourTree behaviourTree = new BehaviourTree(this);
     private ActionBlockingAction lastAction;
     private boolean isAiming;
+
     private Position lookPosition;
+    private Position lookBackPosition;
+
     private boolean isPhantom;
     private int lastUpdateTick = -1;
+    private int lastSeenTick = -1;
     private Integer weapon;
     private ViewSegment viewSegment;
 
@@ -57,8 +61,12 @@ public class Unit {
             lastAction.updateTick(this, unit.getAction());
         }
         this.isAiming = false;
+
         this.lookPosition = null;
+        this.lookBackPosition = null;
+
         this.lastUpdateTick = World.getInstance().getCurrentTick();
+        this.lastSeenTick = World.getInstance().getCurrentTick();
         this.isPhantom = false;
         this.weapon = unit.getWeapon();
 
@@ -123,6 +131,10 @@ public class Unit {
         return lastUpdateTick;
     }
 
+    public int getLastSeenTick() {
+        return lastSeenTick;
+    }
+
     public int getTicksSinceLastUpdate() {
         return World.getInstance().getCurrentTick() - lastUpdateTick;
     }
@@ -138,6 +150,15 @@ public class Unit {
 
     public Position getLookPosition() {
         return lookPosition;
+    }
+
+    public Position getLookBackPosition() {
+        return lookBackPosition;
+    }
+
+    public Unit setLookBackPosition(Position lookBackPosition) {
+        this.lookBackPosition = lookBackPosition;
+        return this;
     }
 
     public boolean isAiming() {
@@ -237,7 +258,7 @@ public class Unit {
     public boolean canShoot(Position position, Unit targetUnit) {
         var line = new Line(getPosition(), position);
 
-        return World.getInstance().getNonShootThroughObstacles().stream()
+        return World.getInstance().getNonShootThroughObstacles().values().stream()
                 .noneMatch(obstacle -> obstacle.getCircle().isIntersect(line))
                 &&
                 World.getInstance().getMyUnits().values().stream()

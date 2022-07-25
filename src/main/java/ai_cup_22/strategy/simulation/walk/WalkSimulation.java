@@ -17,6 +17,20 @@ public class WalkSimulation {
     public static final double MAX_VELOCITY_CHANGE_PER_TICK = 1. / 30;
     public static final double UNIT_RADIUS = 1;
 
+    public static int getTicksToRotate(double angle, double aim, double aimChangePerTick, boolean shouldAim, double aimRotationSpeedPerSec) {
+        int ticks = 0;
+        var curDirection = new Vector(1, 0);
+        var targetDirection = new Vector(1, 0).rotate(angle);
+
+        while (Math.abs(curDirection.getAngle() - angle) > 0.01) {
+            aim = getAimOnNextTick(aim, aimChangePerTick, shouldAim);
+            curDirection = simulateRotateTickToDirection(curDirection, targetDirection, aim, aimRotationSpeedPerSec);
+            ticks++;
+        }
+
+        return ticks;
+    }
+
     public static Position getMaxPositionIfWalkDirect(Unit unit, Vector directionVelocity, int ticks) {
         var obstacles = WalkSimulation.getNonWalkThroughObstaclesInRange(unit , ticks * unit.getMaxForwardSpeedPerTick() + 5);
 
@@ -136,23 +150,11 @@ public class WalkSimulation {
     public static Vector simulateRotateTickToDirection(Vector curLookDirection, Vector targetLookDirection, double aim,
             double aimRotationSpeedPerSec) {
         var nonAimRotationSpeed = World.getInstance().getConstants().getRotationSpeed();
-
-        var targetDirectionAngle = MathUtils.normalizeAngle(targetLookDirection.getAngle());
-        var lookDirectionAngle = MathUtils.normalizeAngle(curLookDirection.getAngle());
-
-//        var rotateSign = Math.signum(targetDirectionAngle - lookDirectionAngle) *
-//                (Math.abs(targetDirectionAngle - lookDirectionAngle) < Math.PI ? 1 : -1);
         var rotationSpeedPerTick = Math.toRadians((nonAimRotationSpeed - (nonAimRotationSpeed - aimRotationSpeedPerSec) * aim) *
                 World.getInstance().getTimePerTick());
+        var diff = curLookDirection.getDiffToVector(targetLookDirection);
 
-        var diff = targetDirectionAngle - lookDirectionAngle;
-        if (diff > Math.PI) {
-            diff = diff - Math.PI * 2;
-        } else if (diff < -Math.PI) {
-            diff = Math.PI * 2 + diff;
-        }
-
-        return curLookDirection.rotate(-Math.signum(diff) * Math.min(rotationSpeedPerTick, Math.abs(diff)));
+        return curLookDirection.rotate(Math.signum(diff) * Math.min(rotationSpeedPerTick, Math.abs(diff)));
     }
 
     public static List<Circle> getNonWalkThroughObstaclesInRange(Unit unit, double maxDist) {
@@ -174,5 +176,9 @@ public class WalkSimulation {
         obstacles.addAll(units);
 
         return obstacles;
+    }
+
+    public static double getAimOnNextTick(double aim, double aimChangePerTick, boolean shouldAim) {
+        return MathUtils.restrict(0, 1, aim + (shouldAim ? aimChangePerTick : -aimChangePerTick));
     }
 }

@@ -38,8 +38,8 @@ public class ViewSegment {
             return Collections.emptyList();
         }
 
-        var obstacles = World.getInstance().getObstaclesInRange(unit.getPosition(), Constants.USER_VIEW_DIST).stream()
-                .filter(obstacle -> !obstacle.isCanSeeThrough())
+        var obstacles = World.getInstance().getNonLookThroughObstacles().values().stream()
+                .filter(obstacle -> obstacle.getCenter().getSquareDistanceTo(unit.getPosition()) < Constants.USER_VIEW_DIST * Constants.USER_VIEW_DIST)
                 .map(Obstacle::getCircle)
                 .collect(Collectors.toList());
 
@@ -51,6 +51,7 @@ public class ViewSegment {
                                 World.getInstance().getEnemyUnits().values().stream()
                         )
                         .filter(Unit::isSpawned)
+                        .filter(u -> u.getId() != unit.getId())
                         .map(Unit::getCircle)
                         .collect(Collectors.toList())
         );
@@ -58,6 +59,10 @@ public class ViewSegment {
         return obstacles.stream()
                 .map(obstacle -> new NonSeeSegment(unit.getPosition(), obstacle))
                 .collect(Collectors.toList());
+    }
+
+    public CircleSegment getCircleSegment() {
+        return viewSegment;
     }
 
     public boolean canSee(Position pos) {

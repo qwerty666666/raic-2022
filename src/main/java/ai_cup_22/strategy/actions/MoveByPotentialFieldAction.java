@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 public class MoveByPotentialFieldAction implements Action {
     @Override
     public void apply(Unit unit, UnitOrder order) {
-        new MoveByPathAction(getBestPathToGo(unit))
+        new MoveByPathAction(getBestPathToGo(unit), false)
                 .apply(unit, order);
     }
 

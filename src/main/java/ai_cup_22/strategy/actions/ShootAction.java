@@ -12,26 +12,37 @@ import ai_cup_22.strategy.simulation.walk.WalkSimulation;
 
 public class ShootAction implements Action {
     private final Unit target;
+    private final Unit me;
+    private final Position bestPositionToShoot;
+    private final boolean shouldShoot;
 
-    public ShootAction(Unit target) {
+    public ShootAction(Unit me, Unit target) {
+        this.me = me;
         this.target = target;
+        this.bestPositionToShoot = getBestPositionToShoot(me, target);
+        this.shouldShoot = shouldShoot(me, bestPositionToShoot, target);
     }
 
     @Override
     public void apply(Unit unit, UnitOrder order) {
-        var bestPositionToShoot = getBestPositionToShoot(unit, target);
-        var shouldShoot = shouldShoot(unit, bestPositionToShoot, target);
-
         new CompositeAction()
                 .add(new AimAction(shouldShoot))
                 .add(new LookToAction(bestPositionToShoot))
                 .apply(unit, order);
     }
 
+    public Position getBestPositionToShoot() {
+        return bestPositionToShoot;
+    }
+
+    public boolean isShouldShoot() {
+        return shouldShoot;
+    }
+
     private boolean shouldShoot(Unit me, Position targetPosition, Unit enemy) {
-        if (enemy.isPhantom() || !enemy.isSpawned()) {
-            return false;
-        }
+       if (!canShootToUnit(targetPosition, enemy)) {
+           return false;
+       }
 
         if (!me.canDoNewAction() || me.isCoolDown()) {
             return false;
@@ -41,12 +52,23 @@ public class ShootAction implements Action {
             return false;
         }
 
+        return true;
+    }
+
+    public boolean canShootToUnit(Position targetPosition, Unit enemy) {
+        if (enemy.isPhantom() || !enemy.isSpawned()) {
+            return false;
+        }
+
         if (!me.canShoot(targetPosition, enemy)) {
             return false;
         }
 
-        var bulletMaxDistance = me.getWeaponOptional().map(Weapon::getMaxDistance).orElse(0.);
-        return me.getPosition().getDistanceTo(targetPosition) < bulletMaxDistance + 2;
+        return true;
+    }
+
+    public Unit getTarget() {
+        return target;
     }
 
     private Position getBestPositionToShoot(Unit me, Unit enemy) {

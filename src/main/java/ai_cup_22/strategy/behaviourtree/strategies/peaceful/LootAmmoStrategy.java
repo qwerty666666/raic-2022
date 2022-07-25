@@ -131,11 +131,6 @@ public class LootAmmoStrategy implements Strategy {
         }
 
         @Override
-        protected Position getLookToPosition(Loot loot) {
-            return loot.getPosition();
-        }
-
-        @Override
         protected Optional<Loot> getBestLoot() {
             var loots = getSuitableLoots().stream()
                     .filter(loot -> !World.getInstance().getGlobalStrategy().isLootTakenByOtherUnit(loot, unit))

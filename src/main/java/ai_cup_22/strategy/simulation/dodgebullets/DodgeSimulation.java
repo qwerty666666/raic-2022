@@ -33,7 +33,7 @@ public class DodgeSimulation {
         // take best one
         var bestDirection = chooseBestDirection(unit, dodgeDirections, bullets);
 
-        drawDebugDodgeResult(unit, dodgeDirections, bestDirection);
+//        drawDebugDodgeResult(unit, dodgeDirections, bestDirection);
 
         return bestDirection;
     }
