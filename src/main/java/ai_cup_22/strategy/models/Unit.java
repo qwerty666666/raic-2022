@@ -259,6 +259,10 @@ public class Unit {
         return getWeaponOptional().map(Weapon::getAimTicks).orElse(0);
     }
 
+    public int getTicksToUnaim() {
+        return getTicksToFullAim() - getRemainedTicksToAim();
+    }
+
     public double getAimRotationSpeed() {
         return getWeaponOptional().map(Weapon::getAimRotationSpeed)
                 .orElseGet(() -> World.getInstance().getConstants().getRotationSpeed());

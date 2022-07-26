@@ -96,6 +96,10 @@ public class WalkSimulation {
     }
 
     public static int getTicksToRunDistanceWithAim(Unit unit, Position destination) {
+        return getTicksToRunDistance(unit, destination, true);
+    }
+
+    public static int getTicksToRunDistance(Unit unit, Position destination, boolean shouldAim) {
         var pos = unit.getPosition();
         var velocity = unit.getVelocityPerTick();
         var aim = unit.getAim();
@@ -104,7 +108,7 @@ public class WalkSimulation {
         Vector velocityOnPrevTick;
 
         while (dist > 0.01) {
-            aim = getAimOnNextTick(aim, unit.getAimChangePerTick(), true);
+            aim = getAimOnNextTick(aim, unit.getAimChangePerTick(), shouldAim);
             velocityOnPrevTick = velocity;
             velocity = getVelocityOnNextTick(
                     pos,

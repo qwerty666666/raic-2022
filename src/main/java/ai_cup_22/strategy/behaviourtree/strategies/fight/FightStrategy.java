@@ -79,7 +79,14 @@ public class FightStrategy implements Strategy {
 
                 // if I can take loot, then allow to do it (should not aim)
                 var loot = lootAmmoStrategy.getBestLoot();
-                if (me.canDoNewAction() && loot.isPresent() && me.canTakeLoot(loot.get())) {
+                if (loot.isPresent() && (
+                        // I stay on the loot
+                        (me.canDoNewAction() && me.canTakeLoot(loot.get())) ||
+                        // I can safely run to the loot
+                        (getEnemiesThatCanShootInSafeDist().stream().noneMatch(e -> e.getDistanceTo(me) < e.getThreatenDistanceFor(me)) &&
+                            WalkSimulation.getTicksToRunDistance(me, loot.get().getPosition(), false) < me.getTicksToUnaim()
+                        )
+                )) {
                     action.add(new LookBackAction());
                 } else {
                     action.add(new ShootWithLookBackAction(me, enemyToShoot));
