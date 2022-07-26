@@ -1,5 +1,6 @@
 package ai_cup_22.strategy.models;
 
+import ai_cup_22.model.ActionType;
 import ai_cup_22.model.Sound;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.basic.ActionBlockingAction;
@@ -261,6 +262,11 @@ public class Unit {
 
     public int getTicksToUnaim() {
         return getTicksToFullAim() - getRemainedTicksToAim();
+    }
+
+    public boolean isTakenShieldPotion() {
+        return unit != null && (unit.getAction() != null &&
+                unit.getAction().getActionType() == ActionType.USE_SHIELD_POTION);
     }
 
     public double getAimRotationSpeed() {

@@ -11,6 +11,7 @@ import ai_cup_22.strategy.actions.ShootAction;
 import ai_cup_22.strategy.actions.ShootWithLookBackAction;
 import ai_cup_22.strategy.actions.basic.LookToAction;
 import ai_cup_22.strategy.actions.basic.NullAction;
+import ai_cup_22.strategy.actions.basic.TakeShieldPotionAction;
 import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.behaviourtree.strategies.peaceful.BaseLootStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.peaceful.ExploreStrategy;
@@ -36,6 +37,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class FightStrategy implements Strategy {
+    private static final double TAKE_SHIELD_POTION_ADDITIONAL_DIST = 2;
+
     private final Unit me;
     private final LootAmmoSafestWayStrategy lootAmmoStrategy;
     private Unit targetEnemy;
@@ -73,8 +76,23 @@ public class FightStrategy implements Strategy {
 
             var action = new CompositeAction();
 
-            // take ammo if needed
-            if (shouldTakeAmmo()) {
+            if (shouldTakeShieldPotion()) {
+
+                // take shield potion if possible
+
+                if (getEnemiesThatCanShootInSafeDist().stream()
+                        .noneMatch(e -> e.getDistanceTo(me) < e.getThreatenDistanceFor(me) + TAKE_SHIELD_POTION_ADDITIONAL_DIST)) {
+                    action
+                            .add(new TakeShieldPotionAction())
+                            .add(new LookBackAction());
+                } else {
+                    action.add(new RetreatStrategy(me).getAction());
+                }
+
+            } else if (shouldTakeAmmo()) {
+
+                // take ammo if needed
+
                 action.add(lootAmmoStrategy.getAction());
 
                 // if I can take loot, then allow to do it (should not aim)
@@ -83,7 +101,8 @@ public class FightStrategy implements Strategy {
                         // I stay on the loot
                         (me.canDoNewAction() && me.canTakeLoot(loot.get())) ||
                         // I can safely run to the loot
-                        (getEnemiesThatCanShootInSafeDist().stream().noneMatch(e -> e.getDistanceTo(me) < e.getThreatenDistanceFor(me)) &&
+                        (getEnemiesThatCanShootInSafeDist().stream()
+                                .noneMatch(e -> e.getDistanceTo(me) < e.getThreatenDistanceFor(me) + TAKE_SHIELD_POTION_ADDITIONAL_DIST) &&
                             WalkSimulation.getTicksToRunDistance(me, loot.get().getPosition(), false) < me.getTicksToUnaim()
                         )
                 )) {
@@ -91,8 +110,11 @@ public class FightStrategy implements Strategy {
                 } else {
                     action.add(new ShootWithLookBackAction(me, enemyToShoot));
                 }
+
             } else {
+
                 // otherwise go to best point
+
                 action
                         .add(new MoveByPotentialFieldAction(false))
                         .add(new ShootWithLookBackAction(me, enemyToShoot));
@@ -100,6 +122,23 @@ public class FightStrategy implements Strategy {
 
             return action;
         }
+    }
+
+    private boolean shouldTakeShieldPotion() {
+        if (me.isTakenShieldPotion()) {
+            return false;
+        }
+
+        if (me.getShieldPotions() == 0) {
+            return false;
+        }
+
+        var enemyToShoot = getEnemyToShoot();
+        if (canPushEnemy(enemyToShoot)) {
+            return false;
+        }
+
+        return me.getShield() < 100;
     }
 
     public boolean isOnSafeDistance() {
@@ -112,7 +151,7 @@ public class FightStrategy implements Strategy {
             return 0;
         }
 
-        return enemy.getThreatenDistanceFor(me);
+        return enemy.getThreatenDistanceFor(me) + (me.canDoNewAction() ? 0 : TAKE_SHIELD_POTION_ADDITIONAL_DIST);
     }
 
     private boolean canPushEnemy(Unit enemy) {
@@ -138,7 +177,7 @@ public class FightStrategy implements Strategy {
             return false;
         }
 
-        return false;
+        return true;
     }
 
     private List<Unit> getEnemiesThatCanShootInSafeDist() {
@@ -335,7 +374,12 @@ public class FightStrategy implements Strategy {
         var angle = new Vector(me.getPosition(), targetEnemy.getPosition())
                 .getAngleTo(new Vector(me.getPosition(), enemy.getPosition()));
 
-        return new LinearDistributor(Math.PI / 4, Math.PI / 2, enemy.getThreatenDistanceFor(me), Constants.SAFE_DIST)
+        return new LinearDistributor(
+                Math.PI / 4,
+                Math.PI / 2,
+                enemy.getThreatenDistanceFor(me) + (me.canDoNewAction() ? 0 : TAKE_SHIELD_POTION_ADDITIONAL_DIST),
+                Constants.SAFE_DIST
+        )
                 .get(angle);
     }
 

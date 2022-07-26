@@ -13,8 +13,6 @@ import ai_cup_22.strategy.potentialfield.ScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.ZoneScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.basic.LinearScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.composite.SumCompositeScoreContributor;
-import java.util.Comparator;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class RetreatStrategy implements Strategy {
@@ -64,16 +62,6 @@ public class RetreatStrategy implements Strategy {
                 .add(new ZoneScoreContributor(unit.getPotentialField()))
                 .add(enemyScoreContributors)
                 .add(phantomEnemiesScoreContributors);
-    }
-
-    private Optional<Unit> getNearestEnemy() {
-        if (!World.getInstance().getEnemyUnits().isEmpty()) {
-            return World.getInstance().getEnemyUnits().values().stream()
-                    .min(Comparator.comparingDouble(enemy -> enemy.getDistanceTo(unit)));
-        } else {
-            return World.getInstance().getPhantomEnemies().values().stream()
-                    .min(Comparator.comparingDouble(enemy -> enemy.getDistanceTo(unit)));
-        }
     }
 
     @Override
