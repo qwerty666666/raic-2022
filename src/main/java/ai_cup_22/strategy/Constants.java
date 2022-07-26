@@ -8,6 +8,7 @@ public class Constants {
     public static final double USER_RADIUS = 1;
     public static final double USER_VIEW_DIST = 50;
     public static final double UNIT_MAX_SPEED_PER_TICK = 1./3;
+    public static final double UNIT_MAX_SIDE_SPEED_PER_TICK = 0.235726;
 
     // Potential field
 

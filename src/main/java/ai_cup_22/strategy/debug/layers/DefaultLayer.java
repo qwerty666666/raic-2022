@@ -31,10 +31,16 @@ public class DefaultLayer extends DrawLayer {
     private void addLookLines(World world) {
         world.getMyUnits().values().forEach(unit -> {
             if (unit.getLookBackPosition() != null) {
-                DebugData.getInstance().getDefaultLayer().addLine(unit.getPosition(), unit.getLookBackPosition(), Colors.VIOLET_TRANSPARENT);
+                DebugData.getInstance().getDefaultLayer().addLine(unit.getPosition(), unit.getLookBackPosition(),
+                        Colors.VIOLET_TRANSPARENT);
+            }
+            if (unit.getLookBackVector() != null) {
+                DebugData.getInstance().getDefaultLayer().addLine(unit.getPosition(), unit.getPosition().move(unit.getLookBackVector()),
+                        Colors.YELLOW_TRANSPARENT);
             }
             if (unit.getLookPosition() != null) {
-                DebugData.getInstance().getDefaultLayer().addLine(unit.getPosition(), unit.getLookPosition(), Colors.YELLOW_TRANSPARENT);
+                DebugData.getInstance().getDefaultLayer().addLine(unit.getPosition(), unit.getLookPosition(),
+                        Colors.LIGHT_GREEN_TRANSPARENT);
             }
         });
     }
@@ -70,7 +76,7 @@ public class DefaultLayer extends DrawLayer {
                     new Vector(0, -2)
             ));
         });
-        world.getEnemyUnits().values().forEach(unit -> {
+        world.getAllEnemyUnits().forEach(unit -> {
             add(new Text(
                     String.format("Shields: %d\n CD: %d", unit.getShieldPotions(), unit.getRemainingCoolDownTicks()),
                     unit.getPosition(),
@@ -89,6 +95,8 @@ public class DefaultLayer extends DrawLayer {
             if (bullet.isEnemy()) {
                 add(new Line(bullet.getRealTrajectory(), Colors.RED_TRANSPARENT));
             }
+
+            addText(bullet.getStartTick() + "", bullet.getPosition(), 0.1);
         });
     }
 

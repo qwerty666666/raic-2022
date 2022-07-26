@@ -31,6 +31,49 @@ public class WalkSimulation {
         return ticks;
     }
 
+    public static int getTicksToRotate(Unit unit, Position target, boolean rotateStrictlyToTarget) {
+        var targetVector = new Vector(unit.getPosition(), target);
+        var curDirection = unit.getDirection();
+        int ticks = 0;
+        var aim = unit.getAim();
+        var aimChangePerTick = unit.getAimChangePerTick();
+        var aimRotationSpeedPerSec = unit.getAimRotationSpeed();
+        var ticksToCd = unit.getRemainingCoolDownTicks();
+        var ticksToAim = unit.getRemainedTicksToAim();
+
+        while (true) {
+            if (rotateStrictlyToTarget) {
+                if (targetVector.getAngleTo(curDirection) < 0.01) {
+                    break;
+                }
+            } else {
+                var fieldOfView = Math.toRadians(World.getInstance().getConstants().getFieldOfView());
+                var aimFieldOfView = unit.getWeaponOptional()
+                        .map(weapon -> Math.toRadians(weapon.getAimFieldOfView()))
+                        .orElse(fieldOfView);
+                var viewAngle = fieldOfView - (fieldOfView - aimFieldOfView) * aim;
+
+                if (targetVector.getAngleTo(curDirection) < viewAngle / 2) {
+                    break;
+                }
+            }
+
+            var shouldAim = ticksToCd <= ticksToAim;
+            aim = getAimOnNextTick(aim, aimChangePerTick, shouldAim);
+            curDirection = simulateRotateTickToDirection(curDirection, targetVector, aim, aimRotationSpeedPerSec);
+            ticks++;
+            ticksToCd--;
+
+            if (shouldAim) {
+                ticksToAim--;
+            } else {
+                ticksToAim++;
+            }
+        }
+
+        return ticks;
+    }
+
     public static Position getMaxPositionIfWalkDirect(Unit unit, Vector directionVelocity, int ticks) {
         var obstacles = WalkSimulation.getNonWalkThroughObstaclesInRange(unit , ticks * unit.getMaxForwardSpeedPerTick() + 5);
 
@@ -50,6 +93,32 @@ public class WalkSimulation {
         }
 
         return pos;
+    }
+
+    public static int getTicksToRunDistance(Unit unit, Position destination) {
+        var pos = unit.getPosition();
+        var velocity = unit.getVelocityPerTick();
+        var aim = unit.getAim();
+        var dist = unit.getPosition().getDistanceTo(destination);
+        int ticks = 0;
+
+        while (dist > 0) {
+            aim = getAimOnNextTick(aim, unit.getAimChangePerTick(), true);
+            velocity = getVelocityOnNextTick(
+                    pos,
+                    unit.getDirection(),
+                    velocity,
+                    unit.getMaxForwardSpeedPerTick(),
+                    unit.getMaxBackwardSpeedPerTick(),
+                    unit.getAim(), unit.getAimSpeedModifier(),
+                    new Vector(pos, destination)
+            );
+            pos = pos.move(velocity);
+            dist -= velocity.getLength();
+            ticks++;
+        }
+
+        return ticks;
     }
 
     public static Vector getVelocityOnNextTickAfterCollision(

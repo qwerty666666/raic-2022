@@ -25,8 +25,9 @@ public class LookBackAction implements Action {
             var lookTo = getLookToVector(unit, unitToUpdate, curLookTarget != null ? curLookTarget : unitToUpdate.getPosition());
 
             unit.setLookBackPosition(unitToUpdate.getPosition());
+            unit.setLookBackVector(lookTo.normalizeToLength(10));
 
-            new LookToAction(lookTo).apply(unit, order);
+            new LookToAction(lookTo, false).apply(unit, order);
         }
     }
 
@@ -37,12 +38,28 @@ public class LookBackAction implements Action {
                 .collect(Collectors.toList());
 
         return World.getInstance().getAllEnemyUnits().stream()
+                .filter(Unit::isSpawned)
                 .filter(enemy -> enemy.getDistanceTo(me) < Constants.USER_VIEW_DIST)
+                .filter(enemy -> enemy.hasWeapon() && enemy.getBulletCount() > 0)
                 .filter(enemy -> obstacles.stream().noneMatch(o -> o.isIntersect(new Line(me.getPosition(), enemy.getPosition()))))
-                .min(Comparator.comparingInt(Unit::getLastSeenTick)
-                        .thenComparingDouble(enemy -> {
-                            return new Vector(enemy.getPosition(), me.getPosition()).getAngleTo(me.getDirection());
-                        })
+                .min(
+                        Comparator.comparing((Unit enemy) -> {
+                            var dist = enemy.getDistanceTo(me) - 2;
+                            var bulletTicks = Math.ceil(dist / enemy.getWeapon().getSpeedPerTick());
+                            var cdTicks = enemy.getRemainingCoolDownTicks();
+                            var rotateTicks = WalkSimulation.getTicksToRotate(me, enemy.getPosition(), false);
+
+                            if (enemy.isPhantom() && cdTicks > 0 &&
+                                    enemy.getWeapon().getCoolDownTicks() - cdTicks < bulletTicks) {
+                                return true;
+                            }
+
+                            return cdTicks < rotateTicks + 4;
+                        }).reversed()
+//                                .thenComparingInt(Unit::getRemainingCoolDownTicks)
+                                .thenComparingDouble(enemy -> {
+                                    return new Vector(me.getPosition(), enemy.getPosition()).getAngleTo(me.getDirection());
+                                })
                 )
                 .orElse(null);
     }

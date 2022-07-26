@@ -12,9 +12,19 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 public class MoveByPotentialFieldAction implements Action {
+    private final boolean setLookPosition;
+
+    public MoveByPotentialFieldAction() {
+        this(true);
+    }
+
+    public MoveByPotentialFieldAction(boolean setLookPosition) {
+        this.setLookPosition = setLookPosition;
+    }
+
     @Override
     public void apply(Unit unit, UnitOrder order) {
-        new MoveByPathAction(getBestPathToGo(unit), false)
+        new MoveByPathAction(getBestPathToGo(unit), setLookPosition)
                 .apply(unit, order);
     }
 

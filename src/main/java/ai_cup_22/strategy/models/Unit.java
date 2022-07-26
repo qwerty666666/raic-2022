@@ -29,16 +29,18 @@ public class Unit {
     private Vector direction;
     private UnitPotentialField potentialField;
     private List<Position> currentPath;
-    private BehaviourTree behaviourTree = new BehaviourTree(this);
+    private BehaviourTree behaviourTree;
     private ActionBlockingAction lastAction;
     private boolean isAiming;
 
     private Position lookPosition;
     private Position lookBackPosition;
+    private Vector lookBackVector;
 
     private boolean isPhantom;
     private int lastUpdateTick = -1;
     private int lastSeenTick = -1;
+    private int lastShootTick = -100;
     private Integer weapon;
     private ViewSegment viewSegment;
 
@@ -61,29 +63,38 @@ public class Unit {
             lastAction.updateTick(this, unit.getAction());
         }
         this.isAiming = false;
+        this.weapon = unit.getWeapon();
 
         this.lookPosition = null;
         this.lookBackPosition = null;
+        this.lookBackVector = null;
+
+        this.isPhantom = false;
 
         this.lastUpdateTick = World.getInstance().getCurrentTick();
         this.lastSeenTick = World.getInstance().getCurrentTick();
-        this.isPhantom = false;
-        this.weapon = unit.getWeapon();
+        if (hasWeapon()) {
+            this.lastShootTick = unit.getNextShotTick() - getWeapon().getCoolDownTicks();
+        }
 
         this.potentialField = null;
+        this.behaviourTree = new BehaviourTree(this);
     }
 
     public void updateBySound(Sound sound) {
         this.circle = new Circle(new Position(sound.getPosition()), World.getInstance().getConstants().getUnitRadius());
-        this.lastUpdateTick = World.getInstance().getCurrentTick();
+        this.lastUpdateTick = World.getInstance().getCurrentTick() - 1;
 
         var soundProperties = World.getInstance().getConstants().getSounds()[sound.getTypeIndex()];
         if (soundProperties.getName().equals("Wand")) {
             weapon = Weapon.WAND_ID;
+            this.lastShootTick = World.getInstance().getCurrentTick() - 1;
         } else if (soundProperties.getName().equals("Staff")) {
             weapon = Weapon.STAFF_ID;
+            this.lastShootTick = World.getInstance().getCurrentTick() - 1;
         } else if (soundProperties.getName().equals("Bow")) {
             weapon = Weapon.BOW_ID;
+            this.lastShootTick = World.getInstance().getCurrentTick() - 1;
         }
 
         isPhantom = true;
@@ -93,9 +104,11 @@ public class Unit {
         if (lastUpdateTick < bullet.getStartTick()) {
             this.circle = new Circle(bullet.getTrajectoryForFullLifetime().getStart(), World.getInstance().getConstants().getUnitRadius());
             this.lastUpdateTick = bullet.getStartTick();
+            this.lastShootTick = bullet.getStartTick();
             this.weapon = bullet.getWeaponId();
             this.isPhantom = true;
             this.id = bullet.getUnitId();
+            this.direction = bullet.getVelocity();
         }
     }
 
@@ -161,6 +174,15 @@ public class Unit {
         return this;
     }
 
+    public Vector getLookBackVector() {
+        return lookBackVector;
+    }
+
+    public Unit setLookBackVector(Vector lookBackVector) {
+        this.lookBackVector = lookBackVector;
+        return this;
+    }
+
     public boolean isAiming() {
         return isAiming;
     }
@@ -211,6 +233,9 @@ public class Unit {
     }
 
     public Vector getVelocityPerTick() {
+        if (!isSeenBefore()) {
+            return new Vector(0, 0);
+        }
         return new Vector(unit.getVelocity()).increase(1. / World.getInstance().getConstants().getTicksPerSecond());
     }
 
@@ -244,7 +269,10 @@ public class Unit {
     }
 
     public int getRemainingCoolDownTicks() {
-        return unit == null ? 0 : Math.max(0, unit.getNextShotTick() - World.getInstance().getCurrentTick());
+        if (hasWeapon()) {
+            return Math.max(0, lastShootTick + getWeapon().getCoolDownTicks() - World.getInstance().getCurrentTick());
+        }
+        return 0;
     }
 
     public boolean isCoolDown() {
@@ -281,14 +309,18 @@ public class Unit {
     }
 
     public boolean hasWeapon() {
-        return unit == null || getWeapon() != null;
+        return getWeapon() != null;
+    }
+
+    public boolean isSeenBefore() {
+        return unit != null;
     }
 
     public int getBulletCount() {
         if (unit == null) {
             return 100;
         }
-        return hasWeapon() ? unit.getAmmo()[unit.getWeapon()] : 0;
+        return hasWeapon() ? unit.getAmmo()[weapon] : 0;
     }
 
     public int getMaxBulletCount() {
@@ -319,7 +351,10 @@ public class Unit {
     }
 
     public double getAim() {
-        return unit.getAim();
+        if (!isSeenBefore()) {
+            return 0;
+        }
+        return isSpawned() ? unit.getAim() : 0;
     }
 
     public double getAimSpeedModifier() {
@@ -343,7 +378,7 @@ public class Unit {
     }
 
     public int getShieldPotions() {
-        return unit.getShieldPotions();
+        return isSeenBefore() ? unit.getShieldPotions() : 0;
     }
 
     public int getMaxShieldPotions() {

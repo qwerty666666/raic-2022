@@ -82,7 +82,7 @@ public class Bullet {
     }
 
     public int getRemainingLifetimeTicks() {
-        return (int) Math.ceil(lifetime / World.getInstance().getTimePerTick());
+        return (int) (lifetime / World.getInstance().getTimePerTick());
     }
 
     public int getRealRemainingLifetimeTicks() {

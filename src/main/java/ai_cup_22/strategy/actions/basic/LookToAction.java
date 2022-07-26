@@ -9,6 +9,7 @@ import ai_cup_22.strategy.models.Unit;
 public class LookToAction implements Action {
     private Position target;
     private Vector vector;
+    private boolean setUnitLookTo = true;
 
     public LookToAction(Unit target) {
         this(target.getPosition());
@@ -18,8 +19,18 @@ public class LookToAction implements Action {
         this.target = target;
     }
 
+    public LookToAction(Position target, boolean setUnitLookTo) {
+        this.target = target;
+        this.setUnitLookTo = setUnitLookTo;
+    }
+
     public LookToAction(Vector vector) {
         this.vector = vector;
+    }
+
+    public LookToAction(Vector vector, boolean setUnitLookTo) {
+        this(vector);
+        this.setUnitLookTo = setUnitLookTo;
     }
 
     @Override
@@ -28,10 +39,14 @@ public class LookToAction implements Action {
 
         if (vector != null) {
             targetVector = vector;
-            unit.setLookPosition(unit.getPosition().move(vector.normalizeToLength(10)));
+            if (setUnitLookTo) {
+                unit.setLookPosition(unit.getPosition().move(vector.normalizeToLength(10)));
+            }
         } else {
             targetVector = new Vector(unit.getPosition(), target);
-            unit.setLookPosition(target);
+            if (setUnitLookTo) {
+                unit.setLookPosition(target);
+            }
         }
 
         order.setTargetDirection(targetVector.normalizeToLength(10).toVec2());

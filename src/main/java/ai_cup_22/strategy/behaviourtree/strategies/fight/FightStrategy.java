@@ -35,11 +35,13 @@ import java.util.stream.Collectors;
 
 public class FightStrategy implements Strategy {
     private final Unit me;
-    private final Strategy lootAmmoStrategy;
+    private final LootAmmoSafestWayStrategy lootAmmoStrategy;
+    private final RetreatStrategy retreatStrategy;
 
     public FightStrategy(Unit me, ExploreStrategy exploreStrategy) {
         this.me = me;
         this.lootAmmoStrategy = new LootAmmoSafestWayStrategy(me, exploreStrategy, this, 50);
+        this.retreatStrategy = new RetreatStrategy(me);
     }
 
     @Override
@@ -73,13 +75,20 @@ public class FightStrategy implements Strategy {
             // take ammo if needed
             if (shouldTakeAmmo()) {
                 action.add(lootAmmoStrategy.getAction());
+
+                // if I can take loot, then allow to do it (should not aim)
+                var loot = lootAmmoStrategy.getBestLoot();
+                if (me.canDoNewAction() && loot.isPresent() && me.canTakeLoot(loot.get())) {
+                    action.add(new LookBackAction());
+                } else {
+                    action.add(new ShootWithLookBackAction(me, enemyToShoot));
+                }
             } else {
                 // otherwise go to best point
-                action.add(new MoveByPotentialFieldAction());
+                action
+                        .add(new MoveByPotentialFieldAction(false))
+                        .add(new ShootWithLookBackAction(me, enemyToShoot));
             }
-
-            // always try to shoot to enemy
-            action.add(new ShootWithLookBackAction(me, enemyToShoot));
 
             return action;
         }
@@ -224,7 +233,7 @@ public class FightStrategy implements Strategy {
         var targetEnemy = getEnemyToShoot();
         var safeDistant = getBestDistanceToEnemy(targetEnemy);
 
-        if (!targetEnemy.isPhantom()) {
+        if (targetEnemy.isSpawned()) {
             contributor.add(new FirstMatchCompositeScoreContributor("Target Enemy")
                     .add(new CircularWithAvoidObstaclesContributor(
                             "Target Enemy Hold Distance",
@@ -323,6 +332,7 @@ public class FightStrategy implements Strategy {
 
     public static class LootAmmoSafestWayStrategy extends BaseLootStrategy {
         private final double maxLootDist;
+        private Optional<Loot> bestLoot;
 
         protected LootAmmoSafestWayStrategy(Unit unit, ExploreStrategy exploreStrategy, FightStrategy fightStrategy, double maxLootDist) {
             super(unit, exploreStrategy, fightStrategy);
@@ -337,39 +347,42 @@ public class FightStrategy implements Strategy {
         }
 
         @Override
-        protected Optional<Loot> getBestLoot() {
-            var loots = getSuitableLoots().stream()
-                    .filter(loot -> !World.getInstance().getGlobalStrategy().isLootTakenByOtherUnit(loot, unit))
-                    .collect(Collectors.toList());
+        public Optional<Loot> getBestLoot() {
+            if (bestLoot == null) {
+                var loots = getSuitableLoots().stream()
+                        .filter(loot -> !World.getInstance().getGlobalStrategy().isLootTakenByOtherUnit(loot, unit))
+                        .collect(Collectors.toList());
 
-            if (loots.isEmpty()) {
-                return Optional.empty();
+                if (loots.isEmpty()) {
+                    bestLoot = Optional.empty();
+                } else {
+                    var pathFinder = new AStarPathFinder(unit.getPotentialField());
+                    var paths = loots.stream()
+                            .collect(Collectors.toMap(
+                                    loot -> loot,
+                                    loot -> pathFinder.findPath(unit.getPosition(), loot.getPosition())
+                            ));
+
+                    // search by min sum of treats on the path
+                    // and min by distance if there is no treat on the path
+                    var loot = paths.entrySet().stream()
+                            .min(
+                                    Comparator.comparingDouble(
+                                                    (Entry<Loot, Path> e) -> e.getValue().getScores().stream()
+                                                            .filter(score -> score.getNonStaticScore() < 0)
+                                                            .mapToDouble(Score::getNonStaticScore)
+                                                            .sum()
+                                            )
+                                            .reversed()
+                                            .thenComparingDouble((Entry<Loot, Path> e) -> e.getValue().getDistance())
+                            )
+                            .orElseThrow()
+                            .getKey();
+
+                    bestLoot = Optional.ofNullable(loot);
+                }
             }
-
-            var pathFinder = new AStarPathFinder(unit.getPotentialField());
-            var paths = loots.stream()
-                    .collect(Collectors.toMap(
-                            loot -> loot,
-                            loot -> pathFinder.findPath(unit.getPosition(), loot.getPosition())
-                    ));
-
-            // search by min sum of treats on the path
-            // and min by distance if there is no treat on the path
-            var loot = paths.entrySet().stream()
-                    .min(
-                            Comparator.comparingDouble(
-                                            (Entry<Loot, Path> e) -> e.getValue().getScores().stream()
-                                                    .filter(score -> score.getNonStaticScore() < 0)
-                                                    .mapToDouble(Score::getNonStaticScore)
-                                                    .sum()
-                                    )
-                                    .reversed()
-                                    .thenComparingDouble((Entry<Loot, Path> e) -> e.getValue().getDistance())
-                    )
-                    .orElseThrow()
-                    .getKey();
-
-            return Optional.ofNullable(loot);
+            return bestLoot;
         }
 
         @Override

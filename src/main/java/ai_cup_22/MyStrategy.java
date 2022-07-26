@@ -169,6 +169,20 @@ public class MyStrategy {
 
         DebugData.getInstance().draw(debugInterface);
 
+        world.getInstance().getMyUnits().values().stream()
+                        .filter(u -> u.getId() == 10803)
+                        .findFirst()
+                        .ifPresent(unit -> {
+                            DebugData.getInstance().getCursorPosition().ifPresent(target -> {
+                                    debugInterface.addSegment(unit.getPosition().toVec2(), target.toVec2(), 0.05, Colors.BLACK);
+                                    debugInterface.addPlacedText(unit.getPosition().toVec2(),
+                                            new Vector(unit.getPosition(), target).getAngleTo(unit.getDirection()) + "",
+                                            new Vec2(0, 0), 1, Colors.BLACK
+                                    );
+                            });
+
+                            });
+
         debugInterface.flush();
     }
 

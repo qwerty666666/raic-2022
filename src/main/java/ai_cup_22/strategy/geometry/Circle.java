@@ -2,6 +2,7 @@ package ai_cup_22.strategy.geometry;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Circle {
     private final Position center;
@@ -39,6 +40,12 @@ public class Circle {
                 vec.rotate(angle).getEndPosition().move(new Vector(center)),
                 vec.rotate(-angle).getEndPosition().move(new Vector(center))
         );
+    }
+
+    public List<Line> getTangentLines(Position position) {
+        return getTangentPoints(position).stream()
+                .map(p -> new Line(position, p))
+                .collect(Collectors.toList());
     }
 
     public boolean contains(Position p) {

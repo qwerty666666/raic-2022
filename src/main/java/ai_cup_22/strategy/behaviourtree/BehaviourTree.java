@@ -59,10 +59,7 @@ public class BehaviourTree {
                                                         .add(fightStrategy)
                                                 )
                                                 // I can fight with enemies
-                                                .add(() -> true, new FirstMatchCompositeStrategy()
-                                                        .add(() -> unit.canDoNewAction(), fightStrategy)
-                                                        .add(() -> true, retreatStrategy)
-                                                )
+                                                .add(() -> true, fightStrategy)
                                         )
                                         .add(regenerateHealthStrategy)
                                 )

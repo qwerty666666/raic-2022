@@ -4,6 +4,7 @@ import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.CompositeAction;
+import ai_cup_22.strategy.actions.LookBackAction;
 import ai_cup_22.strategy.actions.MoveByPotentialFieldAction;
 import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.models.Unit;
@@ -34,7 +35,8 @@ public class RetreatStrategy implements Strategy {
         getPotentialFieldScoreContributor().contribute(unit.getPotentialField());
 
         return new CompositeAction()
-                .add(new MoveByPotentialFieldAction());
+                .add(new MoveByPotentialFieldAction())
+                .add(new LookBackAction());
     }
 
     private ScoreContributor getPotentialFieldScoreContributor() {
