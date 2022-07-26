@@ -7,12 +7,15 @@ import ai_cup_22.strategy.actions.CompositeAction;
 import ai_cup_22.strategy.actions.LookBackAction;
 import ai_cup_22.strategy.actions.MoveByPotentialFieldAction;
 import ai_cup_22.strategy.actions.MoveToWithPathfindingAction;
+import ai_cup_22.strategy.actions.ShootAction;
 import ai_cup_22.strategy.actions.ShootWithLookBackAction;
 import ai_cup_22.strategy.actions.basic.LookToAction;
 import ai_cup_22.strategy.actions.basic.NullAction;
 import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.behaviourtree.strategies.peaceful.BaseLootStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.peaceful.ExploreStrategy;
+import ai_cup_22.strategy.debug.Colors;
+import ai_cup_22.strategy.debug.DebugData;
 import ai_cup_22.strategy.distributions.LinearDistributor;
 import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Loot;
@@ -26,6 +29,7 @@ import ai_cup_22.strategy.potentialfield.scorecontributors.basic.CircularWithAvo
 import ai_cup_22.strategy.potentialfield.scorecontributors.basic.LinearScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.composite.FirstMatchCompositeScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.composite.SumCompositeScoreContributor;
+import ai_cup_22.strategy.simulation.walk.WalkSimulation;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -36,12 +40,11 @@ import java.util.stream.Collectors;
 public class FightStrategy implements Strategy {
     private final Unit me;
     private final LootAmmoSafestWayStrategy lootAmmoStrategy;
-    private final RetreatStrategy retreatStrategy;
+    private Unit targetEnemy;
 
     public FightStrategy(Unit me, ExploreStrategy exploreStrategy) {
         this.me = me;
         this.lootAmmoStrategy = new LootAmmoSafestWayStrategy(me, exploreStrategy, this, 50);
-        this.retreatStrategy = new RetreatStrategy(me);
     }
 
     @Override
@@ -112,7 +115,7 @@ public class FightStrategy implements Strategy {
     }
 
     private boolean canPushEnemy(Unit enemy) {
-        if (getEnemiesInFightRange().size() > 1) {
+        if (getEnemiesInViewRange().size() > 1) {
             return false;
         }
 
@@ -166,7 +169,7 @@ public class FightStrategy implements Strategy {
                 .collect(Collectors.toList());
     }
 
-    private List<Unit> getEnemiesInFightRange() {
+    private List<Unit> getEnemiesInViewRange() {
         return World.getInstance().getAllEnemyUnits().stream()
                 .filter(enemy -> enemy.getDistanceTo(me) < 50)
                 .collect(Collectors.toList());
@@ -182,7 +185,7 @@ public class FightStrategy implements Strategy {
         var priorityEnemy = World.getInstance().getGlobalStrategy().getPriorityTargetEnemy();
 
         if (priorityEnemy != null) {
-            var enemyMinDist = getEnemiesInFightRange().stream()
+            var enemyMinDist = getEnemiesInViewRange().stream()
                     .filter(Unit::isSpawned)
                     .mapToDouble(u -> u.getDistanceTo(me))
                     .min()
@@ -197,22 +200,41 @@ public class FightStrategy implements Strategy {
     }
 
     private Unit getTargetEnemy() {
-        var enemiesAround = getEnemiesInFightRange();
+        if (targetEnemy == null) {
+            var enemiesInViewRange = getEnemiesInViewRange();
 
-        var spawnedEnemies = enemiesAround.stream()
-                .filter(Unit::isSpawned)
-                .collect(Collectors.toList());
+            var spawnedEnemies = enemiesInViewRange.stream()
+                    .filter(Unit::isSpawned)
+                    .collect(Collectors.toList());
 
-        if (spawnedEnemies.isEmpty()) {
-            return getNearestEnemy(enemiesAround);
-        } else {
-            var enemiesUnderAttack = getEnemiesUnderAttack(spawnedEnemies);
-            if (!enemiesUnderAttack.isEmpty()) {
-                return getNearestEnemy(enemiesUnderAttack);
+            if (spawnedEnemies.isEmpty()) {
+                targetEnemy = getNearestEnemy(enemiesInViewRange);
+            } else {
+                targetEnemy = spawnedEnemies.stream()
+                        .sorted(Comparator.comparingDouble(e -> e.getDistanceTo(me)))
+                        .max(Comparator.comparingDouble(enemy -> getShootingPriorityForEnemy(me, enemy)))
+                        .orElseThrow();
             }
-
-            return getNearestEnemy(spawnedEnemies);
         }
+
+        return targetEnemy;
+    }
+
+    public double getShootingPriorityForEnemy(Unit me, Unit enemy) {
+        var dist = me.getDistanceTo(enemy);
+
+        var shootLine = ShootAction.getNearestShootablePosition(me, enemy);
+        var ticksToShoot = WalkSimulation.getTicksToRunDistanceWithAim(me, shootLine.getProjection(me.getPosition()));
+        var ticksToRotate = WalkSimulation.getTicksToRotateWithAim(me, enemy.getPosition(), true);
+
+        var distMul = new LinearDistributor(10, 30, 1, 0)
+                .get(dist);
+        var timeToShootMul = new LinearDistributor(Math.min(me.getRemainedTicksToAim(),
+                me.getRemainingCoolDownTicks()), 30, 1, 0
+        )
+                .get(Math.max(ticksToShoot, ticksToRotate));
+
+        return distMul * timeToShootMul;
     }
 
     public Unit getEnemyToShoot() {

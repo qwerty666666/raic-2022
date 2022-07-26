@@ -120,4 +120,10 @@ public class Vector {
     public String toString() {
         return String.format("{x: %f, y: %f} (%f)", x, y, getLength());
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Vector && Double.compare(((Vector)obj).getX(), x) == 0 &&
+                Double.compare(((Vector)obj).getY(), y) == 0;
+    }
 }

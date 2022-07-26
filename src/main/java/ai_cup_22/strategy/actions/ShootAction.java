@@ -5,7 +5,6 @@ import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.basic.AimAction;
 import ai_cup_22.strategy.actions.basic.LookToAction;
-import ai_cup_22.strategy.debug.Colors;
 import ai_cup_22.strategy.debug.DebugData;
 import ai_cup_22.strategy.geometry.Line;
 import ai_cup_22.strategy.geometry.Position;
@@ -14,7 +13,6 @@ import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.models.Weapon;
 import ai_cup_22.strategy.simulation.walk.WalkSimulation;
 import ai_cup_22.strategy.utils.MathUtils;
-import java.util.Comparator;
 import java.util.stream.Collectors;
 
 public class ShootAction implements Action {
@@ -56,7 +54,7 @@ public class ShootAction implements Action {
                 getTicksToNearestShootablePositionWithAim(me, target),
                 getTicksToRunBySideToTheNearestShootablePosition(target, me)
         );
-        var ticksToRotate = WalkSimulation.getTicksToRotate(me, bestPositionToShoot, true);
+        var ticksToRotate = WalkSimulation.getTicksToRotateWithAim(me, bestPositionToShoot, true);
 DebugData.getInstance().getDefaultLayer().addText(String.format("run: %d (me: %d, en: %d), rot: %d", ticksToShootablePosition,
                 getTicksToNearestShootablePositionWithAim(me, target),
                 getTicksToRunBySideToTheNearestShootablePosition(target, me),
@@ -64,7 +62,7 @@ DebugData.getInstance().getDefaultLayer().addText(String.format("run: %d (me: %d
                 me.getPosition().move(new Vector(1, 1)), 0.5
 );
         var ticksToCanShoot = MathUtils.max(
-                ticksToRotate - 4,
+                ticksToRotate - 1,
                 ticksToSpawn,
                 ticksToShootablePosition,
                 me.getRemainingCoolDownTicks()
@@ -74,19 +72,19 @@ DebugData.getInstance().getDefaultLayer().addText(String.format("run: %d (me: %d
     }
 
     private int getTicksToNearestShootablePositionWithAim(Unit unit, Unit target) {
-DebugData.getInstance().getDefaultLayer().addLine(getNearestShootablePosition(unit, target).getStart(),
-        getNearestShootablePosition(unit, target).getEnd(), Colors.GRAY_TRANSPARENT);
-        return WalkSimulation.getTicksToRunDistance(unit, getNearestShootablePosition(unit, target).getProjection(unit.getPosition()));
+//DebugData.getInstance().getDefaultLayer().addLine(getNearestShootablePosition(unit, target).getStart(),
+//        getNearestShootablePosition(unit, target).getEnd(), Colors.GRAY_TRANSPARENT);
+        return WalkSimulation.getTicksToRunDistanceWithAim(unit, getNearestShootablePosition(unit, target).getProjection(unit.getPosition()));
     }
 
     private int getTicksToRunBySideToTheNearestShootablePosition(Unit unit, Unit target) {
-DebugData.getInstance().getDefaultLayer().addLine(getNearestShootablePosition(unit, target).getStart(),
-        getNearestShootablePosition(unit, target).getEnd(), Colors.GRAY_TRANSPARENT);
+//DebugData.getInstance().getDefaultLayer().addLine(getNearestShootablePosition(unit, target).getStart(),
+//        getNearestShootablePosition(unit, target).getEnd(), Colors.GRAY_TRANSPARENT);
         var destination = getNearestShootablePosition(unit, target).getProjection(unit.getPosition());
         return (int) (unit.getPosition().getDistanceTo(destination) / Constants.UNIT_MAX_SIDE_SPEED_PER_TICK);
     }
 
-    private Line getNearestShootablePosition(Unit unit, Unit target) {
+    public static Line getNearestShootablePosition(Unit unit, Unit target) {
         var shootLine = new Line(target.getPosition(), unit.getPosition());
 
         var lines = World.getInstance().getNonShootThroughObstacles().values().stream()

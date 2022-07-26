@@ -47,7 +47,7 @@ public class LookBackAction implements Action {
                             var dist = enemy.getDistanceTo(me) - 2;
                             var bulletTicks = Math.ceil(dist / enemy.getWeapon().getSpeedPerTick());
                             var cdTicks = enemy.getRemainingCoolDownTicks();
-                            var rotateTicks = WalkSimulation.getTicksToRotate(me, enemy.getPosition(), false);
+                            var rotateTicks = WalkSimulation.getTicksToRotateWithAim(me, enemy.getPosition(), false);
 
                             if (enemy.isPhantom() && cdTicks > 0 &&
                                     enemy.getWeapon().getCoolDownTicks() - cdTicks < bulletTicks) {

@@ -26,11 +26,12 @@ public class GlobalStrategy {
                 .filter(Unit::isSpawned)
                 .collect(Collectors.toList());
 
-        if (!spawnedEnemies.isEmpty()) {
-            priorityTargetEnemy = getNearestToMyTeamUnit(spawnedEnemies);
-        } else {
-            priorityTargetEnemy = getNearestToMyTeamUnit(notSpawnedEnemies);
-        }
+//        if (!spawnedEnemies.isEmpty()) {
+//            priorityTargetEnemy = getNearestToMyTeamUnit(spawnedEnemies);
+//        } else {
+//            priorityTargetEnemy = getNearestToMyTeamUnit(notSpawnedEnemies);
+//        }
+        priorityTargetEnemy = null;
     }
 
     private Unit getNearestToMyTeamUnit(List<Unit> units) {

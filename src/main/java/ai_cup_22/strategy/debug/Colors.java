@@ -4,6 +4,7 @@ import ai_cup_22.debugging.Color;
 
 public class Colors {
     public static Color RED_TRANSPARENT = new Color(1, 0, 0, 0.3);
+    public static Color RED = new Color(1, 0, 0, 1);
     public static Color GREEN_TRANSPARENT = new Color(0, 1, 0, 0.3);
     public static Color GRAY_TRANSPARENT = new Color(0.5, 0.5, 0.5, 0.6);
     public static Color LIGHT_RED_TRANSPARENT = new Color(0.5, 0, 0, 0.3);

@@ -1,5 +1,6 @@
 package ai_cup_22.strategy.debug.layers;
 
+import ai_cup_22.debugging.Color;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.debug.Colors;
 import ai_cup_22.strategy.debug.DebugData;
@@ -11,12 +12,13 @@ import ai_cup_22.strategy.debug.primitives.Text;
 import ai_cup_22.strategy.geometry.Circle;
 import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Unit;
+import java.util.stream.Collectors;
 
 public class DefaultLayer extends DrawLayer {
     public void update(World world) {
-//        addShootLines(world);
+        addShootLines(world);
         addShootAreas(world);
-        addLookLines(world);
+//        addLookLines(world);
 
         addUnitPaths(world);
         addUnitStrategies(world);
@@ -115,21 +117,35 @@ public class DefaultLayer extends DrawLayer {
 
     private void addShootLines(World world) {
         for (var unit: world.getMyUnits().values()) {
-            world.getEnemyUnits().values().stream()
-                    .filter(Unit::isSpawned)
-                    .filter(enemy -> enemy.getDistanceTo(unit) < 40)
-                    .forEach(enemy -> {
-                        if (unit.canShoot(enemy)) {
-                            add(new Line(unit.getPosition(), enemy.getPosition(), Colors.GREEN_TRANSPARENT));
-                        } else {
-                            add(new Line(unit.getPosition(), enemy.getPosition(), Colors.RED_TRANSPARENT));
-                        }
-                    });
+//            world.getEnemyUnits().values().stream()
+//                    .filter(Unit::isSpawned)
+//                    .filter(enemy -> enemy.getDistanceTo(unit) < 40)
+//                    .forEach(enemy -> {
+//                        if (unit.canShoot(enemy)) {
+//                            add(new Line(unit.getPosition(), enemy.getPosition(), Colors.GREEN_TRANSPARENT));
+//                        } else {
+//                            add(new Line(unit.getPosition(), enemy.getPosition(), Colors.RED_TRANSPARENT));
+//                        }
+//                    });
 
-            var priorityEnemy = unit.getBehaviourTree().getFightStrategy().getPriorityEnemy();
-            if (priorityEnemy != null) {
-                addLine(unit.getPosition(), priorityEnemy.getPosition(), Colors.YELLOW_TRANSPARENT);
-            }
+//            var priorityEnemy = unit.getBehaviourTree().getFightStrategy().getPriorityEnemy();
+//            if (priorityEnemy != null) {
+//                addLine(unit.getPosition(), priorityEnemy.getPosition(), Colors.YELLOW_TRANSPARENT);
+//            }
+
+//            for (var enemy: world.getAllEnemyUnits().stream().filter(Unit::isSpawned).filter(e -> e.getDistanceTo(unit) < 50)
+//                    .collect(Collectors.toList())) {
+//                Color color;
+//                if (enemy == unit.getBehaviourTree().getFightStrategy().getEnemyToShoot()) {
+//                    color = Colors.RED_TRANSPARENT;
+//                } else {
+//                    color = Colors.YELLOW_TRANSPARENT;
+//                }
+//
+//                addLine(unit.getPosition(), enemy.getPosition(), color);
+//                addText(unit.getBehaviourTree().getFightStrategy().getShootingPriorityForEnemy(unit, enemy) + "",
+//                        new ai_cup_22.strategy.geometry.Line(unit.getPosition(), enemy.getPosition()).getMiddlePoint());
+//            }
         }
     }
 
