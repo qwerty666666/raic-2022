@@ -14,8 +14,6 @@ import ai_cup_22.strategy.actions.basic.NullAction;
 import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.behaviourtree.strategies.peaceful.BaseLootStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.peaceful.ExploreStrategy;
-import ai_cup_22.strategy.debug.Colors;
-import ai_cup_22.strategy.debug.DebugData;
 import ai_cup_22.strategy.distributions.LinearDistributor;
 import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Loot;
@@ -102,11 +100,7 @@ public class FightStrategy implements Strategy {
                 .allMatch(enemy -> enemy.getDistanceTo(me) > Constants.SAFE_DIST);
     }
 
-    private double getBestDistanceToEnemy(Unit enemy) {
-        if (enemy.isPhantom()) {
-            return Constants.SAFE_DIST;
-        }
-
+    private double getBestDistanceToTargetEnemy(Unit enemy) {
         if (canPushEnemy(enemy)) {
             return 0;
         }
@@ -115,7 +109,7 @@ public class FightStrategy implements Strategy {
     }
 
     private boolean canPushEnemy(Unit enemy) {
-        if (getEnemiesInViewRange().size() > 1) {
+        if (!enemy.isSeenBefore()) {
             return false;
         }
 
@@ -123,15 +117,28 @@ public class FightStrategy implements Strategy {
             return false;
         }
 
-        if (canAttackByDps(enemy)) {
-            return true;
+        if (!canAttackByDps(enemy)) {
+            return false;
         }
 
-        if (canAttackByEnemyHasNoEnoughBullets(enemy)) {
-            return true;
+        if (!canAttackByEnemyHasNoEnoughBullets(enemy)) {
+            return false;
+        }
+
+        var enemiesThatCanShoot = getEnemiesThatCanShootInSafeDist();
+        if (enemiesThatCanShoot.size() > 1 ||
+                (enemiesThatCanShoot.size() == 1 && !enemiesThatCanShoot.get(0).equals(enemy))) {
+            return false;
         }
 
         return false;
+    }
+
+    private List<Unit> getEnemiesThatCanShootInSafeDist() {
+        return getEnemiesInViewRange().stream()
+                .filter(enemy -> enemy.isSpawned() && enemy.hasWeapon() && enemy.getBulletCount() > 0)
+                .filter(enemy -> enemy.getDistanceTo(me) < Constants.SAFE_DIST)
+                .collect(Collectors.toList());
     }
 
     private boolean hasEnoughAmmoToKill(Unit enemy) {
@@ -141,7 +148,7 @@ public class FightStrategy implements Strategy {
     }
 
     private boolean canAttackByEnemyHasNoEnoughBullets(Unit enemy) {
-        if (enemy.isPhantom()) {
+        if (enemy.isSeenBefore()) {
             return false;
         }
 
@@ -253,7 +260,7 @@ public class FightStrategy implements Strategy {
         // target enemy
 
         var targetEnemy = getEnemyToShoot();
-        var safeDistant = getBestDistanceToEnemy(targetEnemy);
+        var safeDistant = getBestDistanceToTargetEnemy(targetEnemy);
 
         if (targetEnemy.isSpawned()) {
             contributor.add(new FirstMatchCompositeScoreContributor("Target Enemy")

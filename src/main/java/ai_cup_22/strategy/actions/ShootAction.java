@@ -54,7 +54,7 @@ public class ShootAction implements Action {
         if (target.getTicksSinceLastUpdate() > 50 ||
                 (target.isSeenBefore() && !target.hasWeapon()) ||
                 (target.isSeenBefore() && target.getBulletCount() == 0)
-                // TODO rotate, aim, cd
+            // TODO rotate, aim, cd
         ) {
             ticksToShootablePosition = getTicksToNearestShootablePositionWithAim(me, target);
         } else {
@@ -64,12 +64,14 @@ public class ShootAction implements Action {
             );
         }
         var ticksToRotate = WalkSimulation.getTicksToRotateWithAim(me, bestPositionToShoot, true);
-DebugData.getInstance().getDefaultLayer().addText(String.format("run: %d (me: %d, en: %d), rot: %d", ticksToShootablePosition,
-                getTicksToNearestShootablePositionWithAim(me, target),
-                getTicksToRunBySideToTheNearestShootablePosition(target, me),
-                ticksToRotate),
-                me.getPosition().move(new Vector(1, 1)), 0.5
-);
+if (DebugData.isEnabled) {
+    DebugData.getInstance().getDefaultLayer().addText(String.format("run: %d (me: %d, en: %d), rot: %d", ticksToShootablePosition,
+                    getTicksToNearestShootablePositionWithAim(me, target),
+                    getTicksToRunBySideToTheNearestShootablePosition(target, me),
+                    ticksToRotate),
+            me.getPosition().move(new Vector(1, 1)), 0.5
+    );
+}
         var ticksToCanShoot = MathUtils.max(
                 ticksToRotate - 1,
                 ticksToSpawn,

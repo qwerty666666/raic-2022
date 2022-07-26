@@ -386,7 +386,7 @@ public class Unit {
     }
 
     public double getShield() {
-        return unit == null ? 0 : unit.getShield();
+        return unit == null ? 200 : unit.getShield();
     }
 
     public double getMaxShield() {
