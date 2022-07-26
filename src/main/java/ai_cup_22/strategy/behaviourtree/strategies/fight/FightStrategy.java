@@ -280,29 +280,23 @@ public class FightStrategy implements Strategy {
         }
 
         // other enemies
-        World.getInstance().getEnemyUnits().values().stream()
+        World.getInstance().getAllEnemyUnits().stream()
                 .filter(enemy -> enemy != targetEnemy)
                 .filter(Unit::isSpawned)
                 .forEach(enemy -> {
+                    if (!enemy.isSpawned()) {
+                        return;
+                    }
+
+                    if (enemy.isSeenBefore() && (!enemy.hasWeapon() || enemy.getBulletCount() == 0)) {
+                        return;
+                    }
+
                     contributor.add(new LinearScoreContributor(
                             "Enemy " + enemy.getPosition(),
                             enemy.getPosition(),
                             Constants.PF_NON_TARGET_ENEMY_MIN_SCORE,
                             Constants.PF_NON_TARGET_ENEMY_MAX_SCORE,
-                            getThreatenDistanceForNonTargetEnemy(targetEnemy, enemy, me)
-                    ));
-                });
-
-        // phantom enemies
-        World.getInstance().getPhantomEnemies().values().stream()
-                .filter(enemy -> enemy.getDistanceTo(me) < 50)
-                .filter(Unit::isSpawned)
-                .forEach(enemy -> {
-                    contributor.add(new LinearScoreContributor(
-                            "Phantom Enemy " + enemy.getPosition(),
-                            enemy.getPosition(),
-                            Constants.PF_PHANTOM_ENEMY_MIN_SCORE,
-                            Constants.PF_PHANTOM_ENEMY_MAX_SCORE,
                             getThreatenDistanceForNonTargetEnemy(targetEnemy, enemy, me)
                     ));
                 });
@@ -327,11 +321,7 @@ public class FightStrategy implements Strategy {
         var angle = new Vector(me.getPosition(), targetEnemy.getPosition())
                 .getAngleTo(new Vector(me.getPosition(), enemy.getPosition()));
 
-        if (angle > Math.PI / 2) {
-            return Constants.SAFE_DIST;
-        }
-
-        return new LinearDistributor(0, Math.PI / 2, enemy.getThreatenDistanceFor(me), Constants.SAFE_DIST)
+        return new LinearDistributor(Math.PI / 4, Math.PI / 2, enemy.getThreatenDistanceFor(me), Constants.SAFE_DIST)
                 .get(angle);
     }
 

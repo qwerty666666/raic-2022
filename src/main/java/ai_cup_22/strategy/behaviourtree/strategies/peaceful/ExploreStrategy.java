@@ -11,11 +11,13 @@ import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.models.Zone;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 public class ExploreStrategy implements Strategy {
+    private static final Map<Unit, Position> positionsToExplore = new HashMap<>();
     private final Unit unit;
-    private Position positionToExplore;
     private Random random = new Random();
 
     public ExploreStrategy(Unit unit) {
@@ -29,9 +31,12 @@ public class ExploreStrategy implements Strategy {
 
     @Override
     public Action getAction() {
+        var positionToExplore = positionsToExplore.get(unit);
+
         if (positionToExplore == null || !getZone().contains(positionToExplore) ||
                 unit.getViewSegment().canSee(positionToExplore)) {
             positionToExplore = getNewPositionToExplore();
+            positionsToExplore.put(unit, positionToExplore);
         }
 
         return new CompositeAction()

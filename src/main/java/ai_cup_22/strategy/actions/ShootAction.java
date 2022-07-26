@@ -50,10 +50,19 @@ public class ShootAction implements Action {
 
     private boolean shouldStartAimingToEnemy() {
         var ticksToSpawn = target.getRemainingSpawnTicks();
-        var ticksToShootablePosition = Math.min(
-                getTicksToNearestShootablePositionWithAim(me, target),
-                getTicksToRunBySideToTheNearestShootablePosition(target, me)
-        );
+        int ticksToShootablePosition;
+        if (target.getTicksSinceLastUpdate() > 50 ||
+                (target.isSeenBefore() && !target.hasWeapon()) ||
+                (target.isSeenBefore() && target.getBulletCount() == 0)
+                // TODO rotate, aim, cd
+        ) {
+            ticksToShootablePosition = getTicksToNearestShootablePositionWithAim(me, target);
+        } else {
+            ticksToShootablePosition = Math.min(
+                    getTicksToNearestShootablePositionWithAim(me, target),
+                    getTicksToRunBySideToTheNearestShootablePosition(target, me)
+            );
+        }
         var ticksToRotate = WalkSimulation.getTicksToRotateWithAim(me, bestPositionToShoot, true);
 DebugData.getInstance().getDefaultLayer().addText(String.format("run: %d (me: %d, en: %d), rot: %d", ticksToShootablePosition,
                 getTicksToNearestShootablePositionWithAim(me, target),
