@@ -43,7 +43,8 @@ public class DodgeSimulation {
                 .min(Comparator.comparingDouble(DodgeDirection::getTakenDmg)
                         // take firstly:
                         // 1. with aim
-                        // 2. without rotating
+                        // 2. without aim + without rotating
+                        // 2. without aim + with rotating
                         .thenComparing(Comparator.comparing(DodgeDirection::isWithAim).reversed()
                                 .thenComparing(DodgeDirection::isWithRotateToDirection)
                         )

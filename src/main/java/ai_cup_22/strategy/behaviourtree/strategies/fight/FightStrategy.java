@@ -138,11 +138,12 @@ public class FightStrategy implements Strategy {
             return false;
         }
 
-        return me.getShield() < 100;
+        return me.getShield() == 0;
     }
 
     public boolean isOnSafeDistance() {
         return World.getInstance().getAllEnemyUnits().stream()
+                .filter(Unit::isSpawned)
                 .allMatch(enemy -> enemy.getDistanceTo(me) > Constants.SAFE_DIST);
     }
 
@@ -264,8 +265,9 @@ public class FightStrategy implements Strategy {
                 targetEnemy = getNearestEnemy(enemiesInViewRange);
             } else {
                 targetEnemy = spawnedEnemies.stream()
-                        .sorted(Comparator.comparingDouble(e -> e.getDistanceTo(me)))
-                        .max(Comparator.comparingDouble(enemy -> getShootingPriorityForEnemy(me, enemy)))
+                        .max(Comparator.comparingDouble((Unit enemy) -> getShootingPriorityForEnemy(me, enemy))
+                                .thenComparingDouble((Unit enemy) -> enemy.getDistanceTo(me))
+                        )
                         .orElseThrow();
             }
         }
@@ -286,8 +288,9 @@ public class FightStrategy implements Strategy {
                 me.getRemainingCoolDownTicks()), 30, 1, 0
         )
                 .get(Math.max(ticksToShoot, ticksToRotate));
+        var healthMul = enemy.getFullHealth() <= me.getDamage() ? 1 : 0.6;
 
-        return distMul * timeToShootMul;
+        return distMul * timeToShootMul * healthMul;
     }
 
     public Unit getEnemyToShoot() {

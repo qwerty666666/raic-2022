@@ -63,7 +63,6 @@ public class LootShieldStrategy implements Strategy {
         @Override
         public double getOrder() {
             return getBestLoot()
-                    .filter(this::canTakeLootOnlyAfterDisabledTime)
                     .map(loot -> {
                         var dist = unit.getPosition().getDistanceTo(loot.getPosition());
 

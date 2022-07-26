@@ -344,6 +344,10 @@ public class Unit {
         return Weapon.get(weapon);
     }
 
+    public double getDamage() {
+        return getWeaponOptional().map(Weapon::getDamage).orElse(0.);
+    }
+
     public Optional<Weapon> getWeaponOptional() {
         return Optional.ofNullable(getWeapon());
     }

@@ -83,7 +83,6 @@ public class LootAmmoStrategy implements Strategy {
         @Override
         public double getOrder() {
             return getBestLoot()
-                    .filter(this::canTakeLootOnlyAfterDisabledTime)
                     .map(ammo -> {
                         var dist = unit.getPosition().getDistanceTo(ammo.getPosition());
                         var maxBullets = unit.getMaxBulletCount();
@@ -202,7 +201,6 @@ public class LootAmmoStrategy implements Strategy {
             }
 
             return getBestLoot()
-                    .filter(this::canTakeLootOnlyAfterDisabledTime)
                     .map(ammo -> {
                         var dist = unit.getPosition().getDistanceTo(ammo.getPosition());
                         var maxBullets = Weapon.get(weaponId).getMaxBulletCount();

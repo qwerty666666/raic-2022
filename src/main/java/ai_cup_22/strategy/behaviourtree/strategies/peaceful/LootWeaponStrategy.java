@@ -32,7 +32,6 @@ public class LootWeaponStrategy extends BaseLootStrategy {
         }
 
         return getBestLoot()
-                .filter(this::canTakeLootOnlyAfterDisabledTime)
                 .map(loot -> {
                     var dist = unit.getPosition().getDistanceTo(loot.getPosition());
 
