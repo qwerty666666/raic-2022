@@ -64,8 +64,11 @@ public class MoveByPotentialFieldAction implements Action {
                 .collect(Collectors.toMap(
                         node -> node,
                         node -> {
-                            return (node.getThreatSumOnPath() + node.getScoreValue() * (maxDist - node.getDist())) *
+                            var score = (node.getThreatSumOnPath() + node.getScoreValue() * (maxDist - node.getDist()));
+                            var distMul = score > 0 ?
+                                    1 / (node.getDist() > 2.72 ? Math.log(node.getDist()) : 1) :
                                     (node.getDist() > 2.72 ? Math.log(node.getDist()) : 1);
+                            return score * distMul;
 //                            // +1 to consider stay at the same node
 //                            return (node.getScoreValue() - minScoreValue) /
 //                                    Math.max(1, -node.getThreatSumOnPath() / Math.max(1, node.getStepsUnderThreat())) /
