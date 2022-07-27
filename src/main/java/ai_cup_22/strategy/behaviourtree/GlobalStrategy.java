@@ -1,17 +1,24 @@
 package ai_cup_22.strategy.behaviourtree;
 
 import ai_cup_22.strategy.World;
+import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.models.Loot;
 import ai_cup_22.strategy.models.Unit;
+import ai_cup_22.strategy.models.ViewMap.Node;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class GlobalStrategy {
     private final Map<Loot, Unit> takenLoots = new HashMap<>();
     private Unit priorityTargetEnemy;
+    private Map<Unit, Node> explorePoints = new HashMap<>();
+    private int explorePointsLastUpdateTick;
 
     public void updateTick() {
         takenLoots.clear();
@@ -19,12 +26,12 @@ public class GlobalStrategy {
     }
 
     private void updatePriorityTargetEnemy() {
-        var spawnedEnemies = World.getInstance().getEnemyUnits().values().stream()
-                .filter(Unit::isSpawned)
-                .collect(Collectors.toList());
-        var notSpawnedEnemies = World.getInstance().getEnemyUnits().values().stream()
-                .filter(Unit::isSpawned)
-                .collect(Collectors.toList());
+//        var spawnedEnemies = World.getInstance().getEnemyUnits().values().stream()
+//                .filter(Unit::isSpawned)
+//                .collect(Collectors.toList());
+//        var notSpawnedEnemies = World.getInstance().getEnemyUnits().values().stream()
+//                .filter(Unit::isSpawned)
+//                .collect(Collectors.toList());
 
 //        if (!spawnedEnemies.isEmpty()) {
 //            priorityTargetEnemy = getNearestToMyTeamUnit(spawnedEnemies);
@@ -54,5 +61,82 @@ public class GlobalStrategy {
 
     public Unit getPriorityTargetEnemy() {
         return priorityTargetEnemy;
+    }
+
+
+    public Optional<Position> getPointToExplore(Unit unit) {
+        if (explorePointsLastUpdateTick != World.getInstance().getCurrentTick() || explorePoints == null) {
+            var viewNodes = World.getInstance().getViewMap().getNodes().values();
+
+            if (viewNodes.size() < 3) {
+                explorePoints = Collections.emptyMap();
+            } else {
+                explorePoints = findBestDistribution(
+                        new ArrayList<>(World.getInstance().getMyUnits().values()),
+                        new HashMap<>(),
+                        World.getInstance().getMyUnits().values().stream()
+                                .collect(Collectors.toMap(u -> u, u -> {
+                                    return viewNodes.stream()
+                                            .sorted(Comparator.comparingDouble(Node::getLastSeenTick)
+                                                    .thenComparingDouble((Node node) -> node.getPosition().getDistanceTo(u.getPosition()))
+                                            )
+                                            .limit(3)
+                                            .collect(Collectors.toList());
+                                }))
+                );
+            }
+
+            explorePointsLastUpdateTick = World.getInstance().getCurrentTick();
+        }
+
+        return Optional.ofNullable(explorePoints.get(unit))
+                .map(Node::getPosition);
+    }
+
+    private Map<Unit, Node> findBestDistribution(List<Unit> units, Map<Unit, Node> takenNodes, Map<Unit, List<Node>> candidates) {
+        if (units.isEmpty()) {
+            return new HashMap<>(takenNodes);
+        }
+
+        Map<Unit, Node> bestDistribution = null;
+        double bestDistributionScore = Double.MIN_VALUE;
+
+        for (var unit: units) {
+            var takeNode = candidates.get(unit).stream()
+                    .filter(node -> !takenNodes.containsValue(node))
+                    .findFirst()
+                    .orElseThrow();
+            takenNodes.put(unit, takeNode);
+
+            var distribution = findBestDistribution(
+                    units.stream().filter(u -> u != unit).collect(Collectors.toList()),
+                    takenNodes,
+                    candidates
+            );
+
+            var distToUnits = distribution.entrySet().stream()
+                    .mapToDouble(e -> e.getKey().getPosition().getDistanceTo(e.getValue().getPosition()))
+                    .reduce(1, (acc, el) -> el * acc);
+            var distBetweenPoints = distribution.values().stream()
+                    .mapToDouble(node -> distribution.values().stream()
+                            .filter(other -> other != node)
+                            .mapToDouble(other -> other.getPosition().getDistanceTo(node.getPosition()))
+                            .reduce(1, (acc, el) -> el * acc)
+                    )
+                    .sum();
+            var unseenTicksSum = distribution.values().stream()
+                    .mapToDouble(node -> World.getInstance().getCurrentTick() - node.getLastSeenTick())
+                    .reduce(1, (acc, el) -> el * acc);
+            var score = unseenTicksSum / distToUnits / distBetweenPoints;
+
+            if (score > bestDistributionScore) {
+                bestDistribution = distribution;
+                bestDistributionScore = score;
+            }
+
+            takenNodes.remove(unit);
+        }
+
+        return bestDistribution;
     }
 }

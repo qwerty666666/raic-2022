@@ -118,6 +118,14 @@ public class MyStrategy {
                 });
             }
 
+
+//            for (var node: World.getInstance().getViewMap().getNodes().values()) {
+//                DebugData.getInstance().getDefaultLayer().addCircle(node.getPosition(), 1, Colors.YELLOW_TRANSPARENT);
+//                DebugData.getInstance().getDefaultLayer().addText(node.getLastSeenTick() + "", node.getPosition(), 2);
+//
+//            }
+
+
             DebugData.getInstance().getDefaultLayer().show(debugInterface);
         }
 

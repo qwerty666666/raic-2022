@@ -12,6 +12,7 @@ import ai_cup_22.strategy.models.Bullet;
 import ai_cup_22.strategy.models.Loot;
 import ai_cup_22.strategy.models.Obstacle;
 import ai_cup_22.strategy.models.Unit;
+import ai_cup_22.strategy.models.ViewMap;
 import ai_cup_22.strategy.models.WeaponLoot;
 import ai_cup_22.strategy.models.Zone;
 import ai_cup_22.strategy.potentialfield.StaticPotentialField;
@@ -42,6 +43,7 @@ public class World {
     private final Map<Integer, Unit> myUnits;
 
     private StaticPotentialField staticPotentialField;
+    private ViewMap viewMap;
     private Zone zone;
 
     private Map<Integer, Bullet> bullets = new HashMap<>();
@@ -76,6 +78,7 @@ public class World {
 
     private void initFirstTick() {
         this.staticPotentialField = new StaticPotentialField(this);
+        this.viewMap = new ViewMap(this);
     }
 
     public static void init(Constants constants, Game game) {
@@ -95,6 +98,7 @@ public class World {
         updateObstacles(game);
 
         UnitPotentialField.updateCache();
+        viewMap.updateTick();
 
         globalStrategy.updateTick();
     }
@@ -449,5 +453,9 @@ public class World {
 
     public GlobalStrategy getGlobalStrategy() {
         return globalStrategy;
+    }
+
+    public ViewMap getViewMap() {
+        return viewMap;
     }
 }

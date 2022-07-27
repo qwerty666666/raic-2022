@@ -54,15 +54,20 @@ public class CircleSegment {
             return false;
         }
 
-        var angleToPosition = new Vector(getCenter(), position).getAngle();
-        while (angleToPosition > getMinAngle()) {
-            angleToPosition -= Math.PI * 2;
+        return contains(new Vector(getCenter(), position));
+    }
+
+    public boolean contains(Vector v) {
+        var angle = v.getAngle();
+
+        while (angle > getMinAngle()) {
+            angle -= Math.PI * 2;
         }
-        while (angleToPosition <= getMinAngle()) {
-            angleToPosition += Math.PI * 2;
+        while (angle <= getMinAngle()) {
+            angle += Math.PI * 2;
         }
 
-        return angleToPosition < getMaxAngle();
+        return angle < getMaxAngle();
     }
 
     public boolean contains(Circle circle) {
