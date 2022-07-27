@@ -99,7 +99,7 @@ public class GlobalStrategy {
         }
 
         Map<Unit, Node> bestDistribution = null;
-        double bestDistributionScore = Double.MIN_VALUE;
+        double bestDistributionScore = Double.MAX_VALUE;
 
         for (var unit: units) {
             var takeNode = candidates.get(unit).stream()
@@ -116,20 +116,10 @@ public class GlobalStrategy {
 
             var distToUnits = distribution.entrySet().stream()
                     .mapToDouble(e -> e.getKey().getPosition().getDistanceTo(e.getValue().getPosition()))
-                    .reduce(1, (acc, el) -> el * acc);
-            var distBetweenPoints = distribution.values().stream()
-                    .mapToDouble(node -> distribution.values().stream()
-                            .filter(other -> other != node)
-                            .mapToDouble(other -> other.getPosition().getDistanceTo(node.getPosition()))
-                            .reduce(1, (acc, el) -> el * acc)
-                    )
                     .sum();
-            var unseenTicksSum = distribution.values().stream()
-                    .mapToDouble(node -> World.getInstance().getCurrentTick() - node.getLastSeenTick())
-                    .reduce(1, (acc, el) -> el * acc);
-            var score = unseenTicksSum / distToUnits / distBetweenPoints;
+            var score = distToUnits;
 
-            if (score > bestDistributionScore) {
+            if (score < bestDistributionScore) {
                 bestDistribution = distribution;
                 bestDistributionScore = score;
             }

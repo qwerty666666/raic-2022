@@ -24,17 +24,12 @@ import java.util.stream.Collectors;
 public class SpawnStrategy implements Strategy {
     private final Unit unit;
     private final FightStrategy fightStrategy;
-    private final Strategy delegate;
+    private final ExploreStrategy exploreStrategy;
 
     public SpawnStrategy(Unit unit, FightStrategy fightStrategy, ExploreStrategy exploreStrategy) {
         this.unit = unit;
         this.fightStrategy = fightStrategy;
-        this.delegate = new MaxOrderCompositeStrategy()
-                .add(new RetreatToSafeSpawn(unit))
-                .add(new LootAmmoStrategy(unit, exploreStrategy, fightStrategy, 100))
-                .add(new LootShieldStrategy(unit, exploreStrategy, fightStrategy, 100))
-                .add(fightStrategy)
-                .add(exploreStrategy);
+        this.exploreStrategy = exploreStrategy;
     }
 
     @Override
@@ -44,10 +39,18 @@ public class SpawnStrategy implements Strategy {
 
     @Override
     public Action getAction() {
-        if (World.getInstance().getCurrentTick() < 15) {
-            return new RotateAction();
+        if (World.getInstance().getCurrentTick() < 151) {
+            return spawnStartGame();
+        } else {
+            return spawnMidGame();
         }
+    }
 
+    private Action spawnStartGame() {
+
+    }
+
+    private Action spawnMidGame() {
         // try to not spawn on another unit
 
         var obstacles = getObstacles();
@@ -59,7 +62,14 @@ public class SpawnStrategy implements Strategy {
 
             // take loot or smth...
 
-            action.add(this.delegate.getAction());
+            var delegate = new MaxOrderCompositeStrategy()
+                    .add(new RetreatToSafeSpawn(unit))
+                    .add(new LootAmmoStrategy(unit, exploreStrategy, fightStrategy, 100))
+                    .add(new LootShieldStrategy(unit, exploreStrategy, fightStrategy, 100))
+                    .add(fightStrategy)
+                    .add(exploreStrategy);
+
+            action.add(delegate.getAction());
         }
 
         // always rotate
