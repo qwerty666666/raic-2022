@@ -15,14 +15,18 @@ public class TakeLootAction implements Action {
 
     @Override
     public void apply(Unit unit, UnitOrder order) {
-        if (unit.canTakeLoot(loot)) {
+        if (unit.isStayOnLoot(loot)) {
             new CompositeAction()
                     .add(new MoveToAction(loot.getPosition()))
                     .add(new PickupAction(loot))
                     .apply(unit, order);
         } else {
             // by default move to given loot
-            new MoveToWithPathfindingAction(loot.getPosition()).apply(unit, order);
+            if (unit.isSpawned()) {
+                new MoveToWithPathfindingAction(loot.getPosition()).apply(unit, order);
+            } else {
+                new MoveToAction(loot.getPosition()).apply(unit, order);
+            }
         }
     }
 }

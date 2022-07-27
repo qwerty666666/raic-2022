@@ -15,7 +15,7 @@ public class PickupAction extends ActionBlockingAction implements Action {
 
     @Override
     public void apply(Unit unit, UnitOrder order) {
-        if (unit.canDoNewAction() && unit.canTakeLoot(loot)) {
+        if (unit.canDoNewAction() && unit.isStayOnLoot(loot)) {
             unit.setLastAction(this);
             targetId = loot.getId();
 

@@ -10,12 +10,11 @@ import ai_cup_22.strategy.behaviourtree.strategies.composite.MaxOrderCompositeSt
 import ai_cup_22.strategy.behaviourtree.strategies.fight.FightStrategy;
 import ai_cup_22.strategy.distributions.FirstMatchDistributor;
 import ai_cup_22.strategy.distributions.LinearDistributor;
-import ai_cup_22.strategy.geometry.Position;
+import ai_cup_22.strategy.models.AmmoLoot;
 import ai_cup_22.strategy.models.Loot;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.models.Weapon;
 import ai_cup_22.strategy.pathfinding.AStarPathFinder;
-import ai_cup_22.strategy.pathfinding.DijkstraPathFinder;
 import ai_cup_22.strategy.pathfinding.Path;
 import ai_cup_22.strategy.potentialfield.PotentialField;
 import ai_cup_22.strategy.potentialfield.Score;
@@ -47,7 +46,7 @@ public class LootAmmoStrategy implements Strategy {
                 .add(() -> unit.getBulletCount() == 0, new LootAmmoForceStrategy(unit, exploreStrategy, fightStrategy))
                 .add(() -> true, new MaxOrderCompositeStrategy()
                         .add(new LootNearestAmmoStrategy(unit, exploreStrategy, fightStrategy))
-                        .add(new LootNonOwningWeaponAmmoStrategy(Weapon.BOW_ID, unit, exploreStrategy, fightStrategy))
+                        .add(new LootNonOwningWeaponAmmoStrategy(unit, exploreStrategy, fightStrategy))
                 );
     }
 
@@ -113,7 +112,6 @@ public class LootAmmoStrategy implements Strategy {
 
 
 
-
     public class LootAmmoForceStrategy extends BaseLootStrategy {
         protected LootAmmoForceStrategy(Unit unit, ExploreStrategy exploreStrategy, FightStrategy fightStrategy) {
             super(unit, exploreStrategy, fightStrategy);
@@ -170,6 +168,7 @@ public class LootAmmoStrategy implements Strategy {
 
         private ScoreContributor getPotentialFieldScoreContributor() {
             var enemyScoreContributors = World.getInstance().getAllEnemyUnits().stream()
+                    .filter(enemy -> enemy.isSpawned() && enemy.hasWeapon() && enemy.getBulletCount() > 0)
                     .map(enemy -> new LinearScoreContributor(enemy.getPosition(), PotentialField.MIN_VALUE, 0, 15))
                     .collect(Collectors.toList());
 
@@ -187,21 +186,19 @@ public class LootAmmoStrategy implements Strategy {
 
 
     public class LootNonOwningWeaponAmmoStrategy extends BaseLootStrategy {
-        private final int weaponId;
-
-        protected LootNonOwningWeaponAmmoStrategy(int weaponId, Unit unit, ExploreStrategy exploreStrategy, FightStrategy fightStrategy) {
+        protected LootNonOwningWeaponAmmoStrategy(Unit unit, ExploreStrategy exploreStrategy, FightStrategy fightStrategy) {
             super(unit, exploreStrategy, fightStrategy);
-            this.weaponId = weaponId;
         }
 
         @Override
         public double getOrder() {
-            if (unit.hasWeapon() && unit.getWeapon().getId() == weaponId) {
+            if (World.getInstance().getZone().getRadius() > 160) {
                 return MIN_ORDER;
             }
 
             return getBestLoot()
                     .map(ammo -> {
+                        var weaponId = ((AmmoLoot)ammo).getWeaponId();
                         var dist = unit.getPosition().getDistanceTo(ammo.getPosition());
                         var maxBullets = Weapon.get(weaponId).getMaxBulletCount();
 
@@ -212,15 +209,21 @@ public class LootAmmoStrategy implements Strategy {
                                 .add(val -> val < maxBullets * 0.8, new LinearDistributor(maxBullets * 0.2, maxBullets * 0.8, 1, 0.125))
                                 .add(val -> true, new LinearDistributor(maxBullets * 0.8, maxBullets, 0.125, 0))
                                 .get(unit.getBulletCount());
+                        var priority = Weapon.getPriority(weaponId);
 
-                        return distMul * countMul / 2;
+                        return distMul * countMul / 2 * priority;
                     })
                     .orElse(0.);
         }
 
         @Override
         protected List<Loot> getSuitableLoots() {
-            return getSuitableAmmoLoots(weaponId);
+            var unitWeaponId = unit.getWeaponOptional().map(Weapon::getId).orElse(-1);
+
+            return World.getInstance().getAmmoLoots().values().stream()
+                    .filter(loot -> loot.getWeaponId() != unitWeaponId)
+                    .filter(loot -> loot.getPosition().getDistanceTo(unit.getPosition()) < maxLootDist)
+                    .collect(Collectors.toList());
         }
 
         @Override

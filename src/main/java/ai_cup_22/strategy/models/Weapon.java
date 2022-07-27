@@ -91,4 +91,14 @@ public class Weapon {
         }
         return weapons.get(id);
     }
+
+    public static double getPriority(int weaponId) {
+        if (weaponId == BOW_ID) {
+            return 1;
+        }
+        if (weaponId == STAFF_ID) {
+            return 0.5;
+        }
+        return 0.2;
+    }
 }

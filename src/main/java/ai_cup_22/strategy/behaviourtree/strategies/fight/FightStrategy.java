@@ -99,7 +99,7 @@ public class FightStrategy implements Strategy {
                 var loot = lootAmmoStrategy.getBestLoot();
                 if (loot.isPresent() && (
                         // I stay on the loot
-                        (me.canDoNewAction() && me.canTakeLoot(loot.get())) ||
+                        (me.canDoNewAction() && me.isStayOnLoot(loot.get())) ||
                         // I can safely run to the loot
                         (getEnemiesThatCanShootInSafeDist().stream()
                                 .noneMatch(e -> e.getDistanceTo(me) < e.getThreatenDistanceFor(me) + TAKE_SHIELD_POTION_ADDITIONAL_DIST) &&

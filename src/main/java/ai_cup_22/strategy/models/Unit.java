@@ -333,6 +333,10 @@ public class Unit {
         return hasWeapon() ? unit.getAmmo()[weapon] : 0;
     }
 
+    public int getBulletCount(int weaponId) {
+        return unit == null ? 0 : unit.getAmmo()[weaponId];
+    }
+
     public int getMaxBulletCount() {
         return hasWeapon() ? getWeapon().getMaxBulletCount() : 0;
     }
@@ -387,7 +391,7 @@ public class Unit {
         return u.getPosition().getDistanceTo(this.getPosition());
     }
 
-    public boolean canTakeLoot(Loot loot) {
+    public boolean isStayOnLoot(Loot loot) {
         return circle.contains(loot.getPosition());
     }
 
@@ -408,7 +412,7 @@ public class Unit {
     }
 
     public boolean canDoNewAction() {
-        return getTicksToNewActionBeAvailable() == 0;
+        return isSpawned() && getTicksToNewActionBeAvailable() == 0;
     }
 
     public int getTicksToNewActionBeAvailable() {
@@ -450,7 +454,7 @@ public class Unit {
                     if (w.isStaff()) {
                         return DEFAULT_SAFE_DIST;
                     }
-                    return 2 + w.getSpeedPerTick() + w.getSpeedPerTick() * (TICKS_TO_RUN_ASIDE_BY_UNIT_RADIUS + 1);
+                    return 2 + w.getSpeedPerTick() + w.getSpeedPerTick() * (TICKS_TO_RUN_ASIDE_BY_UNIT_RADIUS - 3);
                 })
                 .orElse(DEFAULT_SAFE_DIST);
     }
