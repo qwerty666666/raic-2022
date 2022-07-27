@@ -5,10 +5,10 @@ import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.Action;
 import ai_cup_22.strategy.actions.CompositeAction;
 import ai_cup_22.strategy.actions.MoveToWithPathfindingAction;
+import ai_cup_22.strategy.actions.RotateAction;
 import ai_cup_22.strategy.actions.basic.LookToAction;
+import ai_cup_22.strategy.actions.basic.MoveToAction;
 import ai_cup_22.strategy.behaviourtree.Strategy;
-import ai_cup_22.strategy.debug.Colors;
-import ai_cup_22.strategy.debug.DebugData;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
 import ai_cup_22.strategy.models.Unit;
@@ -42,10 +42,16 @@ public class ExploreStrategy implements Strategy {
         state.lastUpdateTick = World.getInstance().getCurrentTick();
 
         var vectorToExplore = new Vector(unit.getPosition(), state.positionToExplore).rotate(state.getNextAngle());
-        DebugData.getInstance().getDefaultLayer().addLine(unit.getPosition(), unit.getPosition().move(vectorToExplore.normalizeToLength(10)), Colors.RED_TRANSPARENT);
-        return new CompositeAction()
-                .add(new MoveToWithPathfindingAction(state.positionToExplore))
-                .add(new LookToAction(vectorToExplore));
+
+        if (unit.isSpawned()) {
+            return new CompositeAction()
+                    .add(new MoveToWithPathfindingAction(state.positionToExplore))
+                    .add(new LookToAction(vectorToExplore));
+        } else {
+            return new CompositeAction()
+                    .add(new MoveToAction(state.positionToExplore))
+                    .add(new RotateAction());
+        }
     }
 
     @Override

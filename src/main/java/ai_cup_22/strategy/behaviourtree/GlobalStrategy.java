@@ -65,32 +65,33 @@ public class GlobalStrategy {
 
 
     public Optional<Position> getPointToExplore(Unit unit) {
-        if (explorePointsLastUpdateTick != World.getInstance().getCurrentTick() || explorePoints == null) {
-            var viewNodes = World.getInstance().getViewMap().getNodes().values();
-
-            if (viewNodes.size() < 3) {
-                explorePoints = Collections.emptyMap();
-            } else {
-                explorePoints = findBestDistribution(
-                        new ArrayList<>(World.getInstance().getMyUnits().values()),
-                        new HashMap<>(),
-                        World.getInstance().getMyUnits().values().stream()
-                                .collect(Collectors.toMap(u -> u, u -> {
-                                    return viewNodes.stream()
-                                            .sorted(Comparator.comparingDouble(Node::getLastSeenTick)
-                                                    .thenComparingDouble((Node node) -> node.getPosition().getDistanceTo(u.getPosition()))
-                                            )
-                                            .limit(3)
-                                            .collect(Collectors.toList());
-                                }))
-                );
-            }
-
-            explorePointsLastUpdateTick = World.getInstance().getCurrentTick();
-        }
-
-        return Optional.ofNullable(explorePoints.get(unit))
-                .map(Node::getPosition);
+        return Optional.empty();
+//        if (explorePointsLastUpdateTick != World.getInstance().getCurrentTick() || explorePoints == null) {
+//            var viewNodes = World.getInstance().getViewMap().getNodes().values();
+//
+//            if (viewNodes.size() < 3) {
+//                explorePoints = Collections.emptyMap();
+//            } else {
+//                explorePoints = findBestDistribution(
+//                        new ArrayList<>(World.getInstance().getMyUnits().values()),
+//                        new HashMap<>(),
+//                        World.getInstance().getMyUnits().values().stream()
+//                                .collect(Collectors.toMap(u -> u, u -> {
+//                                    return viewNodes.stream()
+//                                            .sorted(Comparator.comparingDouble(Node::getLastSeenTick)
+//                                                    .thenComparingDouble((Node node) -> node.getPosition().getDistanceTo(u.getPosition()))
+//                                            )
+//                                            .limit(3)
+//                                            .collect(Collectors.toList());
+//                                }))
+//                );
+//            }
+//
+//            explorePointsLastUpdateTick = World.getInstance().getCurrentTick();
+//        }
+//
+//        return Optional.ofNullable(explorePoints.get(unit))
+//                .map(Node::getPosition);
     }
 
     private Map<Unit, Node> findBestDistribution(List<Unit> units, Map<Unit, Node> takenNodes, Map<Unit, List<Node>> candidates) {
