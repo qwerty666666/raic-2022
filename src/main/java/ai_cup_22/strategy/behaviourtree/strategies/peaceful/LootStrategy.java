@@ -20,13 +20,10 @@ public class LootStrategy implements Strategy {
     public LootStrategy(Unit unit, ExploreStrategy exploreStrategy, FightStrategy fightStrategy, double maxLootDist) {
         lootWeaponStrategy = new LootWeaponStrategy(unit, exploreStrategy, fightStrategy, maxLootDist);
 
-        delegate = new FirstMatchCompositeStrategy()
-                .add(lootWeaponStrategy::shouldSwapWeapon, lootWeaponStrategy)
-                .add(new MaxOrderCompositeStrategy()
+        delegate = new MaxOrderCompositeStrategy()
                         .add(lootWeaponStrategy)
                         .add(new LootShieldStrategy(unit, exploreStrategy, fightStrategy, maxLootDist))
-                        .add(new LootAmmoStrategy(unit, exploreStrategy, fightStrategy, maxLootDist))
-                );
+                        .add(new LootAmmoStrategy(unit, exploreStrategy, fightStrategy, maxLootDist));
     }
 
     @Override

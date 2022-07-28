@@ -41,10 +41,11 @@ public class Path {
     public static Path from(Node to, Graph graph) {
         if (to.getParent() == null) {
             var pos = to.getPosition();
-            to = graph.getNodes().values().stream()
+            to.setParent(graph.getNodes().values().stream()
                     .filter(node -> node.getParent() != null)
                     .min(Comparator.comparingDouble(node -> node.getPosition().getSquareDistanceTo(pos)))
-                    .orElseThrow();
+                    .orElseThrow()
+            );
         }
 
         var path = new ArrayList<Score>();

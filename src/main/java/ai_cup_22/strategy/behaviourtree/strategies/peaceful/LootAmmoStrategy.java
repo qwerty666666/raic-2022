@@ -192,30 +192,35 @@ public class LootAmmoStrategy implements Strategy {
 
         @Override
         public double getOrder() {
-            if (World.getInstance().getZone().getRadius() > 160) {
-                return MIN_ORDER;
-            }
+//            if (World.getInstance().getZone().getRadius() > 160) {
+//                return MIN_ORDER;
+//            }
 
             return getBestLoot()
                     .map(ammo -> {
-//                        var weaponId = ((AmmoLoot)ammo).getWeaponId();
-//                        var dist = unit.getPosition().getDistanceTo(ammo.getPosition());
-//                        var maxBullets = Weapon.get(weaponId).getMaxBulletCount();
-//
-//                        var distMul = new LinearDistributor(0, maxLootDist, 1, 0)
-//                                .get(dist);
-//                        var countMul = new FirstMatchDistributor()
-//                                // 0.125 -- dist < MAX_DIST * 0.2
-////                                .add(val -> val < maxBullets * 0.5, new LinearDistributor(
-////                                        maxBullets * 0.2, maxBullets * 0.5, 1, 0)
-////                                )
-////                                .add(val -> true, new LinearDistributor(maxBullets * 0.5, maxBullets, 0.125, 0))
-//                                .add(val -> true, new LinearDistributor(0, maxBullets * 0.5, 1, 0))
-//                                .get(unit.getBulletCount(weaponId));
-//                        var priority = Weapon.getPriority(weaponId);
-//
-//                        return distMul * countMul / 2 * priority;
-                        return MIN_ORDER;
+                        var weaponId = ((AmmoLoot)ammo).getWeaponId();
+
+                        if (weaponId != 2) {
+                            return 0.;
+                        }
+
+                        var dist = unit.getPosition().getDistanceTo(ammo.getPosition());
+                        var maxBullets = Weapon.get(weaponId).getMaxBulletCount();
+
+                        var distMul = new LinearDistributor(0, maxLootDist, 1, 0)
+                                .get(dist);
+                        var countMul = new FirstMatchDistributor()
+                                // 0.125 -- dist < MAX_DIST * 0.2
+//                                .add(val -> val < maxBullets * 0.5, new LinearDistributor(
+//                                        maxBullets * 0.2, maxBullets * 0.5, 1, 0)
+//                                )
+//                                .add(val -> true, new LinearDistributor(maxBullets * 0.5, maxBullets, 0.125, 0))
+                                .add(val -> true, new LinearDistributor(0, maxBullets * 0.5, 1, 0))
+                                .get(unit.getBulletCount(weaponId));
+                        var priority = Weapon.getPriority(weaponId);
+
+                        return distMul * countMul / 2 * priority;
+//                        return MIN_ORDER;
                     })
                     .orElse(0.);
         }
