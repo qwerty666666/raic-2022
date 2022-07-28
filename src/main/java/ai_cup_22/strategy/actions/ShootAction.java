@@ -6,6 +6,7 @@ import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.actions.basic.AimAction;
 import ai_cup_22.strategy.actions.basic.LookToAction;
 import ai_cup_22.strategy.debug.DebugData;
+import ai_cup_22.strategy.geometry.CircleSegment;
 import ai_cup_22.strategy.geometry.Line;
 import ai_cup_22.strategy.geometry.Position;
 import ai_cup_22.strategy.geometry.Vector;
@@ -22,11 +23,13 @@ public class ShootAction implements Action {
     private final Position bestPositionToShoot;
     private final boolean shouldShoot;
     private final boolean shouldStartAimingToEnemy;
+    private final Vector bestLookDirection;
 
     public ShootAction(Unit me, Unit target) {
         this.me = me;
         this.target = target;
         this.bestPositionToShoot = getBestPositionToShoot(me, target);
+        this.bestLookDirection = getBestLookDirection(bestPositionToShoot);
         this.shouldStartAimingToEnemy = shouldStartAimingToEnemy();
         this.shouldShoot = shouldShoot(me, bestPositionToShoot, target);
     }
@@ -51,7 +54,8 @@ public class ShootAction implements Action {
     }
 
     public boolean isShootWillDamageEnemy(Unit me, Unit enemy) {
-        if (!me.getShootingSegment().containsOrIntersects(enemy.getCircle())) {
+        var shootingSegment = getShootingSegmentOnStartNextTick();
+        if (!shootingSegment.containsOrIntersects(enemy.getCircle())) {
             return false;
         }
 
@@ -65,8 +69,8 @@ public class ShootAction implements Action {
         var pos1 = WalkSimulation.getMaxPositionIfWalkDirect(enemy, dodgeDirection1, ticksToHit);
         var pos2 = WalkSimulation.getMaxPositionIfWalkDirect(enemy, dodgeDirection2, ticksToHit);
 
-        return me.getShootingSegment().containsOrIntersects(enemy.getCircle().moveToPosition(pos1)) &&
-                me.getShootingSegment().containsOrIntersects(enemy.getCircle().moveToPosition(pos2));
+        return shootingSegment.containsOrIntersects(enemy.getCircle().moveToPosition(pos1)) &&
+                shootingSegment.containsOrIntersects(enemy.getCircle().moveToPosition(pos2));
     }
 
     private Vector getBestLookDirection(Position lookPosition) {
@@ -201,11 +205,17 @@ if (DebugData.isEnabled) {
             return true;
         }
 
-        if (!me.getShootingSegment().contains(targetPosition)) {
+        if (!getShootingSegmentOnStartNextTick().contains(targetPosition)) {
             return false;
         }
 
         return true;
+    }
+
+    private CircleSegment getShootingSegmentOnStartNextTick() {
+        var aim = WalkSimulation.getAimOnNextTick(me.getAim(), me.getAimChangePerTick(), shouldStartAimingToEnemy);
+        var direction = WalkSimulation.simulateRotateTickToDirection(me.getDirection(), bestLookDirection, aim, me.getAimRotationSpeed());
+        return me.getShootingSegment().rotateToAngle(direction.getAngle());
     }
 
     public boolean canShootUnit(Position targetPosition, Unit enemy) {

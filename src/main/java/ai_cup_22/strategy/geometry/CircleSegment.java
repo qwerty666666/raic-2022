@@ -25,6 +25,10 @@ public class CircleSegment {
         );
     }
 
+    public CircleSegment rotateToAngle(double newCenterAngle) {
+        return new CircleSegment(circle, newCenterAngle, angle);
+    }
+
     public Position getCenter() {
         return circle.getCenter();
     }
