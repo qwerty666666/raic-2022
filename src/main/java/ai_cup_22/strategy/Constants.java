@@ -42,7 +42,7 @@ public class Constants {
 
     // Strategy Orders
 
-    public static final double STRATEGY_EXPLORE_ORDER = 0.1;
+    public static final double STRATEGY_EXPLORE_ORDER = 0.001;
     public static final double STRATEGY_MOVE_TO_PRIORITY_ENEMY_ORDER = STRATEGY_EXPLORE_ORDER + 0.01;
 
     // Strategy Constants
