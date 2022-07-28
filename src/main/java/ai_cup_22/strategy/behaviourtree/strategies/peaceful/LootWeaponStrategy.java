@@ -11,6 +11,7 @@ import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.models.Weapon;
 import ai_cup_22.strategy.models.WeaponLoot;
 import ai_cup_22.strategy.pathfinding.AStarPathFinder;
+import ai_cup_22.strategy.pathfinding.Path;
 import ai_cup_22.strategy.potentialfield.PotentialField;
 import ai_cup_22.strategy.potentialfield.ScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.ZoneScoreContributor;
@@ -18,7 +19,10 @@ import ai_cup_22.strategy.potentialfield.scorecontributors.basic.LinearScoreCont
 import ai_cup_22.strategy.potentialfield.scorecontributors.composite.SumCompositeScoreContributor;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -26,6 +30,7 @@ public class LootWeaponStrategy extends BaseLootStrategy {
     private final Unit unit;
     private final double maxLootDist;
     private Optional<Loot> bestLoot;
+    private Map<Loot, Double> weaponScores = new HashMap<>();
 
     public LootWeaponStrategy(Unit unit, ExploreStrategy exploreStrategy, FightStrategy fightStrategy) {
         this(unit, exploreStrategy, fightStrategy, Constants.MAX_LOOT_STRATEGY_DIST);
@@ -50,7 +55,7 @@ public class LootWeaponStrategy extends BaseLootStrategy {
 
         return getBestLoot()
                 .map(loot -> {
-                    var score = getScoreToTakeWeapon((WeaponLoot) loot);
+                    var score = this.weaponScores.get(loot);
                     if (!unit.hasWeapon() || score > getScoreForWeapon(unit.getWeapon().getId(), 0)) {
                         return score;
                     }
@@ -98,13 +103,15 @@ public class LootWeaponStrategy extends BaseLootStrategy {
                         loot -> pathFinder.findPath(unit.getPosition(), loot.getPosition())
                 ));
 
+        this.weaponScores = paths.entrySet().stream()
+                .collect(Collectors.toMap(Entry::getKey, e -> getScoreToTakeWeapon((WeaponLoot) e.getKey(), e.getValue())));
+
         // search by min sum of treats on the path
         // and min by distance if there is no treat on the path
-        var loot = paths.entrySet().stream()
-                .max(Comparator.comparingDouble(e -> getScoreToTakeWeapon((WeaponLoot) e.getKey()))
-                )
-                .orElseThrow()
-                .getKey();
+        var loot = weaponScores.entrySet().stream()
+                .max(Comparator.comparingDouble(e -> weaponScores.get(e.getKey())))
+                .map(Entry::getKey)
+                .orElseThrow();
 
         return Optional.ofNullable(loot);
     }
@@ -113,9 +120,9 @@ public class LootWeaponStrategy extends BaseLootStrategy {
         return World.getInstance().getZone().getRadius() < 140;
     }
 
-    private double getScoreToTakeWeapon(WeaponLoot loot) {
+    private double getScoreToTakeWeapon(WeaponLoot loot, Path path) {
         var weaponId = loot.getWeaponId();
-        return getScoreForWeapon(weaponId, loot.getPosition().getDistanceTo(unit.getPosition()));
+        return getScoreForWeapon(weaponId, path.getDistance());
     }
 
     private double getScoreForWeapon(int weaponId, double dist) {
