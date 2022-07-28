@@ -30,7 +30,7 @@ public class Constants {
     public static final double PF_RETREAT_ENEMY_DIST = 44;
 
     public static final double PF_OUT_OF_ZONE_MIN_SCORE = -300;
-    public static final double PF_OUT_OF_ZONE_MAX_SCORE = -50;
+    public static final double PF_OUT_OF_ZONE_MAX_SCORE = -100;
     public static final double PF_OUT_OF_ZONE_DIST = 10;
     public static final double PF_ZONE_MIN_SCORE = PF_OUT_OF_ZONE_MAX_SCORE;
     public static final double PF_ZONE_MAX_SCORE = 0;
