@@ -129,6 +129,10 @@ public class LootWeaponStrategy extends BaseLootStrategy {
     }
 
     private double getScoreForWeapon(int weaponId, double dist) {
+        if (weaponId != Weapon.BOW_ID) {
+            return MIN_ORDER;
+        }
+
         var lootCount = World.getInstance().getAmmoLoots(weaponId).stream()
                 .mapToInt(AmmoLoot::getCount)
                 .sum();
