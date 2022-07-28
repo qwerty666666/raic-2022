@@ -38,7 +38,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class FightStrategy implements Strategy {
-    private static final double TAKE_SHIELD_POTION_ADDITIONAL_DIST = 2;
+    private static final double TAKE_SHIELD_POTION_ADDITIONAL_DIST = 4;
 
     private final Unit me;
     private final LootAmmoSafestWayStrategy lootAmmoStrategy;
