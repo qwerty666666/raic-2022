@@ -28,6 +28,7 @@ public class MaxOrderCompositeStrategy implements Strategy {
 
     private Strategy getStrategy() {
         return strategies.stream()
+                .filter(s -> s.getOrder() > MIN_ORDER)
                 .max(Comparator.comparingDouble(Strategy::getOrder))
                 .orElseGet(NullStrategy::new);
     }

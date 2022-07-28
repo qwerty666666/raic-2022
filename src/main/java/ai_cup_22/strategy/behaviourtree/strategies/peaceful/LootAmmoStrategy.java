@@ -206,8 +206,11 @@ public class LootAmmoStrategy implements Strategy {
                                 .get(dist);
                         var countMul = new FirstMatchDistributor()
                                 // 0.125 -- dist < MAX_DIST * 0.2
-                                .add(val -> val < maxBullets * 0.8, new LinearDistributor(maxBullets * 0.2, maxBullets * 0.8, 1, 0.125))
-                                .add(val -> true, new LinearDistributor(maxBullets * 0.8, maxBullets, 0.125, 0))
+//                                .add(val -> val < maxBullets * 0.5, new LinearDistributor(
+//                                        maxBullets * 0.2, maxBullets * 0.5, 1, 0)
+//                                )
+//                                .add(val -> true, new LinearDistributor(maxBullets * 0.5, maxBullets, 0.125, 0))
+                                .add(val -> true, new LinearDistributor(0, maxBullets * 0.5, 1, 0))
                                 .get(unit.getBulletCount());
                         var priority = Weapon.getPriority(weaponId);
 

@@ -12,11 +12,12 @@ public class CumulativeExponentialDistributor implements Distributor {
 
     @Override
     public double get(double val) {
+        // the plot is reversed
         if (val > maxDist) {
-            return maxVal;
+            return minVal;
         }
         if (val < minDist) {
-            return minVal;
+            return maxVal;
         }
 
         return minVal + (1 - Math.pow(val / (maxDist - minDist), 2)) * (maxVal - minVal);

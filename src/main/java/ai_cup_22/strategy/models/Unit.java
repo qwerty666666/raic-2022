@@ -454,7 +454,7 @@ public class Unit {
                     if (w.isStaff()) {
                         return DEFAULT_SAFE_DIST;
                     }
-                    return 2 + w.getSpeedPerTick() + w.getSpeedPerTick() * (TICKS_TO_RUN_ASIDE_BY_UNIT_RADIUS - 3);
+                    return 2 + w.getSpeedPerTick() + w.getSpeedPerTick() * (TICKS_TO_RUN_ASIDE_BY_UNIT_RADIUS + 1);
                 })
                 .orElse(DEFAULT_SAFE_DIST);
     }

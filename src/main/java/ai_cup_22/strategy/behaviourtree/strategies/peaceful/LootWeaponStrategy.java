@@ -4,6 +4,7 @@ import ai_cup_22.strategy.Constants;
 import ai_cup_22.strategy.World;
 import ai_cup_22.strategy.behaviourtree.Strategy;
 import ai_cup_22.strategy.behaviourtree.strategies.fight.FightStrategy;
+import ai_cup_22.strategy.distributions.CumulativeExponentialDistributor;
 import ai_cup_22.strategy.distributions.LinearDistributor;
 import ai_cup_22.strategy.models.AmmoLoot;
 import ai_cup_22.strategy.models.Loot;
@@ -73,7 +74,9 @@ public class LootWeaponStrategy extends BaseLootStrategy {
 
     @Override
     protected List<Loot> getSuitableLoots() {
-        return new ArrayList<>(World.getInstance().getWeaponLoots().values());
+        return World.getInstance().getWeaponLoots().values().stream()
+                .filter(loot -> loot.getPosition().getDistanceTo(unit.getPosition()) < maxLootDist)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -117,7 +120,7 @@ public class LootWeaponStrategy extends BaseLootStrategy {
     }
 
     private boolean isSmallZone() {
-        return World.getInstance().getZone().getRadius() < 140;
+        return World.getInstance().getZone().getRadius() < 130;
     }
 
     private double getScoreToTakeWeapon(WeaponLoot loot, Path path) {
@@ -143,9 +146,11 @@ public class LootWeaponStrategy extends BaseLootStrategy {
                     .get(lootCount + myBulletCount);
         }
 
+        var distMul = new CumulativeExponentialDistributor(0, maxLootDist, 0, 1)
+                .get(dist);
         var priority = Weapon.getPriority(weaponId);
 
-        return priority * countMul / Math.max(1, dist);
+        return priority * countMul * distMul;
     }
 
     private ScoreContributor getPotentialFieldScoreContributor() {
