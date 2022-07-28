@@ -74,6 +74,10 @@ public class Path {
             return new Path(List.of(path.get(0), path.get(2)));
         }
 
+        if (path.get(0).getPosition().getDistanceTo(path.get(path.size() - 1).getPosition()) < 3) {
+            return new Path(List.of(path.get(0), path.get(path.size() - 1)));
+        }
+
         var pathRect = new Rectangle(path.get(0).getPosition(), path.get(path.size() - 1).getPosition())
                 .increase(5);
         var unitRadius = World.getInstance().getConstants().getUnitRadius();
