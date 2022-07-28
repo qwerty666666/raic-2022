@@ -34,7 +34,11 @@ public class ShootAction implements Action {
     public void apply(Unit unit, UnitOrder order) {
         var action = new CompositeAction();
 
-        if (shouldStartAimingToEnemy || (target.getDistanceTo(me) < 18 && me.getRemainedTicksToAim() >= 15)) {
+        if (shouldStartAimingToEnemy) {
+            action.add(new AimAction(shouldShoot));
+        }
+        // on dist 18 stay half-aimed
+        if (target.isSpawned() && target.getDistanceTo(me) < 18 && me.getRemainedTicksToAim() >= 15) {
             action.add(new AimAction(shouldShoot));
         }
         if (shouldStartAimingToEnemy || unit.getLookPosition() == null) {

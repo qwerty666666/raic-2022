@@ -17,6 +17,7 @@ import ai_cup_22.strategy.behaviourtree.strategies.peaceful.BaseLootStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.peaceful.ExploreStrategy;
 import ai_cup_22.strategy.distributions.LinearDistributor;
 import ai_cup_22.strategy.geometry.Vector;
+import ai_cup_22.strategy.models.AmmoLoot;
 import ai_cup_22.strategy.models.Loot;
 import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.models.Weapon;
@@ -447,7 +448,9 @@ public class FightStrategy implements Strategy {
                                                             .sum()
                                             )
                                             .reversed()
-                                            .thenComparingDouble((Entry<Loot, Path> e) -> e.getValue().getDistance())
+                                            .thenComparingDouble((Entry<Loot, Path> e) -> e.getValue().getDistance() /
+                                                    Math.sqrt(((AmmoLoot) e.getKey()).getCount())
+                                            )
                             )
                             .orElseThrow()
                             .getKey();
