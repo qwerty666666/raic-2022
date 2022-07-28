@@ -13,6 +13,7 @@ import ai_cup_22.strategy.models.Unit;
 import ai_cup_22.strategy.models.Weapon;
 import ai_cup_22.strategy.simulation.walk.WalkSimulation;
 import ai_cup_22.strategy.utils.MathUtils;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 public class ShootAction implements Action {
@@ -42,10 +43,55 @@ public class ShootAction implements Action {
             action.add(new AimAction(shouldShoot));
         }
         if (shouldStartAimingToEnemy || unit.getLookPosition() == null) {
-            action.add(new LookToAction(bestPositionToShoot));
+            var lookDirection = getBestLookDirection(bestPositionToShoot);
+            action.add(new LookToAction(lookDirection));
         }
 
         action.apply(unit, order);
+    }
+
+    public boolean isShootWillDamageEnemy(Unit me, Unit enemy) {
+        if (!me.getShootingSegment().containsOrIntersects(enemy.getCircle())) {
+            return false;
+        }
+
+        var dist = me.getDistanceTo(enemy) - me.getCircle().getRadius();
+        var bulletSpeed = me.getWeaponOptional().map(Weapon::getSpeedPerTick).orElse(0.);
+        var ticksToHit = (int) Math.ceil(dist / bulletSpeed);
+        var trajectory = new Vector(enemy.getPosition(), me.getPosition()).normalizeToLength(100);
+        var dodgeDirection1 = trajectory.rotate(Math.PI / 2);
+        var dodgeDirection2 = trajectory.rotate(-Math.PI / 2);
+
+        var pos1 = WalkSimulation.getMaxPositionIfWalkDirect(enemy, dodgeDirection1, ticksToHit);
+        var pos2 = WalkSimulation.getMaxPositionIfWalkDirect(enemy, dodgeDirection2, ticksToHit);
+
+        return me.getShootingSegment().containsOrIntersects(enemy.getCircle().moveToPosition(pos1)) &&
+                me.getShootingSegment().containsOrIntersects(enemy.getCircle().moveToPosition(pos2));
+    }
+
+    private Vector getBestLookDirection(Position lookPosition) {
+        var shootingLine = new Line(me.getPosition(), lookPosition);
+        var shootingVector = shootingLine.toVector();
+
+        var obstacle = World.getInstance().getNonShootThroughObstacles().values().stream()
+                .filter(ob -> ob.getCircle().isIntersect(shootingLine))
+                .min(Comparator.comparingDouble(ob -> ob.getCenter().getDistanceTo(me.getPosition())))
+                .orElse(null);
+        if (obstacle == null) {
+            return shootingVector;
+        }
+
+        var tangent = obstacle.getCircle().getTangentLines(me.getPosition()).stream()
+                .min(Comparator.comparingDouble(line -> line.toVector().getAngleTo(shootingVector)))
+                .map(Line::toVector)
+                .orElse(null);
+        if (tangent == null || tangent.getAngleTo(shootingVector) > me.getShootingSegment().getAngle()) {
+            return shootingVector;
+        }
+
+        var vectorToTree = new Vector(me.getPosition(), obstacle.getCenter());
+
+        return tangent.rotate(Math.signum(vectorToTree.getDiffToVector(tangent)) * me.getShootingSegment().getAngle() / 2);
     }
 
     public boolean isShouldStartAimingToEnemy() {
@@ -149,6 +195,10 @@ if (DebugData.isEnabled) {
 
         if (!me.canDoNewAction() || me.isCoolDown()) {
             return false;
+        }
+
+        if (isShootWillDamageEnemy(me, enemy)) {
+            return true;
         }
 
         if (!me.getShootingSegment().contains(targetPosition)) {

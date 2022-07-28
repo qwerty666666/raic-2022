@@ -82,4 +82,9 @@ public class CircleSegment {
         return circle.getTangentPoints(this.circle.getCenter()).stream()
                 .allMatch(this::contains);
     }
+
+    public boolean containsOrIntersects(Circle circle) {
+        return contains(circle) ||
+                this.getBoundaries().stream().anyMatch(circle::isIntersect);
+    }
 }
