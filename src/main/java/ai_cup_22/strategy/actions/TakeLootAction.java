@@ -22,11 +22,7 @@ public class TakeLootAction implements Action {
                     .apply(unit, order);
         } else {
             // by default move to given loot
-            if (unit.isSpawned()) {
-                new MoveToWithPathfindingAction(loot.getPosition()).apply(unit, order);
-            } else {
-                new MoveToAction(loot.getPosition()).apply(unit, order);
-            }
+            new MoveToWithPathfindingAction(loot.getPosition()).apply(unit, order);
         }
     }
 }

@@ -168,7 +168,7 @@ public class LootAmmoStrategy implements Strategy {
 
         private ScoreContributor getPotentialFieldScoreContributor() {
             var enemyScoreContributors = World.getInstance().getAllEnemyUnits().stream()
-                    .filter(enemy -> enemy.isSpawned() && enemy.hasWeapon() && enemy.getBulletCount() > 0)
+//                    .filter(enemy -> enemy.isSpawned() && enemy.hasWeapon() && enemy.getBulletCount() > 0)
                     .map(enemy -> new LinearScoreContributor(enemy.getPosition(), PotentialField.MIN_VALUE, 0, 15))
                     .collect(Collectors.toList());
 

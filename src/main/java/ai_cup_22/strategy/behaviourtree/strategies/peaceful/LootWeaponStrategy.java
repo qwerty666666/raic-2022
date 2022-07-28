@@ -96,7 +96,7 @@ public class LootWeaponStrategy extends BaseLootStrategy {
             return Optional.empty();
         }
 
-        getPotentialFieldScoreContributor().contribute(unit.getPotentialField());
+//        getPotentialFieldScoreContributor().contribute(unit.getPotentialField());
 
         var pathFinder = new AStarPathFinder(unit.getPotentialField());
 
