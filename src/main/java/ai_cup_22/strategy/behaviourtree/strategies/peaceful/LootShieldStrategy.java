@@ -74,8 +74,9 @@ public class LootShieldStrategy implements Strategy {
 //                                .add(val -> val < unit.getMaxShieldPotions(), new ConstDistributor(0.15))
                                 .add(val -> true, new LinearDistributor(2, unit.getMaxShieldPotions(), 0.99, 0))
                                 .get(unit.getShieldPotions());
+                        var hasWeaponMul = unit.hasWeapon() ? 1 : 0.5;
 
-                        return distMul * countMul;
+                        return distMul * countMul * hasWeaponMul;
                     })
                     .orElse(0.);
         }

@@ -11,17 +11,14 @@ import ai_cup_22.strategy.models.Unit;
 
 public class LootStrategy implements Strategy {
     private final Strategy delegate;
-    private final LootWeaponStrategy lootWeaponStrategy;
 
     public LootStrategy(Unit unit, ExploreStrategy exploreStrategy, FightStrategy fightStrategy) {
         this(unit, exploreStrategy, fightStrategy, Constants.MAX_LOOT_STRATEGY_DIST);
     }
 
     public LootStrategy(Unit unit, ExploreStrategy exploreStrategy, FightStrategy fightStrategy, double maxLootDist) {
-        lootWeaponStrategy = new LootWeaponStrategy(unit, exploreStrategy, fightStrategy, maxLootDist);
-
         delegate = new MaxOrderCompositeStrategy()
-                        .add(lootWeaponStrategy)
+                        .add(new LootWeaponStrategy(unit, exploreStrategy, fightStrategy, maxLootDist))
                         .add(new LootShieldStrategy(unit, exploreStrategy, fightStrategy, maxLootDist))
                         .add(new LootAmmoStrategy(unit, exploreStrategy, fightStrategy, maxLootDist));
     }

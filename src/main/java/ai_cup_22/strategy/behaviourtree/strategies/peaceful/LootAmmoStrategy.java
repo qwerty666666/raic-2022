@@ -192,17 +192,13 @@ public class LootAmmoStrategy implements Strategy {
 
         @Override
         public double getOrder() {
-//            if (World.getInstance().getZone().getRadius() > 160) {
-//                return MIN_ORDER;
-//            }
+            if (World.getInstance().getZone().getRadius() > 160 && unit.hasWeapon() && unit.getWeapon().isBow()) {
+                return MIN_ORDER;
+            }
 
             return getBestLoot()
                     .map(ammo -> {
                         var weaponId = ((AmmoLoot)ammo).getWeaponId();
-
-                        if (weaponId != 2) {
-                            return 0.;
-                        }
 
                         var dist = unit.getPosition().getDistanceTo(ammo.getPosition());
                         var maxBullets = Weapon.get(weaponId).getMaxBulletCount();
@@ -218,9 +214,9 @@ public class LootAmmoStrategy implements Strategy {
                                 .add(val -> true, new LinearDistributor(0, maxBullets * 0.5, 1, 0))
                                 .get(unit.getBulletCount(weaponId));
                         var priority = Weapon.getPriority(weaponId);
+                        var hasWeaponMul = unit.hasWeapon() ? 1 : 0.5;
 
-                        return distMul * countMul / 2 * priority;
-//                        return MIN_ORDER;
+                        return distMul * countMul / 2 * priority * hasWeaponMul;
                     })
                     .orElse(0.);
         }

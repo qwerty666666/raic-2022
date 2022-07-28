@@ -18,7 +18,6 @@ import ai_cup_22.strategy.potentialfield.ScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.ZoneScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.basic.LinearScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.composite.SumCompositeScoreContributor;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -129,10 +128,6 @@ public class LootWeaponStrategy extends BaseLootStrategy {
     }
 
     private double getScoreForWeapon(int weaponId, double dist) {
-        if (weaponId != Weapon.BOW_ID) {
-            return MIN_ORDER;
-        }
-
         var lootCount = World.getInstance().getAmmoLoots(weaponId).stream()
                 .mapToInt(AmmoLoot::getCount)
                 .sum();
