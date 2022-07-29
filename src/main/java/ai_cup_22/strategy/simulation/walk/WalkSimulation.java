@@ -31,6 +31,42 @@ public class WalkSimulation {
         return ticks;
     }
 
+    public static int getTicksToRotateWithBestEffortToAimTarget(Unit unit, Position target) {
+        var targetVector = new Vector(unit.getPosition(), target);
+        var curDirection = unit.getDirection();
+        var angle = targetVector.getAngleTo(curDirection);
+        int ticks = 0;
+        var aim = unit.getAim();
+        var aimChangePerTick = unit.getAimChangePerTick();
+        var aimRotationSpeedPerSec = unit.getAimRotationSpeed();
+
+        while (angle > 0 && aim < 1) {
+            aim = getAimOnNextTick(aim, aimChangePerTick, true);
+            var rotateAnglePerTick = getRotationAnglePerTick(aimRotationSpeedPerSec, aim);
+            angle -= rotateAnglePerTick;
+            ticks++;
+        }
+
+        aim = unit.getAim();
+        while (angle > 0 && aim > 0) {
+            aim = getAimOnNextTick(aim, aimChangePerTick, false);
+            var rotateAnglePerTick = getRotationAnglePerTick(aimRotationSpeedPerSec, aim);
+            if (angle > rotateAnglePerTick) {
+                angle -= 2 * rotateAnglePerTick;
+                ticks += 2;
+            } else {
+                angle -= rotateAnglePerTick;
+                ticks += 1;
+            }
+        }
+
+        if (angle > 0) {
+            ticks += (int) Math.ceil(angle / getRotationAnglePerTick(aimRotationSpeedPerSec, 0));
+        }
+
+        return ticks;
+    }
+
     public static int getTicksToRotateWithAim(Unit unit, Position target, boolean rotateStrictlyToTarget) {
         var targetVector = new Vector(unit.getPosition(), target);
         var curDirection = unit.getDirection();
@@ -58,7 +94,7 @@ public class WalkSimulation {
                 }
             }
 
-            var shouldAim = unit.getBulletCount() > 0 && ticksToCd <= ticksToAim;
+            var shouldAim = ticksToCd <= ticksToAim;
             aim = getAimOnNextTick(aim, aimChangePerTick, shouldAim);
             curDirection = simulateRotateTickToDirection(curDirection, targetVector, aim, aimRotationSpeedPerSec);
             ticks++;
@@ -228,12 +264,16 @@ public class WalkSimulation {
 
     public static Vector simulateRotateTickToDirection(Vector curLookDirection, Vector targetLookDirection, double aim,
             double aimRotationSpeedPerSec) {
-        var nonAimRotationSpeed = World.getInstance().getConstants().getRotationSpeed();
-        var rotationSpeedPerTick = Math.toRadians((nonAimRotationSpeed - (nonAimRotationSpeed - aimRotationSpeedPerSec) * aim) *
-                World.getInstance().getTimePerTick());
+        var rotationSpeedPerTick = getRotationAnglePerTick(aimRotationSpeedPerSec, aim);
         var diff = curLookDirection.getDiffToVector(targetLookDirection);
 
         return curLookDirection.rotate(Math.signum(diff) * Math.min(rotationSpeedPerTick, Math.abs(diff)));
+    }
+
+    private static double getRotationAnglePerTick(double aimRotationSpeedPerSec, double aim) {
+        var nonAimRotationSpeed = World.getInstance().getConstants().getRotationSpeed();
+        return Math.toRadians((nonAimRotationSpeed - (nonAimRotationSpeed - aimRotationSpeedPerSec) * aim) *
+                World.getInstance().getTimePerTick());
     }
 
     public static List<Circle> getNonWalkThroughObstaclesInRange(Unit unit, double maxDist) {

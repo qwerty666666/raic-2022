@@ -23,6 +23,7 @@ public class ShootAction implements Action {
     private final Position bestPositionToShoot;
     private final boolean shouldShoot;
     private final boolean shouldStartAimingToEnemy;
+    private final boolean shouldRotateToEnemy;
     private final Vector bestLookDirection;
 
     public ShootAction(Unit me, Unit target) {
@@ -31,6 +32,7 @@ public class ShootAction implements Action {
         this.bestPositionToShoot = getBestPositionToShoot(me, target);
         this.bestLookDirection = getBestLookDirection(bestPositionToShoot);
         this.shouldStartAimingToEnemy = shouldStartAimingToEnemy();
+        this.shouldRotateToEnemy = shouldStartAimingToEnemy || getTicksToCanShootEnemy() - 2 >= me.getRemainingCoolDownTicks();
         this.shouldShoot = shouldShoot(me, bestPositionToShoot, target);
     }
 
@@ -45,7 +47,7 @@ public class ShootAction implements Action {
         if (target.isSpawned() && target.getDistanceTo(me) < 18 && me.getRemainedTicksToAim() >= 15) {
             action.add(new AimAction(shouldShoot));
         }
-        if (shouldStartAimingToEnemy || unit.getLookPosition() == null) {
+        if (shouldStartAimingToEnemy || shouldRotateToEnemy || unit.getLookPosition() == null) {
             var lookDirection = getBestLookDirection(bestPositionToShoot);
             action.add(new LookToAction(lookDirection));
         }
@@ -103,13 +105,14 @@ public class ShootAction implements Action {
     }
 
     private boolean shouldStartAimingToEnemy() {
+        return getTicksToCanShootEnemy() - 2 <= me.getRemainedTicksToAim();
+    }
+
+    private int getTicksToCanShootEnemy() {
         var ticksToSpawn = target.getRemainingSpawnTicks();
         int ticksToShootablePosition;
-        if (target.getTicksSinceLastUpdate() > 50 ||
-                (target.isSeenBefore() && !target.hasWeapon()) ||
-                (target.isSeenBefore() && target.getBulletCount() == 0)
-            // TODO rotate, aim, cd
-        ) {
+        // TODO rotate, aim, cd
+        if (target.getTicksSinceLastUpdate() > 50 || (target.isSeenBefore() && target.getBulletCount() == 0)) {
             ticksToShootablePosition = getTicksToNearestShootablePositionWithAim(me, target);
         } else {
             ticksToShootablePosition = Math.min(
@@ -117,23 +120,22 @@ public class ShootAction implements Action {
                     getTicksToRunBySideToTheNearestShootablePosition(target, me)
             );
         }
-        var ticksToRotate = WalkSimulation.getTicksToRotateWithAim(me, bestPositionToShoot, true);
-if (DebugData.isEnabled) {
-    DebugData.getInstance().getDefaultLayer().addText(String.format("run: %d (me: %d, en: %d), rot: %d", ticksToShootablePosition,
-                    getTicksToNearestShootablePositionWithAim(me, target),
-                    getTicksToRunBySideToTheNearestShootablePosition(target, me),
-                    ticksToRotate),
-            me.getPosition().move(new Vector(1, 1)), 0.5
-    );
-}
-        var ticksToCanShoot = MathUtils.max(
-                ticksToRotate - 1,
-                ticksToSpawn,
-                ticksToShootablePosition,
-                me.getRemainingCoolDownTicks()
-        );
+        var ticksToRotate = WalkSimulation.getTicksToRotateWithBestEffortToAimTarget(me, bestPositionToShoot);
 
-        return ticksToCanShoot <= me.getRemainedTicksToAim();
+        if (DebugData.isEnabled) {
+            DebugData.getInstance().getDefaultLayer().addText(String.format("run: %d (me: %d, en: %d), rot: %d", ticksToShootablePosition,
+                            getTicksToNearestShootablePositionWithAim(me, target),
+                            getTicksToRunBySideToTheNearestShootablePosition(target, me),
+                            ticksToRotate),
+                    me.getPosition().move(new Vector(1, 1)), 0.5
+            );
+        }
+
+        return (int) MathUtils.max(
+                ticksToRotate,
+                ticksToSpawn,
+                ticksToShootablePosition
+        );
     }
 
     private int getTicksToNearestShootablePositionWithAim(Unit unit, Unit target) {
@@ -193,9 +195,9 @@ if (DebugData.isEnabled) {
     }
 
     private boolean shouldShoot(Unit me, Position targetPosition, Unit enemy) {
-       if (!canShootUnit(targetPosition, enemy)) {
-           return false;
-       }
+        if (!canShootUnit(targetPosition, enemy)) {
+            return false;
+        }
 
         if (!me.canDoNewAction() || me.isCoolDown()) {
             return false;
