@@ -23,9 +23,9 @@ public class Constants {
     public static final double PF_NON_TARGET_ENEMY_MIN_SCORE = PF_ENEMY_THREATEN_DIST_MIN_SCORE;
     public static final double PF_NON_TARGET_ENEMY_MAX_SCORE = PF_ENEMY_THREATEN_DIST_MAX_SCORE;
 
-    public static final double PF_ALLY_MIN_SCORE = -40;
-    public static final double PF_ALLY_MAX_SCORE = -20;
-    public static final double PF_ALLY_DIST = 3;
+    public static final double PF_ALLY_MIN_SCORE = -20;
+    public static final double PF_ALLY_MAX_SCORE = -10;
+    public static final double PF_ALLY_DIST = 5;
 
     public static final double PF_RETREAT_ENEMY_DIST = 44;
 

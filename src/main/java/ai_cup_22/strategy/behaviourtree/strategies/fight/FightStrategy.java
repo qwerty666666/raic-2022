@@ -24,6 +24,7 @@ import ai_cup_22.strategy.models.Weapon;
 import ai_cup_22.strategy.pathfinding.AStarPathFinder;
 import ai_cup_22.strategy.pathfinding.Path;
 import ai_cup_22.strategy.potentialfield.Score;
+import ai_cup_22.strategy.potentialfield.scorecontributors.HoldDistanceScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.ZoneScoreContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.basic.CircularWithAvoidObstaclesContributor;
 import ai_cup_22.strategy.potentialfield.scorecontributors.basic.LinearScoreContributor;
@@ -316,19 +317,7 @@ public class FightStrategy implements Strategy {
 
         if (targetEnemy.isSpawned()) {
             contributor.add(new FirstMatchCompositeScoreContributor("Target Enemy")
-                    .add(new CircularWithAvoidObstaclesContributor(
-                            "Target Enemy Hold Distance",
-                            targetEnemy.getPosition(),
-                            new LinearScoreContributor(
-                                    targetEnemy.getPosition(),
-                                    Constants.PF_ENEMY_HOLD_DISTANCE_MAX_SCORE,
-                                    Constants.PF_ENEMY_HOLD_DISTANCE_MIN_SCORE,
-                                    safeDistant,
-                                    safeDistant + Constants.PF_ENEMY_HOLD_DISTANCE_DIST
-                            ),
-                            safeDistant + Constants.PF_ENEMY_HOLD_DISTANCE_DIST,
-                            0
-                    ))
+                    .add(new HoldDistanceScoreContributor(targetEnemy, safeDistant))
                     .add(new LinearScoreContributor(
                             targetEnemy.getPosition(),
                             Constants.PF_ENEMY_THREATEN_DIST_MIN_SCORE,
