@@ -87,7 +87,9 @@ public class FightStrategy implements Strategy {
                             .add(new TakeShieldPotionAction())
                             .add(new LookBackAction());
                 } else {
-                    action.add(new RetreatStrategy(me).getAction());
+                    action
+                            .add(new RetreatStrategy(me).getAction())
+                            .add(new ShootWithLookBackAction(me, enemyToShoot));
                 }
 
             } else if (shouldTakeAmmo()) {
