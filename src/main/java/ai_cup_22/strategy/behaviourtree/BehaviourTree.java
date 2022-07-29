@@ -6,6 +6,7 @@ import ai_cup_22.strategy.behaviourtree.strategies.composite.FirstMatchComposite
 import ai_cup_22.strategy.behaviourtree.strategies.composite.MaxOrderCompositeStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.fight.DodgeBulletsStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.fight.FightStrategy;
+import ai_cup_22.strategy.behaviourtree.strategies.fight.GoToPhantomEnemyStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.fight.RegenerateHealthStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.fight.RetreatStrategy;
 import ai_cup_22.strategy.behaviourtree.strategies.peaceful.ExploreStrategy;
@@ -65,6 +66,7 @@ public class BehaviourTree {
                                 )
                                 // I am safe
                                 .add(() -> true, new MaxOrderCompositeStrategy()
+                                        .add(new GoToPhantomEnemyStrategy(unit))
                                         .add(lootStrategy)
                                         .add(moveToPriorityEnemyStrategy)
                                         .add(exploreStrategy)
