@@ -58,7 +58,7 @@ public class WalkSimulation {
                 }
             }
 
-            var shouldAim = ticksToCd <= ticksToAim;
+            var shouldAim = unit.getBulletCount() > 0 && ticksToCd <= ticksToAim;
             aim = getAimOnNextTick(aim, aimChangePerTick, shouldAim);
             curDirection = simulateRotateTickToDirection(curDirection, targetVector, aim, aimRotationSpeedPerSec);
             ticks++;

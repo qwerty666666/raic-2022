@@ -50,34 +50,31 @@ public class MyStrategy {
             initWorld(game);
         } else if (game.getCurrentTick() == 1) {
             world.getStaticPotentialField().fillStaticData(world);
-        }
+        } else {
+            world.updateTick(game);
 
 
-        world.updateTick(game);
+            if (game.getCurrentTick() <= 1 && world.getMyUnits().size() == 1) {
+                return new Order(orders);
+            }
 
+            world.getMyUnits().values().stream()
+                    .sorted(Comparator.comparing(Unit::isSpawned).reversed()
+                            .thenComparingDouble(Unit::getId)
+                    )
+                    .forEach(unit -> {
+                        var action = unit.getBehaviourTree().getStrategy().getAction();
 
-        if (game.getCurrentTick() <= 1 && world.getMyUnits().size() == 1) {
-            return new Order(orders);
-        }
+                        orders.computeIfAbsent(unit.getId(), id -> {
+                            // default action - do nothing
+                            var unitOrder = new UnitOrder(new Vec2(0, 0), new Vec2(0, 0), null);
 
+                            action.apply(unit, unitOrder);
 
-        world.getMyUnits().values().stream()
-                .sorted(Comparator.comparing(Unit::isSpawned).reversed()
-                        .thenComparingDouble(Unit::getId)
-                )
-                .forEach(unit -> {
-                    var action = unit.getBehaviourTree().getStrategy().getAction();
-
-                    orders.computeIfAbsent(unit.getId(), id -> {
-                        // default action - do nothing
-                        var unitOrder = new UnitOrder(new Vec2(0, 0), new Vec2(0, 0), null);
-
-                        action.apply(unit, unitOrder);
-
-                        return unitOrder;
+                            return unitOrder;
+                        });
                     });
-                });
-
+        }
 
         if (DebugData.isEnabled) {
             updateUnitsDebugLayer();
@@ -128,7 +125,6 @@ public class MyStrategy {
 
             DebugData.getInstance().getDefaultLayer().show(debugInterface);
         }
-
 
         var tickTime = (System.currentTimeMillis() - start);
         totalTime += tickTime;
