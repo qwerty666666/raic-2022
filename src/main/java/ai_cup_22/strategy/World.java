@@ -233,6 +233,16 @@ public class World {
         for (var phantom: new ArrayList<>(phantomEnemies.entrySet())) {
             if (myUnits.values().stream().anyMatch(me -> me.getViewSegment().canSee(phantom.getValue().getPosition()))) {
                 phantomEnemies.remove(phantom.getKey());
+            } else if (phantom.getValue().getTicksSinceLastUpdate() > 60) {
+                var seeSideOfPhantom = myUnits.values().stream()
+                        .filter(me -> me.getDistanceTo(phantom.getValue()) < ai_cup_22.strategy.Constants.USER_VIEW_DIST)
+                        .anyMatch(me -> {
+                            return phantom.getValue().getCircle().getTangentPoints(me.getPosition()).stream()
+                                    .anyMatch(point -> me.getViewSegment().canSee(point));
+                        });
+                if (seeSideOfPhantom) {
+                    phantomEnemies.remove(phantom.getKey());
+                }
             }
         }
 
