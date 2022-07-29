@@ -56,7 +56,7 @@ public class ShootAction implements Action {
     }
 
     public boolean isShootWillDamageEnemy(Unit me, Unit enemy) {
-        var shootingSegment = getShootingSegmentOnStartNextTick();
+        var shootingSegment = getShootingSegmentOnNextTick();
         if (!shootingSegment.containsOrIntersects(enemy.getCircle())) {
             return false;
         }
@@ -77,10 +77,14 @@ public class ShootAction implements Action {
 
     private Vector getBestLookDirection(Position lookPosition) {
         var shootingLine = new Line(me.getPosition(), lookPosition);
+        var viewSegmentAngle = getShootingSegmentOnNextTick(new Vector(me.getPosition(), lookPosition)).getAngle();
         var shootingVector = shootingLine.toVector();
 
         var obstacle = World.getInstance().getNonShootThroughObstacles().values().stream()
-                .filter(ob -> ob.getCircle().isIntersect(shootingLine))
+                .filter(ob -> ob.getCircle().isIntersect(shootingLine) ||
+                        ob.getCircle().isIntersect(shootingLine.rotate(viewSegmentAngle / 2)) ||
+                        ob.getCircle().isIntersect(shootingLine.rotate(-viewSegmentAngle / 2))
+                )
                 .min(Comparator.comparingDouble(ob -> ob.getCenter().getDistanceTo(me.getPosition())))
                 .orElse(null);
         if (obstacle == null) {
@@ -91,13 +95,13 @@ public class ShootAction implements Action {
                 .min(Comparator.comparingDouble(line -> line.toVector().getAngleTo(shootingVector)))
                 .map(Line::toVector)
                 .orElse(null);
-        if (tangent == null || tangent.getAngleTo(shootingVector) > me.getShootingSegment().getAngle()) {
+        if (tangent == null || tangent.getAngleTo(shootingVector) > viewSegmentAngle) {
             return shootingVector;
         }
 
         var vectorToTree = new Vector(me.getPosition(), obstacle.getCenter());
 
-        return tangent.rotate(Math.signum(vectorToTree.getDiffToVector(tangent)) * me.getShootingSegment().getAngle() / 2);
+        return tangent.rotate(Math.signum(vectorToTree.getDiffToVector(tangent)) * viewSegmentAngle / 2);
     }
 
     public boolean isShouldStartAimingToEnemy() {
@@ -207,14 +211,18 @@ public class ShootAction implements Action {
             return true;
         }
 
-        if (!getShootingSegmentOnStartNextTick().contains(targetPosition)) {
+        if (!getShootingSegmentOnNextTick().contains(targetPosition)) {
             return false;
         }
 
         return true;
     }
 
-    private CircleSegment getShootingSegmentOnStartNextTick() {
+    private CircleSegment getShootingSegmentOnNextTick() {
+        return getShootingSegmentOnNextTick(bestLookDirection);
+    }
+
+    private CircleSegment getShootingSegmentOnNextTick(Vector bestLookDirection) {
         var aim = WalkSimulation.getAimOnNextTick(me.getAim(), me.getAimChangePerTick(), shouldStartAimingToEnemy);
         var direction = WalkSimulation.simulateRotateTickToDirection(me.getDirection(), bestLookDirection, aim, me.getAimRotationSpeed());
         return me.getShootingSegment().rotateToAngle(direction.getAngle());

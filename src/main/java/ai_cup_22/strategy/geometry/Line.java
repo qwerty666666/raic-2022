@@ -72,6 +72,10 @@ public class Line {
         return new Line(start.move(v), end.move(v));
     }
 
+    public Line rotate(double angle) {
+        return new Line(start, start.move(new Vector(start, end).rotate(angle)));
+    }
+
     public Position getMiddlePoint() {
         return new Position((start.getX() + end.getX()) / 2, (start.getY() + end.getY()) / 2);
     }
