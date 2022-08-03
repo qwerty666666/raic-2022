@@ -1,0 +1,25 @@
+{
+  "seed": null,
+  "game": {
+    "Create": {
+      "Override": {
+        "preset": "Finals"
+      }
+    }
+  },
+  "players": [
+    {
+      "Tcp": {
+        "port": 31001,
+        "accept_timeout": 100,
+        "single_timeout": 10,
+        "total_time_limit": 300,
+        "run": {
+          "run_command": [
+            "java", "-jar", "/mnt/f/raic2022/solution/batch-runner/1.0.jar"
+          ]
+        }
+      }
+    }
+  ]
+}
